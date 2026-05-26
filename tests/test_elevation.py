@@ -1,8 +1,8 @@
 import unittest
+from pathlib import Path
 
 import numpy as np
 
-from gradeit import repo_root
 from gradeit.coordinate import Coordinate
 from gradeit.elevation.tiff_reader import UsgsTile
 from gradeit.elevation.usgs_api import USGSApi
@@ -12,7 +12,9 @@ from gradeit.elevation.usgs_local import USGSLocal, build_grid_refs
 # float32 GeoTIFF (LZW + predictor 3, 16x16 internal tiles) whose elevation is
 # the linear ramp BASE + A*col + B*row, with one no-data cell. A linear field
 # makes bilinear interpolation analytically exact, so golden values are precise.
-FIXTURE_DIR = repo_root() / "tests" / "fixtures"
+# Anchor to this test file (the fixture ships alongside it) rather than to the
+# installed gradeit package, which may live elsewhere under a non-editable install.
+FIXTURE_DIR = Path(__file__).resolve().parent / "fixtures"
 GRID_REF = "n40w105"
 FIXTURE_TILE = FIXTURE_DIR / GRID_REF / f"USGS_13_{GRID_REF}.tif"
 X_ORIGIN, Y_ORIGIN, PIXEL_SIZE = -105.0, 40.0, 0.001
