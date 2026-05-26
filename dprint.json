@@ -1,0 +1,17 @@
+{
+  "markdown": {
+    "lineWidth": 100
+  },
+  "includes": ["**/*.md"],
+  "excludes": [
+    "**/node_modules",
+    "**/.pixi",
+    "**/.venv",
+    "**/build",
+    "**/dist",
+    "**/*.egg-info"
+  ],
+  "plugins": [
+    "https://plugins.dprint.dev/markdown-0.22.1.wasm"
+  ]
+}

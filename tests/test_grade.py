@@ -1,4 +1,5 @@
 import unittest
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -89,6 +90,49 @@ class GradeTest(unittest.TestCase):
 
         np.testing.assert_array_equal(dist_arr, self.data.dist_ft[1:])
         np.testing.assert_array_equal(grade_arr, self.data.grade_dec)
+
+    def test_get_grade_zero_distance(self):
+        # a zero-distance segment (coincident points) carries the previous grade
+        # instead of producing inf
+        grade_arr = grade.get_grade([5000.0, 5005.0, 5006.0], distances=[100.0, 0.0])
+
+        self.assertEqual(grade_arr, [0.0, 0.05, 0.05])
+        self.assertFalse(any(np.isinf(g) or np.isnan(g) for g in grade_arr))
+
+    def test_get_grade_zero_distance_no_warning(self):
+        # the old implementation emitted a divide-by-zero RuntimeWarning here
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            grade.get_grade([5000.0, 5005.0, 5006.0], distances=[100.0, 0.0])
+
+    def test_get_grade_tiny_distance(self):
+        # a sub-foot elevation change over a sub-foot distance no longer blows up;
+        # the old behavior returned 0.5 / 0.3 = 1.6667 (167% grade)
+        grade_arr = grade.get_grade([5000.0, 5005.0, 5005.5], distances=[100.0, 0.3])
+
+        self.assertEqual(grade_arr, [0.0, 0.05, 0.05])
+
+    def test_get_grade_bounded_stationary_stretch(self):
+        # a profile that stops/crawls in the middle stays bounded and finite
+        elev = [5000.0, 5001.0, 5001.2, 5001.2, 5001.3, 5006.0]
+        dist = [50.0, 0.2, 0.0, 0.1, 50.0]
+        grade_arr = grade.get_grade(elev, distances=dist)
+
+        self.assertTrue(all(abs(g) < 1.0 for g in grade_arr))
+        self.assertFalse(any(np.isnan(g) or np.isinf(g) for g in grade_arr))
+
+    def test_get_grade_first_segment_undefined(self):
+        # a sub-threshold first segment carries the leading zero
+        grade_arr = grade.get_grade([5000.0, 5000.1], distances=[0.2])
+
+        self.assertEqual(grade_arr, [0.0, 0.0])
+
+    def test_get_grade_min_distance_param(self):
+        # the threshold is configurable: a 100 ft segment is undefined under a 200 ft
+        # threshold and carries the leading zero
+        grade_arr = grade.get_grade([5000.0, 5050.0], distances=[100.0], min_distance_ft=200.0)
+
+        self.assertEqual(grade_arr, [0.0, 0.0])
 
 
 if __name__ == "__main__":

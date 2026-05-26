@@ -6,16 +6,44 @@ import numpy as np
 from gradeit.coordinate import Coordinate
 
 
-def get_grade(elevation_profile: List[float], distances: List[float]) -> List[float]:
+def get_grade(
+    elevation_profile: List[float],
+    distances: List[float],
+    min_distance_ft: float = 1.0,
+) -> List[float]:
+    """Compute decimal road grade (rise/run) for an elevation profile.
+
+    Grade is the point-to-point ratio ``Δelevation / distance``. Segments shorter than
+    ``min_distance_ft`` are treated as undefined -- near-coincident coordinates
+    otherwise divide a small elevation change by a near-zero distance and yield physically impossible grades.
+    Undefined segments carry the previous valid grade forward.
+
+    Parameters
+    ----------
+    elevation_profile : List[float]
+        Elevation at each point (n > 1).
+    distances : List[float]
+        Horizontal distance of each segment, length len(elevation_profile) - 1.
+    min_distance_ft : float, optional
+        Segments shorter than this are undefined and carry the previous grade,
+        by default 1.0. Raise it to also suppress noise-driven spikes at crawl speed.
+    """
     # check that n > 1
     if len(elevation_profile) < 2:
         raise ValueError(
             "Determining grade requires at least 2 coordinates\n\t\ti.e. Input size of n > 1"
         )
 
-    d_elev = np.diff(elevation_profile)
-    grade = d_elev / distances
-    grade = np.insert(grade, 0, 0)
+    d_elev = np.diff(np.asarray(elevation_profile, dtype=float))
+    dist_arr = np.asarray(distances, dtype=float)
+
+    # only divide where the segment is long enough to define a grade; sub-threshold
+    # segments stay NaN and are carried-forward below (no divide-by-zero warning)
+    grade = np.full(d_elev.shape, np.nan)
+    measurable = dist_arr >= min_distance_ft
+    grade[measurable] = d_elev[measurable] / dist_arr[measurable]
+
+    grade = np.insert(grade, 0, 0.0)
     grade = np.round(grade, decimals=4)
     for a in range(len(grade) - 1):
         if np.isinf(grade[a + 1]) or np.isnan(grade[a + 1]):

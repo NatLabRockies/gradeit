@@ -1,0 +1,9 @@
+repos:
+  - repo: local
+    hooks:
+      - id: pixi-check
+        name: Run pixi checks
+        entry: pixi run -e dev check
+        language: system
+        pass_filenames: false
+        always_run: true
