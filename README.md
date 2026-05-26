@@ -13,26 +13,40 @@ model, which provides much faster results.
 
 ## Setup
 
-Clone or download the git repository.
-
-`git clone https://github.com/NREL/gradeit.git`
-
-gradeit depends on python 3.8 and up. One way to satisfy this is to use conda:
+gradeit requires python 3.10 or newer. To use the library, install it from source:
 
 ```bash
-conda create -n gradeit python=3.8
-conda activate gradeit
+git clone https://github.com/NREL/gradeit.git
+pip install .
 ```
 
-This will create a new conda environment that uses python 3.8.
+or install the published package directly:
 
-Then, you can install the gradeit library
+```bash
+pip install gradeit
+```
 
-`pip install gradeit`
+## Development
 
-or if you're already in the gradeit root directory then:
+This project uses [pixi](https://pixi.sh) to manage development environments and tasks.
+After [installing pixi](https://pixi.sh/latest/#installation), set up the dev environment:
 
-`pip install .`
+```bash
+pixi install -e dev
+```
+
+The native geospatial stack (GDAL via rasterio, shapely, etc.) is pulled from conda-forge so
+it is self-contained and reproducible.
+
+Common tasks are defined in `pyproject.toml` under `[tool.pixi.feature.dev.tasks]`:
+
+```bash
+pixi run -e dev check   # ruff format + lint, dprint (markdown), mypy, and tests
+pixi run -e dev test    # run the test suite
+```
+
+Formatting and linting use [ruff](https://docs.astral.sh/ruff/), and markdown files are
+formatted with [dprint](https://dprint.dev/).
 
 ## Getting Started
 

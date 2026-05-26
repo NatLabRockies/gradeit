@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gradeit"
-version = "0.1.2"
+version = "0.2.0"
 description = "Road Grade Inference Tool (GradeIT) appends elevation and road grade to a sequence of GPS points."
 readme = "README.md"
 authors = [{ name = "National Renewable Energy Laboratory" }]
@@ -15,7 +15,10 @@ classifiers = [
     "License :: Other/Proprietary License",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering",
 ]
 keywords = ["gps", "elevation", "road grade"]
@@ -29,20 +32,63 @@ dependencies = [
     "shapely",
 ]
 
-requires-python = ">=3.8"
+requires-python = ">=3.10"
+
 [project.optional-dependencies]
 plot = ["matplotlib"]
-dev = ["black", "ruff", "mypy", "pytest", "types-requests"]
-
+dev = ["ruff>=0.14,<1", "mypy>=1,<2", "pytest>=8", "types-requests", "pre-commit"]
 
 [project.urls]
 Homepage = "https://github.com/NREL/gradeit"
 
-[tool.black]
-line-length = 100
-
 [tool.ruff]
 line-length = 100
+exclude = ["build/*", "dist/*"]
+
+[tool.ruff.lint]
+# Enable Pyflakes (`F`) and a subset of the pycodestyle (`E`) codes by default.
+select = ["E4", "E7", "E9", "F"]
+ignore = []
+fixable = ["ALL"]
+unfixable = []
+# Allow unused variables when underscore-prefixed.
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.mypy]
+ignore_missing_imports = true
+exclude = ["docs/", "build/", "dist/"]
 
 [tool.setuptools.package-data]
 "*" = ["py.typed"]
+
+[tool.pixi.workspace]
+channels = ["conda-forge"]
+platforms = ["osx-arm64"]
+
+# Native/geospatial deps come from conda-forge so the GDAL stack is
+# self-contained and reproducible rather than built against system libraries.
+[tool.pixi.dependencies]
+python = ">=3.10,<3.14"
+numpy = "*"
+pandas = "*"
+scipy = "*"
+rasterio = "*"
+shapely = "*"
+
+[tool.pixi.pypi-dependencies]
+gradeit = { path = ".", editable = true }
+
+[tool.pixi.environments]
+default = { solve-group = "default" }
+dev = { features = ["dev", "plot"], solve-group = "default" }
+
+[tool.pixi.feature.dev.dependencies]
+dprint = "*"
+
+[tool.pixi.feature.dev.tasks]
+fmt_fix = "ruff format"
+lint_fix = "ruff check --fix"
+fmt_md = "dprint fmt"
+typing = "mypy ."
+test = "pytest tests/"
+check = { depends-on = ["fmt_fix", "lint_fix", "fmt_md", "typing", "test"] }
