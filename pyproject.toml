@@ -25,7 +25,6 @@ keywords = ["gps", "elevation", "road grade"]
 dependencies = [
     "numpy",
     "pandas",
-    "scipy",
     "tifffile",
     "imagecodecs",
 ]
@@ -34,7 +33,7 @@ requires-python = ">=3.10"
 
 [project.optional-dependencies]
 api = ["requests"]
-dev = ["ruff>=0.14,<1", "mypy>=1,<2", "pytest>=8", "types-requests", "pre-commit"]
+dev = ["ruff>=0.14,<1", "mypy>=1,<2", "pytest>=8", "scipy", "types-requests", "pre-commit", "ipykernel", "matplotlib"]
 
 [project.urls]
 Homepage = "https://github.com/NatLabRockiesgradeit"

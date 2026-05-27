@@ -3,7 +3,7 @@ from typing import Optional, Union
 import pandas as pd
 from gradeit.elevation.elevation_model import ElevationModel
 
-from gradeit.elevation.filtering import elevation_filter
+from gradeit.elevation.filters import SavitzkyGolayFilter
 from gradeit.elevation.usgs_local import USGSLocal
 from gradeit.elevation.usgs_api import USGSApi
 from gradeit.coordinate import Coordinate
@@ -81,9 +81,8 @@ def gradeit(
     df["grade_dec_unfiltered"] = grade_dec_unfiltered
 
     if filtering:
-        elevation_ft_filtered = elevation_filter(
-            elevation_profile=elevation_ft, coordinates=coordinates, sg_window=des_sg
-        )
+        efilter = SavitzkyGolayFilter(window=des_sg)
+        elevation_ft_filtered = efilter.filter(elevation_ft, coordinates)
         df["elevation_ft_filtered"] = elevation_ft_filtered
         grade_dec_filtered = get_grade(elevation_ft_filtered, distances=distances_ft)
         df["grade_dec_filtered"] = grade_dec_filtered
