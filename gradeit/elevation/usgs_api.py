@@ -1,7 +1,5 @@
 from typing import List
 
-import requests
-from requests import JSONDecodeError
 
 from gradeit.coordinate import Coordinate
 from gradeit.elevation.elevation_model import ElevationModel
@@ -16,6 +14,14 @@ def usgs_query_call(coord: Coordinate) -> float:
     """
     Build and run the query to the USGS API endpoint
     """
+    try:
+        import requests
+        from requests import JSONDecodeError
+    except ImportError as e:
+        raise ImportError(
+            "The 'requests' library is required to use the USGS API elevation source. "
+            "Please install it with 'pip install gradeit[api]'."
+        ) from e
 
     lat = str(coord.latitude)
     lon = str(coord.longitude)

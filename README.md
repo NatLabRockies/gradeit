@@ -1,6 +1,6 @@
 # GradeIT
 
-Road Grade Inference Tool (GradeIT) - a python package, developed by the National Renewable Energy Laboratory,
+Road Grade Inference Tool (GradeIT) - a python package, developed by the National Laboratory of the Rockies,
 to append elevation and road grade to a sequence of GPS points.
 
 ## Overview
@@ -16,7 +16,7 @@ model, which provides much faster results.
 gradeit requires python 3.10 or newer. To use the library, install it from source:
 
 ```bash
-git clone https://github.com/NREL/gradeit.git
+git clone https://github.com/NatLabRockiesgradeit.git
 pip install .
 ```
 
@@ -53,7 +53,7 @@ In this repository, `examples/basic.py` will demonstrate basic application of th
 
 The United States Geological Survey offers a variety of products as a part of the [National Map](https://www.usgs.gov/core-science-systems/national-geospatial-program/national-map) project, including bare-earth elevation datasets. The 1/3 arc-second elevation dataset is continuous for the coterminous United States and is therefore used in GradeIT. Appending elevation and grade to 1000+ points benefits significantly from having a local or network copy of the required USGS elevation data.
 
-NREL has the 1/3 arc-second raster data downloaded to on-site compute resources for large scale needs. Individual users can access the same raster data [here](https://prd-tnm.s3.amazonaws.com/index.html?prefix=StagedProducts/Elevation/13/TIFF/current/).
+NLR has the 1/3 arc-second raster data downloaded to on-site compute resources for large scale needs. Individual users can access the same raster data [here](https://prd-tnm.s3.amazonaws.com/index.html?prefix=StagedProducts/Elevation/13/TIFF/current/).
 
 ### Download Script
 
@@ -96,7 +96,7 @@ filter procedure is summarized in the figure below from Wood et al in 2014.
 <img src="docs/imgs/grade_filters.png">
 
 <sub>Wood, Eric, E. Burton, A. Duran, and J. Gonder. Appending High-Resolution Elevation Data to GPS Speed Traces for
-Vehicle Energy Modeling and Simulation. No. NREL/TP-5400-61109. National Renewable Energy Lab.(NREL), Golden, CO
+Vehicle Energy Modeling and Simulation. No. NatLabRockiesTP-5400-61109. National Renewable Energy Lab.(NLR), Golden, CO
 (United States), 2014.<sub>
 
 Additionally, since the USGS Digital Elevation Model is a "bare earth" model, road infrastructure features (i.e.

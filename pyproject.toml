@@ -7,8 +7,8 @@ name = "gradeit"
 version = "0.2.0"
 description = "Road Grade Inference Tool (GradeIT) appends elevation and road grade to a sequence of GPS points."
 readme = "README.md"
-authors = [{ name = "National Renewable Energy Laboratory" }]
-license = { text = "BSD 3-Clause License Copyright (c) 2020, Alliance for Sustainable Energy, LLC" }
+authors = [{ name = "National Laboratory of the Rockies" }]
+license = { text = "BSD 3-Clause License Copyright (c) 2020, Alliance for Energy Innovation, LLC" }
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",
@@ -25,9 +25,7 @@ keywords = ["gps", "elevation", "road grade"]
 dependencies = [
     "numpy",
     "pandas",
-    "requests",
     "scipy",
-    "tqdm",
     "tifffile",
     "imagecodecs",
 ]
@@ -35,11 +33,11 @@ dependencies = [
 requires-python = ">=3.10"
 
 [project.optional-dependencies]
-plot = ["matplotlib"]
+api = ["requests"]
 dev = ["ruff>=0.14,<1", "mypy>=1,<2", "pytest>=8", "types-requests", "pre-commit"]
 
 [project.urls]
-Homepage = "https://github.com/NREL/gradeit"
+Homepage = "https://github.com/NatLabRockiesgradeit"
 
 [tool.ruff]
 line-length = 100
@@ -73,7 +71,7 @@ gradeit = { path = ".", editable = true }
 
 [tool.pixi.environments]
 default = { solve-group = "default" }
-dev = { features = ["dev", "plot"], solve-group = "default" }
+dev = { features = ["dev", "api"], solve-group = "default" }
 
 [tool.pixi.feature.dev.dependencies]
 dprint = "*"
