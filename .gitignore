@@ -1,4 +1,6 @@
 *.tif
+# but keep the tiny synthetic test fixture (see scripts/make_test_fixture.py)
+!tests/fixtures/**/*.tif
 
 *.local
 

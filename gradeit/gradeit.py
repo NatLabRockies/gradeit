@@ -18,6 +18,7 @@ def gradeit(
     source: str = "usgs-api",
     usgs_db_path: Optional[Union[str, Path]] = None,
     des_sg: int = 17,
+    sampling: str = "bilinear",
 ) -> pd.DataFrame:
     """
     Add grade to an input dataframe with latitude and longitude columns
@@ -38,6 +39,9 @@ def gradeit(
         path to local USGS raster tiles, by default None
     des_sg : int, optional
         Savitzky-Golay filter window size, by default 17
+    sampling : str, optional
+        DEM sampling mode for the "usgs-local" source: "bilinear" (default)
+        or "nearest". Ignored by the "usgs-api" source.
 
     Returns
     -------
@@ -61,7 +65,7 @@ def gradeit(
                 "to use the 'usgs-local' option"
             )
         usgs_db_path = Path(usgs_db_path)
-        emodel = USGSLocal(usgs_db_path)
+        emodel = USGSLocal(usgs_db_path, sampling=sampling)
     else:
         raise Exception(
             "Invalid elevation data source. Provide one of these options: ['usgs-api','usgs-local']"

@@ -35,9 +35,6 @@ After [installing pixi](https://pixi.sh/latest/#installation), set up the dev en
 pixi install -e dev
 ```
 
-The native geospatial stack (GDAL via rasterio, shapely, etc.) is pulled from conda-forge so
-it is self-contained and reproducible.
-
 Common tasks are defined in `pyproject.toml` under `[tool.pixi.feature.dev.tasks]`:
 
 ```bash
@@ -73,8 +70,13 @@ results = gradeit(
     df=df,
     source="usgs-local",
     usgs_db_path="path/to/output/",
+    sampling="bilinear",  # "bilinear" (default) or "nearest"
 )
 ```
+
+Elevation is sampled from the DEM with bilinear interpolation by default, which is smoother and
+more accurate than the legacy nearest-neighbor lookup (still available via `sampling="nearest"`).
+Points outside the available tiles, or over DEM no-data cells, are returned as `NaN`.
 
 You can also use the script to just download a subset of tiles.
 

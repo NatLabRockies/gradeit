@@ -12,7 +12,7 @@ license = { text = "BSD 3-Clause License Copyright (c) 2020, Alliance for Sustai
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",
-    "License :: Other/Proprietary License",
+    "License :: OSI Approved :: BSD License",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3.10",
@@ -26,10 +26,10 @@ dependencies = [
     "numpy",
     "pandas",
     "requests",
-    "rasterio",
     "scipy",
     "tqdm",
-    "shapely",
+    "tifffile",
+    "imagecodecs",
 ]
 
 requires-python = ">=3.10"
@@ -65,15 +65,8 @@ exclude = ["docs/", "build/", "dist/"]
 channels = ["conda-forge"]
 platforms = ["osx-arm64"]
 
-# Native/geospatial deps come from conda-forge so the GDAL stack is
-# self-contained and reproducible rather than built against system libraries.
 [tool.pixi.dependencies]
 python = ">=3.10,<3.14"
-numpy = "*"
-pandas = "*"
-scipy = "*"
-rasterio = "*"
-shapely = "*"
 
 [tool.pixi.pypi-dependencies]
 gradeit = { path = ".", editable = true }
