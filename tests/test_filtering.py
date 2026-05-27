@@ -3,8 +3,7 @@ import unittest
 import numpy as np
 
 from gradeit.coordinate import Coordinate
-from gradeit.elevation.filters import SavitzkyGolayFilter
-from gradeit.elevation.filters._savgol import savgol_filter
+from gradeit.filters.savitzky_golay import savgol_filter, SavitzkyGolayFilter
 
 try:
     from scipy.signal import savgol_filter as scipy_savgol_filter

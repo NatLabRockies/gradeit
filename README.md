@@ -26,6 +26,13 @@ or install the published package directly:
 pip install gradeit
 ```
 
+gradeit has no hard dependency on pandas. Install the optional extras you need:
+
+```bash
+pip install gradeit[pandas]   # DataFrame input + GradeResult.to_dataframe()
+pip install gradeit[api]       # the online USGS Elevation Point Query Service source
+```
+
 ## Development
 
 This project uses [pixi](https://pixi.sh) to manage development environments and tasks.
@@ -47,7 +54,20 @@ formatted with [dprint](https://dprint.dev/).
 
 ## Getting Started
 
-In this repository, `examples/basic.py` will demonstrate basic application of the gradeit package.
+```python
+from gradeit import gradeit
+
+# `data` can be a pandas DataFrame, a numpy (n, 2) array, a dict of
+# {"latitude": [...], "longitude": [...]}, or an iterable of (lat, lon) pairs.
+result = gradeit(data, source="usgs-api")
+
+result.elevation_ft   # numpy array of elevation (feet)
+result.grade_dec       # numpy array of decimal road grade (rise/run)
+result.to_dataframe()  # tabular view (requires gradeit[pandas])
+```
+
+`gradeit()` returns a `GradeResult` of numpy arrays and never mutates its input.
+For the full, runnable walkthrough see `examples/basic.py`.
 
 ## USGS Elevation Data
 
@@ -66,8 +86,8 @@ python scripts/get_usgs_tiles.py --output-dir path/to/output/
 The script will then proceed to download all tiles into `path/to/output/` which can be used when running gradeit:
 
 ```python
-results = gradeit(
-    df=df,
+result = gradeit(
+    df,
     source="usgs-local",
     usgs_db_path="path/to/output/",
     sampling="bilinear",  # "bilinear" (default) or "nearest"
@@ -90,8 +110,31 @@ python get_usgs_tiles.py --output-dir colorado_tiles/ --tile-data colorado_tiles
 
 Given the spatial noise that can be present in GPS data and the 1/3 arc-second resolution of the digital elevation
 model being employed, outliers and unrealistic topographical features can be present in the raw elevation profiles.
-Therefore, a series of filtering procedures can be applied to the elevation data, if desired by the user. The primary
-filter procedure is summarized in the figure below from Wood et al in 2014.
+gradeit makes two kinds of filtering available, and the distinction matters:
+
+- **Elevation filters** (`ElevationFilter`) smooth the **elevation** profile _before_ grade is computed. The built-in
+  `SavitzkyGolayFilter` removes DEM/GPS noise that would otherwise produce spurious grade spikes.
+- **Grade filters** (`GradeFilter`) correct the **grade** profile _after_ it is computed. The built-in
+  `BridgeGradeFilter` handles bridges and overpasses (see below).
+
+Both are passed to `gradeit()` as instances (or `True` for the default), so you can configure or swap them:
+
+```python
+from gradeit import gradeit, SavitzkyGolayFilter, BridgeGradeFilter
+
+result = gradeit(
+    data,
+    source="usgs-local",
+    usgs_db_path="path/to/output/",
+    elevation_filter=SavitzkyGolayFilter(window=21),  # or True for the default
+    grade_filter=BridgeGradeFilter(),                  # or True for the default
+)
+```
+
+When filtering runs, the smoothed/corrected profiles are available as `result.elevation_ft_filtered` and
+`result.grade_dec_filtered`; the raw `result.elevation_ft` / `result.grade_dec` are always preserved.
+
+The primary elevation-filtering procedure is summarized in the figure below from Wood et al in 2014.
 
 <img src="docs/imgs/grade_filters.png">
 
@@ -101,5 +144,6 @@ Vehicle Energy Modeling and Simulation. No. NatLabRockiesTP-5400-61109. National
 
 Additionally, since the USGS Digital Elevation Model is a "bare earth" model, road infrastructure features (i.e.
 bridges and overpasses) are often not represented in the data. Rather, the "bare earth" model represents the valley or
-body of water that is being spanned. GradeIT has optional filtering routines to explicitly handle this by
-"building" a bridge to span the river, valley, etc where necessary.
+body of water that is being spanned. The `BridgeGradeFilter` grade filter explicitly handles this by detecting the
+flat bare-earth span inside a dip and zeroing the grade across it, effectively "building" a bridge to span the river,
+valley, etc. where necessary.

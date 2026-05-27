@@ -3,6 +3,7 @@ from typing import List
 
 from gradeit.coordinate import Coordinate
 from gradeit.elevation.elevation_model import ElevationModel
+from gradeit.exceptions import ElevationLookupError, MissingDependencyError
 
 
 URL = "https://epqs.nationalmap.gov/v1/"
@@ -18,7 +19,7 @@ def usgs_query_call(coord: Coordinate) -> float:
         import requests
         from requests import JSONDecodeError
     except ImportError as e:
-        raise ImportError(
+        raise MissingDependencyError(
             "The 'requests' library is required to use the USGS API elevation source. "
             "Please install it with 'pip install gradeit[api]'."
         ) from e
@@ -30,13 +31,15 @@ def usgs_query_call(coord: Coordinate) -> float:
     response = requests.get(query)
     try:
         result = response.json()
-    except JSONDecodeError:
-        raise Exception(f"Error when querying USGS API: {response.text}")
+    except JSONDecodeError as e:
+        raise ElevationLookupError(f"Error when querying USGS API: {response.text}") from e
 
     try:
         raw_elevation = result["value"]
-    except KeyError:
-        raise Exception("Error when querying USGS API: elevation not present in result")
+    except KeyError as e:
+        raise ElevationLookupError(
+            "Error when querying USGS API: elevation not present in result"
+        ) from e
     try:
         elev = float(raw_elevation)
     except ValueError as e:

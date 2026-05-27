@@ -24,7 +24,6 @@ classifiers = [
 keywords = ["gps", "elevation", "road grade"]
 dependencies = [
     "numpy",
-    "pandas",
     "tifffile",
     "imagecodecs",
 ]
@@ -33,6 +32,7 @@ requires-python = ">=3.10"
 
 [project.optional-dependencies]
 api = ["requests"]
+pandas = ["pandas"]
 dev = ["ruff>=0.14,<1", "mypy>=1,<2", "pytest>=8", "scipy", "types-requests", "pre-commit", "ipykernel", "matplotlib"]
 
 [project.urls]
@@ -53,7 +53,7 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
 [tool.mypy]
 ignore_missing_imports = true
-exclude = ["docs/", "build/", "dist/"]
+exclude = ["docs/", "build/", "dist/", "scripts.local/"]
 
 [tool.setuptools.package-data]
 "*" = ["py.typed"]
@@ -70,7 +70,7 @@ gradeit = { path = ".", editable = true }
 
 [tool.pixi.environments]
 default = { solve-group = "default" }
-dev = { features = ["dev", "api"], solve-group = "default" }
+dev = { features = ["dev", "api", "pandas"], solve-group = "default" }
 
 [tool.pixi.feature.dev.dependencies]
 dprint = "*"

@@ -1,11 +1,16 @@
 # %%
+from pathlib import Path
+
 import pandas as pd
 
-from gradeit import repo_root
-from gradeit.gradeit import gradeit
+from gradeit import BridgeGradeFilter, gradeit
+
+# Resolve example data/tiles relative to this file (works from any cwd).
+HERE = Path(__file__).resolve().parent
+REPO_ROOT = HERE.parent
 
 # %%
-example_trace = pd.read_csv(repo_root() / "examples/data/sample_trip_1.csv")
+example_trace = pd.read_csv(HERE / "data/sample_trip_1.csv")
 
 # %%
 example_trace.head()
@@ -13,7 +18,7 @@ example_trace.head()
 # %%
 
 # choose source for elevation data;
-# this defaults to the USGS Local option, which requires you download the USGS raster tiles;
+# the usgs-local option requires you download the USGS raster tiles;
 # see the scripts/get_usgs_tiles.py script to download tiles;
 # sample traces 1, 2, and 3 are in the state of Colorado and so you can use the colorado_tiles.txt
 # file as an input to the script
@@ -21,22 +26,25 @@ example_trace.head()
 source = "usgs-local"  # options: 'usgs-api', 'usgs-local'
 
 # if using the usgs-local option, you must provide the path to the local raster tiles
-db_path = repo_root() / "scripts/colorado_tiles"
-
-# should we filter the elevation data?
-elevation_filter = True
+db_path = REPO_ROOT / "scripts/colorado_tiles"
 
 # %%
-df_w_grade = gradeit(
-    df=example_trace,
-    lat_col="latitude",
-    lon_col="longitude",
-    filtering=elevation_filter,
+# gradeit accepts a DataFrame (or arrays / lists / dicts) and returns a GradeResult.
+# elevation_filter=True smooths the elevation profile before computing grade;
+# pass a BridgeGradeFilter as grade_filter to also correct bare-earth bridge artifacts.
+result = gradeit(
+    example_trace,
     source=source,
     usgs_db_path=db_path,
+    elevation_filter=True,
+    grade_filter=BridgeGradeFilter(),
 )
+
 # %%
+# Materialize the result as a DataFrame for inspection/plotting (needs gradeit[pandas]).
+df_w_grade = result.to_dataframe()
 df_w_grade.head()
+
 # %%
 df_w_grade.elevation_ft.plot()
 # %%
