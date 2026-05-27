@@ -77,11 +77,17 @@ class UsgsTile:
 
     def open(self) -> "UsgsTile":
         self._tif = tifffile.TiffFile(self.path)
-        # pages[0] is the full-resolution image; later pages are COG overviews.
-        self._page = self._tif.pages[0]
-        self._validate_page(self._page)
-        self.transform = self._transform_from_tags(self._page)
-        self.nodata = self._nodata_from_tags(self._page)
+        try:
+            # pages[0] is the full-resolution image; later pages are COG overviews.
+            self._page = self._tif.pages[0]
+            self._validate_page(self._page)
+            self.transform = self._transform_from_tags(self._page)
+            self.nodata = self._nodata_from_tags(self._page)
+        except Exception:
+            # Don't leak the open handle if validation/parsing fails; on Windows
+            # an open handle locks the file and blocks any later deletion.
+            self.close()
+            raise
         return self
 
     def close(self) -> None:
