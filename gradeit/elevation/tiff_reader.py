@@ -1,17 +1,3 @@
-"""Pure-Python reader for USGS 1/3 arc-second DEM GeoTIFFs.
-
-This module encapsulates all GeoTIFF I/O so the rest of the package never
-touches a geospatial native stack (it replaces the previous ``rasterio`` /
-GDAL dependency). It reads only the internal tiles needed to cover a batch of
-query points rather than loading the whole ~450 MB band, and supports both
-nearest-neighbor and bilinear sampling.
-
-Decoding (LZW + the floating-point predictor used by USGS tiles) is delegated
-to ``tifffile``'s own segment decoder, so there is no hand-rolled compression
-logic here. The clean ``UsgsTile`` / ``sample`` surface is intentionally small
-so a future Rust/pyo3 core can replace this module's internals behind it.
-"""
-
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -27,6 +13,20 @@ _TAG_MODEL_PIXEL_SCALE = 33550
 _TAG_MODEL_TIEPOINT = 33922
 _TAG_MODEL_TRANSFORMATION = 34264
 _TAG_GDAL_NODATA = 42113
+_TAG_GEO_KEY_DIRECTORY = 34735
+
+# GTModelTypeGeoKey (key 1024) records the coordinate-system family. This reader
+# samples points by longitude/latitude in degrees, so only a geographic CRS is
+# valid; projected (1) and geocentric (3) rasters would be sampled at the wrong
+# location.
+_GTMODELTYPE_KEY = 1024
+_MODEL_TYPE_GEOGRAPHIC = 2
+
+# A ModelTransformation's off-diagonal (rotation/skew) terms are rejected if
+# they exceed this fraction of the pixel scale; the raster must be north-up and
+# axis-aligned (the ModelPixelScale/Tiepoint form cannot encode rotation, so
+# only the matrix form needs checking).
+_ROTATION_REL_TOL = 1e-6
 
 # USGS uses a large-magnitude negative sentinel for voids/no-data.
 _DEFAULT_NODATA = -999999.0
@@ -79,6 +79,7 @@ class UsgsTile:
         self._tif = tifffile.TiffFile(self.path)
         # pages[0] is the full-resolution image; later pages are COG overviews.
         self._page = self._tif.pages[0]
+        self._validate_page(self._page)
         self.transform = self._transform_from_tags(self._page)
         self.nodata = self._nodata_from_tags(self._page)
         return self
@@ -118,15 +119,75 @@ class UsgsTile:
         trans = tags.get(_TAG_MODEL_TRANSFORMATION)
         if trans is not None:
             m = trans.value  # 4x4 matrix, row-major (16 doubles)
+            pixel_width, pixel_height = float(m[0]), float(m[5])
+            if (
+                abs(float(m[1])) > abs(pixel_width) * _ROTATION_REL_TOL
+                or abs(float(m[4])) > abs(pixel_height) * _ROTATION_REL_TOL
+            ):
+                raise ValueError(
+                    f"{page.parent.filehandle.name}: raster has a rotated/sheared "
+                    "ModelTransformation; only north-up, axis-aligned rasters are supported."
+                )
             return GeoTransform(
                 x_origin=float(m[3]),
                 y_origin=float(m[7]),
-                pixel_width=float(m[0]),
-                pixel_height=float(m[5]),
+                pixel_width=pixel_width,
+                pixel_height=pixel_height,
                 width=width,
                 height=height,
             )
         raise ValueError(f"{page.parent.filehandle.name}: missing GeoTIFF georeferencing tags")
+
+    @staticmethod
+    def _validate_page(page) -> None:
+        """Reject rasters that violate this reader's assumptions.
+
+        Sampling is single-band and indexed by lon/lat in degrees, so a
+        multi-band or projected raster would silently return wrong values. We
+        fail loudly instead. (Rotation is checked in ``_transform_from_tags``;
+        a CRS that is absent from the file cannot be verified and is allowed.)
+        """
+        name = page.parent.filehandle.name
+        spp = int(getattr(page, "samplesperpixel", 1) or 1)
+        if spp != 1:
+            raise ValueError(
+                f"{name}: expected a single-band raster, got samplesperpixel={spp}. "
+                "Only single-band (e.g. elevation) GeoTIFFs are supported."
+            )
+        model_type = UsgsTile._model_type_from_tags(page)
+        if model_type is not None and model_type != _MODEL_TYPE_GEOGRAPHIC:
+            raise ValueError(
+                f"{name}: expected a geographic lon/lat CRS (GTModelTypeGeoKey="
+                f"{_MODEL_TYPE_GEOGRAPHIC}), got {model_type}. Points are sampled by "
+                "longitude/latitude in degrees; projected rasters are not supported."
+            )
+
+    @staticmethod
+    def _model_type_from_tags(page) -> int | None:
+        """Return GTModelTypeGeoKey from the GeoKeyDirectory, or ``None`` if the
+        directory or key is absent (the CRS then cannot be verified).
+
+        The directory is a flat array of SHORTs: a 4-value header
+        (version, key_revision, minor_revision, num_keys) followed by ``num_keys``
+        4-value entries (key_id, tag_location, count, value_or_offset). A
+        ``tag_location`` of 0 means ``value_or_offset`` holds the value inline,
+        which is always the case for GTModelTypeGeoKey.
+        """
+        tag = page.tags.get(_TAG_GEO_KEY_DIRECTORY)
+        if tag is None or tag.value is None:
+            return None
+        keys = tag.value
+        if len(keys) < 4:
+            return None
+        num_keys = int(keys[3])
+        for i in range(num_keys):
+            base = 4 + i * 4
+            if base + 3 >= len(keys):
+                break
+            key_id, location, _count, value = (int(keys[base + j]) for j in range(4))
+            if key_id == _GTMODELTYPE_KEY:
+                return value if location == 0 else None
+        return None
 
     @staticmethod
     def _nodata_from_tags(page) -> float:

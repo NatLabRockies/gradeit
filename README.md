@@ -35,11 +35,6 @@ After [installing pixi](https://pixi.sh/latest/#installation), set up the dev en
 pixi install -e dev
 ```
 
-GradeIT is pure Python and pip-installable with no system dependencies: GeoTIFF elevation
-tiles are read with [tifffile](https://pypi.org/project/tifffile/) +
-[imagecodecs](https://pypi.org/project/imagecodecs/) rather than GDAL/rasterio. The pixi dev
-environment pulls the scientific stack (numpy, pandas, scipy) from conda-forge for reproducibility.
-
 Common tasks are defined in `pyproject.toml` under `[tool.pixi.feature.dev.tasks]`:
 
 ```bash

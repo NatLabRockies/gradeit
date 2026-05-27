@@ -1,7 +1,9 @@
+import tempfile
 import unittest
 from pathlib import Path
 
 import numpy as np
+import tifffile
 
 from gradeit.coordinate import Coordinate
 from gradeit.elevation.tiff_reader import UsgsTile
@@ -126,6 +128,89 @@ class TiffReaderTest(unittest.TestCase):
     def test_invalid_sampling_raises(self):
         with self.assertRaises(ValueError):
             self.tile.sample(np.array([X_ORIGIN]), np.array([Y_ORIGIN]), sampling="cubic")
+
+
+class TiffReaderValidationTest(unittest.TestCase):
+    """``open()`` rejects rasters that violate the reader's single-band,
+    north-up, geographic-lon/lat assumptions instead of silently sampling
+    wrong values."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.dir = Path(self._tmp.name)
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _write(self, data, extratags, name="t.tif", **kwargs):
+        dest = self.dir / name
+        tifffile.imwrite(dest, data, tile=(16, 16), extratags=extratags, **kwargs)
+        return dest
+
+    def _geo_tags(self, model_type=None):
+        """ModelPixelScale + ModelTiepoint georef; optional GeoKeyDirectory
+        carrying GTModelTypeGeoKey (1=projected, 2=geographic, 3=geocentric)."""
+        tags = [
+            (33550, 12, 3, (PIXEL_SIZE, PIXEL_SIZE, 0.0), True),
+            (33922, 12, 6, (0.0, 0.0, 0.0, X_ORIGIN, Y_ORIGIN, 0.0), True),
+        ]
+        if model_type is not None:
+            # header (version, key_rev, minor_rev, num_keys) + one key entry
+            # (key_id=1024, location=0 inline, count=1, value=model_type)
+            tags.append((34735, 3, 8, (1, 1, 0, 1, 1024, 0, 1, model_type), True))
+        return tags
+
+    def test_multiband_rejected(self):
+        # photometric="rgb" pins three contiguous samples in one page, so
+        # page[0].samplesperpixel == 3 regardless of tifffile's default.
+        data = np.zeros((32, 32, 3), dtype=np.float32)
+        path = self._write(data, self._geo_tags(model_type=2), photometric="rgb")
+        with self.assertRaisesRegex(ValueError, "single-band"):
+            UsgsTile(path).open()
+
+    def test_projected_crs_rejected(self):
+        data = np.zeros((32, 32), dtype=np.float32)
+        path = self._write(data, self._geo_tags(model_type=1))
+        with self.assertRaisesRegex(ValueError, "geographic"):
+            UsgsTile(path).open()
+
+    def test_geographic_crs_accepted(self):
+        data = np.zeros((32, 32), dtype=np.float32)
+        path = self._write(data, self._geo_tags(model_type=2))
+        with UsgsTile(path) as tile:
+            self.assertEqual((tile.transform.width, tile.transform.height), (32, 32))
+
+    def test_absent_crs_allowed(self):
+        # No GeoKeyDirectory (as in the real fixture): unverifiable, so allowed.
+        data = np.zeros((32, 32), dtype=np.float32)
+        path = self._write(data, self._geo_tags())
+        with UsgsTile(path) as tile:
+            self.assertIsNotNone(tile.transform)
+
+    def test_rotated_transformation_rejected(self):
+        data = np.zeros((32, 32), dtype=np.float32)
+        s = PIXEL_SIZE
+        m = (
+            s,
+            s * 0.5,
+            0.0,
+            X_ORIGIN,  # off-diagonal s*0.5 => rotation/skew
+            s * 0.5,
+            -s,
+            0.0,
+            Y_ORIGIN,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+        )
+        path = self._write(data, [(34264, 12, 16, m, True)])
+        with self.assertRaisesRegex(ValueError, "rotat"):
+            UsgsTile(path).open()
 
 
 class UsgsLocalTest(unittest.TestCase):
