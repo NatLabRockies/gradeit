@@ -21,7 +21,8 @@ def usgs_query_call(coord: Coordinate) -> float:
     except ImportError as e:
         raise MissingDependencyError(
             "The 'requests' library is required to use the USGS API elevation source. "
-            "Please install it with 'pip install gradeit[api]'."
+            "It is a core dependency of gradeit; reinstall the package with "
+            "'pip install gradeit' to pull it in."
         ) from e
 
     lat = str(coord.latitude)

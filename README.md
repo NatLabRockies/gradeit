@@ -30,7 +30,7 @@ gradeit has no hard dependency on pandas. Install the optional extras you need:
 
 ```bash
 pip install gradeit[pandas]   # DataFrame input + GradeResult.to_dataframe()
-pip install gradeit[api]       # the online USGS Elevation Point Query Service source
+pip install gradeit[plot]      # interactive folium map of the trace colored by grade
 ```
 
 ## Development
@@ -59,7 +59,7 @@ from gradeit import gradeit
 
 # `data` can be a pandas DataFrame, a numpy (n, 2) array, a dict of
 # {"latitude": [...], "longitude": [...]}, or an iterable of (lat, lon) pairs.
-result = gradeit(data, source="usgs-api")
+result = gradeit(data)
 
 result.elevation_ft   # numpy array of elevation (feet)
 result.grade_dec       # numpy array of decimal road grade (rise/run)
@@ -67,6 +67,12 @@ result.to_dataframe()  # tabular view (requires gradeit[pandas])
 ```
 
 `gradeit()` returns a `GradeResult` of numpy arrays and never mutates its input.
+Elevation comes from an `ElevationModel`, selected with the `elevation_model`
+argument. By default it uses `USGSApi()` — the online USGS Elevation Point Query
+Service, which needs no setup. For whole-trace lookups, point `USGSLocal` at a
+local copy of the raster tiles instead (see below); it is much faster. By default
+`gradeit()` also runs a `BridgeFilter` over the elevation profile (see _Filters_);
+pass `elevation_filter=None` to disable filtering.
 For the full, runnable walkthrough see `examples/basic.py`.
 
 ## USGS Elevation Data
@@ -86,11 +92,14 @@ python scripts/get_usgs_tiles.py --output-dir path/to/output/
 The script will then proceed to download all tiles into `path/to/output/` which can be used when running gradeit:
 
 ```python
+from gradeit import gradeit, USGSLocal
+
 result = gradeit(
     df,
-    source="usgs-local",
-    usgs_db_path="path/to/output/",
-    sampling="bilinear",  # "bilinear" (default) or "nearest"
+    elevation_model=USGSLocal(
+        "path/to/output/",
+        sampling="bilinear",  # "bilinear" (default) or "nearest"
+    ),
 )
 ```
 
@@ -110,29 +119,64 @@ python get_usgs_tiles.py --output-dir colorado_tiles/ --tile-data colorado_tiles
 
 Given the spatial noise that can be present in GPS data and the 1/3 arc-second resolution of the digital elevation
 model being employed, outliers and unrealistic topographical features can be present in the raw elevation profiles.
-gradeit makes two kinds of filtering available, and the distinction matters:
+gradeit cleans up the elevation profile through one or more `ElevationFilter`s applied before grade is computed:
 
-- **Elevation filters** (`ElevationFilter`) smooth the **elevation** profile _before_ grade is computed. The built-in
-  `SavitzkyGolayFilter` removes DEM/GPS noise that would otherwise produce spurious grade spikes.
-- **Grade filters** (`GradeFilter`) correct the **grade** profile _after_ it is computed. The built-in
-  `BridgeGradeFilter` handles bridges and overpasses (see below).
+- `BridgeFilter` interpolates elevation across bridge and overpass artifacts the bare-earth DEM does not represent
+  (see below). This is the **default** filter — `gradeit()` applies it unless you pass a different
+  `elevation_filter` (or `None` to disable filtering).
+- `SavitzkyGolayFilter` removes DEM/GPS noise that would otherwise produce spurious grade spikes.
 
-Both are passed to `gradeit()` as instances (or `True` for the default), so you can configure or swap them:
+Pass a single filter or a sequence; sequences are applied in order, each consuming the previous filter's output:
 
 ```python
-from gradeit import gradeit, SavitzkyGolayFilter, BridgeGradeFilter
+from gradeit import gradeit, USGSLocal, SavitzkyGolayFilter, BridgeFilter
 
 result = gradeit(
     data,
-    source="usgs-local",
-    usgs_db_path="path/to/output/",
-    elevation_filter=SavitzkyGolayFilter(window=21),  # or True for the default
-    grade_filter=BridgeGradeFilter(),                  # or True for the default
+    elevation_model=USGSLocal("path/to/output/"),
+    elevation_filter=[BridgeFilter(), SavitzkyGolayFilter(window=21)],
 )
 ```
 
-When filtering runs, the smoothed/corrected profiles are available as `result.elevation_ft_filtered` and
-`result.grade_dec_filtered`; the raw `result.elevation_ft` / `result.grade_dec` are always preserved.
+The recommended order is `BridgeFilter` first, then `SavitzkyGolayFilter`: bridge correction produces a clean
+profile for Savitzky-Golay to smooth, whereas smoothing first attenuates the dip magnitude `BridgeFilter` keys on.
+
+When filtering runs, the cleaned profile is available as `result.elevation_ft_filtered` and grade recomputed from it
+as `result.grade_dec_filtered`; the raw `result.elevation_ft` / `result.grade_dec` are always preserved.
+
+## Plotting
+
+Install the `plot` extra (`pip install gradeit[plot]`) for `plot_grade_map`, an
+interactive folium map of the trace with each segment colored by its grade.
+This is handy for spot-checking DEM artifacts -- bridges and overpasses show
+up as sharp negative grade spikes on the raw layer where the bare-earth DEM
+dips into the valley underneath.
+
+```python
+from gradeit import gradeit, USGSLocal, BridgeFilter, SavitzkyGolayFilter
+
+result = gradeit(
+    data,
+    elevation_model=USGSLocal("path/to/output/"),
+    elevation_filter=[BridgeFilter(), SavitzkyGolayFilter()],
+)
+
+# Returns a folium.Map; in Jupyter it renders inline, or save to HTML:
+m = result.plot_map()           # equivalent to plot_grade_map(result)
+m.save("trace.html")
+```
+
+When the result has both raw and filtered grade, `plot_map()` shows them as
+toggleable layers so you can flip back and forth and see exactly where the
+filter intervened. Hovering a segment reveals its grade, elevation, and
+length. Pass `grade="raw"`, `"filtered"`, or `"both"` to override, and
+`grade_range_pct=(-8, 8)` to fix the color scale.
+
+> **VS Code Interactive Window / untrusted notebooks**: inline display can show
+> "Make this notebook trusted to load map". The VS Code Interactive Window has
+> no trust toggle; `.ipynb` files do via Command Palette → "Notebook: Manage
+> Trust". The simplest workaround is to render via an `IFrame` from a saved
+> file (see `examples/basic.py`) or just open the saved HTML in a browser.
 
 The primary elevation-filtering procedure is summarized in the figure below from Wood et al in 2014.
 
@@ -144,6 +188,7 @@ Vehicle Energy Modeling and Simulation. No. NatLabRockiesTP-5400-61109. National
 
 Additionally, since the USGS Digital Elevation Model is a "bare earth" model, road infrastructure features (i.e.
 bridges and overpasses) are often not represented in the data. Rather, the "bare earth" model represents the valley or
-body of water that is being spanned. The `BridgeGradeFilter` grade filter explicitly handles this by detecting the
-flat bare-earth span inside a dip and zeroing the grade across it, effectively "building" a bridge to span the river,
-valley, etc. where necessary.
+body of water that is being spanned. The `BridgeFilter` elevation filter handles this by detecting dips in elevation
+that sit below the surrounding road surface on both sides and linearly interpolating the road's elevation across the
+span, effectively "building" a bridge to span the river, valley, etc. where necessary. Grade is then recomputed from
+the corrected elevation so elevation and grade stay internally consistent.

@@ -16,10 +16,6 @@ class InvalidInputError(GradeitError, ValueError):
     """The coordinate input could not be interpreted (wrong type or shape)."""
 
 
-class InvalidSourceError(GradeitError, ValueError):
-    """An unknown elevation source, or a source missing required configuration."""
-
-
 class MissingDependencyError(GradeitError, ImportError):
     """An optional dependency (e.g. pandas, requests) is needed but not installed."""
 

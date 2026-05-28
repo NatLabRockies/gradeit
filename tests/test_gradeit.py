@@ -6,9 +6,9 @@ import numpy as np
 
 from gradeit import gradeit
 from gradeit.coordinate import Coordinate
-from gradeit.elevation import ElevationModel
-from gradeit.exceptions import InvalidInputError, InvalidSourceError
-from gradeit.filters import BridgeGradeFilter, SavitzkyGolayFilter
+from gradeit.elevation import ElevationModel, USGSLocal
+from gradeit.exceptions import InvalidInputError
+from gradeit.filters import BridgeFilter, SavitzkyGolayFilter
 from gradeit.io import GradeResult
 
 # The synthetic fixture DB shipped alongside the elevation tests (see
@@ -37,65 +37,62 @@ class GradeitLocalTest(unittest.TestCase):
         self.coords = [
             Coordinate.from_lat_lon(lat, lon) for lon, lat in (_center(c, r) for c, r in cells)
         ]
+        self.model = USGSLocal(FIXTURE_DIR, sampling="nearest")
 
-    def test_returns_grade_result_no_filter(self):
-        result = gradeit(
-            self.coords, source="usgs-local", usgs_db_path=FIXTURE_DIR, sampling="nearest"
-        )
+    def test_returns_grade_result_filter_disabled(self):
+        result = gradeit(self.coords, elevation_model=self.model, elevation_filter=None)
         self.assertIsInstance(result, GradeResult)
         n = len(self.coords)
         self.assertEqual(result.elevation_ft.shape, (n,))
         self.assertEqual(result.distances_ft.shape, (n,))
         self.assertEqual(result.grade_dec.shape, (n,))
         self.assertEqual(result.distances_ft[0], 0.0)
-        # No filtering requested -> filtered fields stay None.
+        # Filtering explicitly disabled -> filtered fields stay None.
         self.assertIsNone(result.elevation_ft_filtered)
         self.assertIsNone(result.grade_dec_filtered)
 
-    def test_source_enum_and_string_equivalent(self):
-        from gradeit import Source
+    def test_default_filter_is_bridge_filter(self):
+        # With no elevation_filter argument, gradeit applies a BridgeFilter, so
+        # the filtered fields are populated even though the caller asked for
+        # nothing explicitly.
+        result = gradeit(self.coords, elevation_model=self.model)
+        self.assertIsNotNone(result.elevation_ft_filtered)
+        self.assertIsNotNone(result.grade_dec_filtered)
+        self.assertEqual(result.elevation_ft_filtered.shape, result.elevation_ft.shape)
 
-        r_str = gradeit(
-            self.coords, source="usgs-local", usgs_db_path=FIXTURE_DIR, sampling="nearest"
-        )
-        r_enum = gradeit(
-            self.coords, source=Source.USGS_LOCAL, usgs_db_path=FIXTURE_DIR, sampling="nearest"
-        )
-        np.testing.assert_array_equal(r_str.elevation_ft, r_enum.elevation_ft)
+    def test_empty_filter_sequence_disables_filtering(self):
+        result = gradeit(self.coords, elevation_model=self.model, elevation_filter=[])
+        self.assertIsNone(result.elevation_ft_filtered)
+        self.assertIsNone(result.grade_dec_filtered)
 
-    def test_elevation_filter_true_populates_filtered_fields(self):
+    def test_elevation_filter_instance_populates_filtered_fields(self):
         result = gradeit(
             self.coords,
-            source="usgs-local",
-            usgs_db_path=FIXTURE_DIR,
-            sampling="nearest",
-            elevation_filter=True,
+            elevation_model=self.model,
+            elevation_filter=SavitzkyGolayFilter(window=3, polyorder=2),
         )
         self.assertIsNotNone(result.elevation_ft_filtered)
         self.assertIsNotNone(result.grade_dec_filtered)
         self.assertEqual(result.elevation_ft_filtered.shape, result.elevation_ft.shape)
 
-    def test_elevation_filter_instance(self):
+    def test_elevation_filter_sequence_applies_in_order(self):
+        # A sequence runs the filters left-to-right and recomputes grade once
+        # from the final filtered elevation, so both filtered fields are
+        # populated and stay internally consistent.
         result = gradeit(
             self.coords,
-            source="usgs-local",
-            usgs_db_path=FIXTURE_DIR,
-            sampling="nearest",
-            elevation_filter=SavitzkyGolayFilter(window=3, polyorder=2),
+            elevation_model=self.model,
+            elevation_filter=[BridgeFilter(), SavitzkyGolayFilter(window=3, polyorder=2)],
         )
         self.assertIsNotNone(result.elevation_ft_filtered)
-
-    def test_grade_filter_keeps_raw_grade_and_fills_filtered(self):
-        result = gradeit(
-            self.coords,
-            source="usgs-local",
-            usgs_db_path=FIXTURE_DIR,
-            sampling="nearest",
-            grade_filter=BridgeGradeFilter(),
-        )
-        # Raw grade preserved; corrected grade present even without elevation filtering.
         self.assertIsNotNone(result.grade_dec_filtered)
-        self.assertIsNone(result.elevation_ft_filtered)
+        # Raw arrays untouched.
+        self.assertEqual(result.elevation_ft.shape, (len(self.coords),))
+
+    def test_elevation_filter_true_raises_invalid_input(self):
+        # The boolean shortcut has been removed; passing True is an error.
+        with self.assertRaises(InvalidInputError):
+            gradeit(self.coords, elevation_model=self.model, elevation_filter=True)
 
     def test_input_not_mutated(self):
         # A dict input must come back unchanged (no appended keys).
@@ -103,7 +100,7 @@ class GradeitLocalTest(unittest.TestCase):
         lons = [c.longitude for c in self.coords]
         data = {"latitude": list(lats), "longitude": list(lons)}
         before = {k: list(v) for k, v in data.items()}
-        gradeit(data, source="usgs-local", usgs_db_path=FIXTURE_DIR, sampling="nearest")
+        gradeit(data, elevation_model=self.model)
         self.assertEqual(data, before)
 
 
@@ -115,17 +112,6 @@ class GradeitInjectionTest(unittest.TestCase):
 
 
 class GradeitErrorTest(unittest.TestCase):
-    def setUp(self):
-        self.coords = [Coordinate.from_lat_lon(39.0, -105.0), Coordinate.from_lat_lon(39.1, -105.1)]
-
-    def test_bad_source_raises(self):
-        with self.assertRaises(InvalidSourceError):
-            gradeit(self.coords, source="not-a-source")
-
-    def test_local_without_path_raises(self):
-        with self.assertRaises(InvalidSourceError):
-            gradeit(self.coords, source="usgs-local")
-
     def test_too_few_coordinates_raises(self):
         with self.assertRaises(InvalidInputError):
             gradeit([Coordinate.from_lat_lon(39.0, -105.0)], elevation_model=StubModel())

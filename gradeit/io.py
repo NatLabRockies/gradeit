@@ -10,6 +10,7 @@ from gradeit.coordinate import Coordinate
 from gradeit.exceptions import InvalidInputError, MissingDependencyError
 
 if TYPE_CHECKING:
+    import folium
     import pandas as pd
 
 # Anything ``to_coordinates`` knows how to turn into a list of Coordinates.
@@ -153,3 +154,13 @@ class GradeResult:
                 "install it with 'pip install gradeit[pandas]'."
             ) from e
         return pd.DataFrame(self.to_dict())
+
+    def plot_map(self, **kwargs) -> "folium.Map":
+        """Render this result on an interactive folium map colored by grade.
+
+        Thin convenience wrapper around :func:`gradeit.plotting.plot_grade_map`;
+        all keyword arguments are forwarded. Requires ``gradeit[plot]``.
+        """
+        from gradeit.plotting import plot_grade_map
+
+        return plot_grade_map(self, **kwargs)

@@ -7,33 +7,29 @@ from gradeit.exceptions import (
     ElevationLookupError,
     GradeitError,
     InvalidInputError,
-    InvalidSourceError,
     MissingDependencyError,
 )
 from gradeit.filters import (
-    BridgeGradeFilter,
+    BridgeFilter,
     ElevationFilter,
-    GradeFilter,
     SavitzkyGolayFilter,
 )
 from gradeit.io import GradeResult
-from gradeit.sources import Source
+from gradeit.plotting import plot_grade_map
 
 __all__ = [
     "gradeit",
     "Coordinate",
     "GradeResult",
-    "Source",
     "ElevationModel",
     "USGSApi",
     "USGSLocal",
     "ElevationFilter",
-    "GradeFilter",
     "SavitzkyGolayFilter",
-    "BridgeGradeFilter",
+    "BridgeFilter",
     "GradeitError",
     "InvalidInputError",
-    "InvalidSourceError",
     "MissingDependencyError",
     "ElevationLookupError",
+    "plot_grade_map",
 ]

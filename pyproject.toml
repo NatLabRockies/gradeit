@@ -26,14 +26,15 @@ dependencies = [
     "numpy",
     "tifffile",
     "imagecodecs",
+    "requests",
 ]
 
 requires-python = ">=3.10"
 
 [project.optional-dependencies]
-api = ["requests"]
 pandas = ["pandas"]
-dev = ["ruff>=0.14,<1", "mypy>=1,<2", "pytest>=8", "scipy", "types-requests", "pre-commit", "ipykernel", "matplotlib"]
+plot = ["folium"]
+dev = ["ruff>=0.14,<1", "mypy>=1,<2", "pytest>=8", "scipy", "types-requests", "pre-commit", "ipykernel", "matplotlib", "folium"]
 
 [project.urls]
 Homepage = "https://github.com/NatLabRockiesgradeit"
@@ -70,7 +71,7 @@ gradeit = { path = ".", editable = true }
 
 [tool.pixi.environments]
 default = { solve-group = "default" }
-dev = { features = ["dev", "api", "pandas"], solve-group = "default" }
+dev = { features = ["dev", "pandas", "plot"], solve-group = "default" }
 
 [tool.pixi.feature.dev.dependencies]
 dprint = "*"

@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from gradeit import BridgeGradeFilter, gradeit
+from gradeit import BridgeFilter, SavitzkyGolayFilter, USGSLocal, gradeit
 
 # Resolve example data/tiles relative to this file (works from any cwd).
 HERE = Path(__file__).resolve().parent
@@ -17,27 +17,24 @@ example_trace.head()
 
 # %%
 
-# choose source for elevation data;
-# the usgs-local option requires you download the USGS raster tiles;
-# see the scripts/get_usgs_tiles.py script to download tiles;
-# sample traces 1, 2, and 3 are in the state of Colorado and so you can use the colorado_tiles.txt
-# file as an input to the script
-
-source = "usgs-local"  # options: 'usgs-api', 'usgs-local'
-
-# if using the usgs-local option, you must provide the path to the local raster tiles
+# choose the elevation model;
+# gradeit() defaults to USGSApi() (the online query service, no setup needed),
+# but for whole-trace lookups the local raster model (USGSLocal) is much faster.
+# USGSLocal requires you download the USGS raster tiles; see the
+# scripts/get_usgs_tiles.py script. Sample traces 1, 2, and 3 are in Colorado,
+# so you can use the colorado_tiles.txt file as an input to the script.
 db_path = REPO_ROOT / "scripts/colorado_tiles"
+elevation_model = USGSLocal(db_path)
 
 # %%
 # gradeit accepts a DataFrame (or arrays / lists / dicts) and returns a GradeResult.
-# elevation_filter=True smooths the elevation profile before computing grade;
-# pass a BridgeGradeFilter as grade_filter to also correct bare-earth bridge artifacts.
+# Pass a list of ElevationFilters to apply in order: BridgeFilter first
+# interpolates elevation across bare-earth bridge artifacts, then
+# SavitzkyGolayFilter smooths the cleaned profile.
 result = gradeit(
     example_trace,
-    source=source,
-    usgs_db_path=db_path,
-    elevation_filter=True,
-    grade_filter=BridgeGradeFilter(),
+    elevation_model=elevation_model,
+    elevation_filter=[BridgeFilter(), SavitzkyGolayFilter()],
 )
 
 # %%
@@ -53,4 +50,11 @@ df_w_grade.elevation_ft_filtered.plot()
 df_w_grade.grade_dec_unfiltered.plot()
 # %%
 df_w_grade.grade_dec_filtered.plot()
+
+# %%
+m = result.plot_map()
+
+trace_html = HERE / "trace.html"
+m.save(str(trace_html))
+
 # %%
