@@ -6,6 +6,12 @@ GradeIT's default filtration implements the five-step routine of Wood et al. (20
 > GPS Speed Traces for Vehicle Energy Modeling and Simulation._ NREL/TP-5400-61109. National
 > Renewable Energy Laboratory, Golden, CO (United States), 2014.
 
+```{note}
+That is the reference for the **method**. To cite the **software**, see the Citation section on
+the [home page](intro) — the two are separate, and citing the paper does not credit this package
+or its authors.
+```
+
 ```{image} imgs/grade_filters.png
 :alt: The five-step filtration routine from Wood et al. (2014)
 :width: 100%

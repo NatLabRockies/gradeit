@@ -50,6 +50,24 @@ default filter implements the five-step routine from
 
 ## Citation
 
-> Wood, Eric, E. Burton, A. Duran, and J. Gonder. _Appending High-Resolution Elevation Data to
-> GPS Speed Traces for Vehicle Energy Modeling and Simulation._ NREL/TP-5400-61109. National
-> Renewable Energy Laboratory, Golden, CO (United States), 2014.
+If you use GradeIT in published work, please cite the software:
+
+> National Laboratory of the Rockies. _GradeIT: Road Grade Inference Tool_ (version 0.2.0)
+> [Computer software]. https://github.com/NREL/gradeit
+
+```bibtex
+@software{gradeit,
+  title    = {{GradeIT}: Road Grade Inference Tool},
+  author   = {{National Laboratory of the Rockies}},
+  version  = {0.2.0},
+  url      = {https://github.com/NREL/gradeit},
+  license  = {BSD-3-Clause}
+}
+```
+
+The repository also carries a
+[`CITATION.cff`](https://github.com/NREL/gradeit/blob/main/CITATION.cff), which GitHub renders as
+"Cite this repository".
+
+GradeIT implements a filtration methodology published separately; if the method itself is what
+matters to your work, cite [Wood et al. (2014)](methodology) as well.

@@ -138,6 +138,24 @@ See [Contributing](https://nrel.github.io/gradeit/developers/contributing.html) 
 
 ## Citation
 
-> Wood, Eric, E. Burton, A. Duran, and J. Gonder. _Appending High-Resolution Elevation Data to GPS
-> Speed Traces for Vehicle Energy Modeling and Simulation._ NREL/TP-5400-61109. National Renewable
-> Energy Laboratory, Golden, CO (United States), 2014.
+If you use GradeIT in published work, please cite the software:
+
+> National Laboratory of the Rockies. _GradeIT: Road Grade Inference Tool_ (version 0.2.0)
+> [Computer software]. https://github.com/NREL/gradeit
+
+```bibtex
+@software{gradeit,
+  title    = {{GradeIT}: Road Grade Inference Tool},
+  author   = {{National Laboratory of the Rockies}},
+  version  = {0.2.0},
+  url      = {https://github.com/NREL/gradeit},
+  license  = {BSD-3-Clause}
+}
+```
+
+`CITATION.cff` in the repository root carries the same metadata in machine-readable form; GitHub
+renders it as "Cite this repository" in the sidebar.
+
+The filtration methodology GradeIT implements is described separately in Wood et al. (2014) - cite
+that as well if the method itself is what matters to your work. See
+[Methodology](https://nrel.github.io/gradeit/methodology.html).

@@ -1,0 +1,46 @@
+# Citation metadata for the GradeIT software itself.
+# GitHub renders this as "Cite this repository". Format: https://citation-file-format.github.io
+#
+# The filtration methodology GradeIT implements is published separately; that
+# paper is listed under `references` rather than as the preferred citation,
+# because citing it does not credit this software.
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "GradeIT: Road Grade Inference Tool"
+abstract: >-
+  A Python package that appends elevation and road grade to a sequence of GPS
+  points, sourcing elevation from the USGS 1/3 arc-second Digital Elevation
+  Model and filtering out bare-earth artifacts before grade is computed.
+type: software
+authors:
+  - name: "National Laboratory of the Rockies"
+version: "0.2.0"
+license: BSD-3-Clause
+repository-code: "https://github.com/NREL/gradeit"
+url: "https://nrel.github.io/gradeit/"
+keywords:
+  - gps
+  - elevation
+  - road grade
+  - digital elevation model
+  - vehicle energy modeling
+references:
+  - type: report
+    title: >-
+      Appending High-Resolution Elevation Data to GPS Speed Traces for Vehicle
+      Energy Modeling and Simulation
+    authors:
+      - family-names: Wood
+        given-names: Eric
+      - family-names: Burton
+        given-names: Evan
+      - family-names: Duran
+        given-names: Adam
+      - family-names: Gonder
+        given-names: Jeffrey
+    year: 2014
+    number: "NREL/TP-5400-61109"
+    institution:
+      name: National Renewable Energy Laboratory
+    location:
+      name: "Golden, CO, United States"
