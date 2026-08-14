@@ -16,6 +16,7 @@ class ImportSurfaceTest(unittest.TestCase):
             SavitzkyGolayFilter,
             USGSApi,
             USGSLocal,
+            Wood2014Filter,
             gradeit,
         )
 

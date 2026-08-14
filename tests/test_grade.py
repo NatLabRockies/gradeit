@@ -18,8 +18,7 @@ class GradeTest(unittest.TestCase):
         self.coord1 = Coordinate.from_lat_lon(self.lat1, self.lon1)
         self.coord2 = Coordinate.from_lat_lon(self.lat2, self.lon2)
 
-        self.expected_dist_km = 3.665130
-        self.expected_bearing_deg = 104.63
+        self.expected_dist_km = 3.23893
 
         self.data = pd.DataFrame()
         self.data["lat"] = np.linspace(39.702730, 39.695368, 10)
@@ -42,28 +41,28 @@ class GradeTest(unittest.TestCase):
 
         self.data["dist_ft"] = [
             0,
-            1336.0892816,
-            1336.0892816,
-            1336.0892816,
-            1336.0892816,
-            1336.12209,
-            1336.12209,
-            1336.12209,
-            1336.12209,
-            1336.1548984,
+            1180.6758908,
+            1180.6758908,
+            1180.6758908,
+            1180.7086992,
+            1180.7086992,
+            1180.7415076,
+            1180.7415076,
+            1180.7415076,
+            1180.774316,
         ]
 
         self.data["grade_dec"] = [
             0.0,
-            -0.0243,
-            0.1064,
-            -0.1146,
-            -0.0625,
-            -0.0608,
-            -0.1073,
-            0.0289,
-            -0.1353,
-            -0.0815,
+            -0.0275,
+            0.1204,
+            -0.1296,
+            -0.0708,
+            -0.0688,
+            -0.1214,
+            0.0327,
+            -0.1532,
+            -0.0922,
         ]
 
     def test_haversine(self):
@@ -78,7 +77,9 @@ class GradeTest(unittest.TestCase):
         ]
         dist_arr = grade.get_distances(coordinates)
 
-        np.testing.assert_array_equal(dist_arr, np.array(self.data.dist_ft[1:]))
+        # atol rather than exact equality: the haversine result passes through
+        # libm sin/asin/sqrt, which may differ by an ULP across platforms.
+        np.testing.assert_allclose(dist_arr, np.array(self.data.dist_ft[1:]), rtol=0, atol=1e-6)
 
     def test_get_grade_from_distance(self):
         coordinates = [
@@ -88,7 +89,8 @@ class GradeTest(unittest.TestCase):
         dist_arr = grade.get_distances(coordinates)
         grade_arr = grade.get_grade(self.data.elev_ft, distances=dist_arr)
 
-        np.testing.assert_array_equal(dist_arr, self.data.dist_ft[1:])
+        np.testing.assert_allclose(dist_arr, self.data.dist_ft[1:], rtol=0, atol=1e-6)
+        # grade is rounded to 4 decimals in get_grade, so exact equality is safe
         np.testing.assert_array_equal(grade_arr, self.data.grade_dec)
 
     def test_get_grade_zero_distance(self):

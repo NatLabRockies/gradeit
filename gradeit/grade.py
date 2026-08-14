@@ -90,7 +90,7 @@ def haversine(coord1: Coordinate, coord2: Coordinate, get_bearing: bool = False)
     # compute haversine result
     dlat = lat2 - lat1
     dlon = lon2 - lon1
-    a = sin(dlat / 2) ** 2 + cos(lat1) * sin(dlon / 2) ** 2
+    a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
     c = 2 * asin(sqrt(a))
     R = 6371  # radius of earth in km
     distance = c * R

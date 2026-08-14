@@ -34,7 +34,8 @@ class BridgeFilterDetectionTest(unittest.TestCase):
         np.testing.assert_array_equal(out[120:], elev[120:])
 
     def test_short_dip_below_min_length_is_ignored(self):
-        # A single-point dip has zero length and is rejected before peak-depth checks.
+        # The interpolated span here is 100 ft (one 50 ft segment either side of
+        # the dip point), below the 200 ft floor this filter is configured with.
         n = 100
         coords = _make_coords(n, ft_step=50.0)
         elev = np.full(n, 1000.0)
@@ -42,6 +43,37 @@ class BridgeFilterDetectionTest(unittest.TestCase):
 
         f = BridgeFilter(baseline_radius_ft=1000.0, min_bridge_len_ft=200.0)
         out = np.asarray(f.filter(elev.tolist(), coords))
+        np.testing.assert_array_equal(out, elev)
+
+    def test_single_point_dip_is_corrected(self):
+        # At highway speed 1 Hz points are ~95 ft apart, so a short overpass
+        # shows up as a dip exactly one point wide. Run length is measured
+        # anchor-to-anchor precisely so this case is not rejected as zero-length.
+        n = 120
+        ft_step = 95.0
+        coords = _make_coords(n, ft_step=ft_step)
+        truth = 1000.0 + 0.01 * np.arange(n) * ft_step  # steady 1% climb
+        elev = truth.copy()
+        elev[50] -= 30.0
+
+        out = np.asarray(BridgeFilter().filter(elev.tolist(), coords))
+
+        # The dip is interpolated back onto the underlying road surface.
+        np.testing.assert_allclose(out[50], truth[50], atol=1.0)
+        # Everything away from the dip is left bit-for-bit alone.
+        np.testing.assert_array_equal(out[:50], elev[:50])
+        np.testing.assert_array_equal(out[51:], elev[51:])
+
+    def test_single_point_dip_below_peak_threshold_is_ignored(self):
+        # Correcting one-point dips must not turn ordinary DEM noise into a
+        # bridge: 6 ft is below the default 10 ft peak-depth floor.
+        n = 120
+        ft_step = 95.0
+        coords = _make_coords(n, ft_step=ft_step)
+        elev = 1000.0 + 0.01 * np.arange(n) * ft_step
+        elev[50] -= 6.0
+
+        out = np.asarray(BridgeFilter().filter(elev.tolist(), coords))
         np.testing.assert_array_equal(out, elev)
 
     def test_shallow_dip_below_peak_threshold_is_ignored(self):

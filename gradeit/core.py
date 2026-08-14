@@ -4,13 +4,13 @@ import numpy as np
 
 from gradeit.elevation import ElevationModel, USGSApi
 from gradeit.exceptions import InvalidInputError
-from gradeit.filters import BridgeFilter, ElevationFilter
+from gradeit.filters import ElevationFilter, Wood2014Filter
 from gradeit.grade import get_distances, get_grade
 from gradeit.io import CoordinateInput, GradeResult, to_coordinates
 
-# Applied unless the caller overrides elevation_filter. BridgeFilter is a frozen
-# (immutable) dataclass, so sharing one instance as the default is safe.
-_DEFAULT_FILTER = BridgeFilter()
+# Applied unless the caller overrides elevation_filter. Wood2014Filter is a
+# frozen (immutable) dataclass, so sharing one instance as the default is safe.
+_DEFAULT_FILTER = Wood2014Filter()
 
 
 def gradeit(
@@ -39,12 +39,16 @@ def gradeit(
     elevation_filter:
         Clean up the elevation profile before grade is computed. Pass a single
         :class:`ElevationFilter` instance or a sequence of them (applied in
-        order, each consuming the previous filter's output). Defaults to a
-        :class:`~gradeit.filters.BridgeFilter`, which interpolates elevation
-        across bare-earth-DEM bridge artifacts; pass ``None`` (or ``[]``) to
-        skip filtering. For noisy DEM data the recommended pipeline is
-        ``[BridgeFilter(), SavitzkyGolayFilter()]`` — bridge correction first
-        gives Savitzky-Golay a clean profile to smooth.
+        order, each consuming the previous filter's output). Defaults to
+        :class:`~gradeit.filters.Wood2014Filter`, the filtration routine of
+        Wood et al. (2014), NREL/TP-5400-61109: resample onto a uniform
+        distance grid, smooth, reject and backfill anomalous points, smooth
+        again, and interpolate back. Pass ``None`` (or ``[]``) to skip
+        filtering entirely.
+
+        :class:`~gradeit.filters.BridgeFilter` (targeted bare-earth bridge
+        correction) and :class:`~gradeit.filters.SavitzkyGolayFilter`
+        (index-domain smoothing) remain available for narrower jobs.
     lat_col, lon_col:
         Column/key names for the latitude and longitude, used only for the
         DataFrame and mapping input forms.
@@ -103,8 +107,8 @@ def _resolve_filters(
     if isinstance(elevation_filter, bool):
         raise InvalidInputError(
             "elevation_filter no longer accepts a boolean; pass an ElevationFilter "
-            "instance, e.g. SavitzkyGolayFilter(), or a sequence such as "
-            "[BridgeFilter(), SavitzkyGolayFilter()]."
+            "instance, e.g. Wood2014Filter(), or a sequence such as "
+            "[BridgeFilter(), Wood2014Filter()]."
         )
     if isinstance(elevation_filter, ElevationFilter):
         return [elevation_filter]

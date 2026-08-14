@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from gradeit import BridgeFilter, SavitzkyGolayFilter, USGSLocal, gradeit
+from gradeit import BridgeFilter, USGSLocal, Wood2014Filter, gradeit
 
 # Resolve example data/tiles relative to this file (works from any cwd).
 HERE = Path(__file__).resolve().parent
@@ -24,17 +24,31 @@ example_trace.head()
 # scripts/get_usgs_tiles.py script. Sample traces 1, 2, and 3 are in Colorado,
 # so you can use the colorado_tiles.txt file as an input to the script.
 db_path = REPO_ROOT / "scripts/colorado_tiles"
+if not db_path.is_dir():
+    raise SystemExit(
+        f"No USGS tiles at {db_path}.\n"
+        "Download them first (~14 GB for all of Colorado, or edit the tile list down):\n"
+        "    python scripts/get_usgs_tiles.py "
+        "--tile-data scripts/colorado_tiles.txt --output-dir scripts/colorado_tiles\n"
+        "Or point db_path at a directory you already have."
+    )
 elevation_model = USGSLocal(db_path)
 
 # %%
 # gradeit accepts a DataFrame (or arrays / lists / dicts) and returns a GradeResult.
-# Pass a list of ElevationFilters to apply in order: BridgeFilter first
-# interpolates elevation across bare-earth bridge artifacts, then
-# SavitzkyGolayFilter smooths the cleaned profile.
+# With no elevation_filter argument it applies Wood2014Filter, the filtration
+# routine from Wood et al. (2014) -- that is all most callers need:
+result = gradeit(example_trace, elevation_model=elevation_model)
+
+# %%
+# Filters can also be passed explicitly, as an instance or a sequence applied in
+# order. BridgeFilter goes first when used: it keys on raw dip magnitude, which
+# any smoother attenuates. It catches bridge spans longer than Wood2014Filter's
+# outlier rejection will accept.
 result = gradeit(
     example_trace,
     elevation_model=elevation_model,
-    elevation_filter=[BridgeFilter(), SavitzkyGolayFilter()],
+    elevation_filter=[BridgeFilter(), Wood2014Filter()],
 )
 
 # %%
@@ -54,7 +68,7 @@ df_w_grade.grade_dec_filtered.plot()
 # %%
 m = result.plot_map()
 
-trace_html = HERE / "trace.html"
+trace_html = HERE / "trace.local.html"
 m.save(str(trace_html))
 
 # %%

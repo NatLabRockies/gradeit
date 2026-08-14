@@ -79,11 +79,33 @@ class TiffReaderTest(unittest.TestCase):
         np.testing.assert_allclose(got, expected, rtol=0, atol=1e-4)
 
     def test_bilinear_exact_on_linear_field(self):
+        # `lonlat_at` is corner-referenced, but the stored value of pixel (c, r)
+        # lives at its center -- corner coords (c + 0.5, r + 0.5). So the true
+        # surface at corner coords (c, r) is ramp(c - 0.5, r - 0.5). Bilinear
+        # interpolation of a linear field reproduces it exactly.
         fracs = [(5.3, 8.7), (20.5, 4.25), (40.1, 50.9)]
         lons, lats = zip(*(lonlat_at(c, r) for c, r in fracs))
         got = self.tile.sample(np.array(lons), np.array(lats), sampling="bilinear")
-        expected = [ramp(c, r) for c, r in fracs]
+        expected = [ramp(c - 0.5, r - 0.5) for c, r in fracs]
         np.testing.assert_allclose(got, expected, rtol=0, atol=1e-3)
+
+    def test_bilinear_at_pixel_center_returns_that_pixel(self):
+        # The defining property of a correctly registered bilinear sampler:
+        # at a pixel's own center the four weights collapse onto that pixel.
+        cells = [(1, 1), (5, 8), (20, 30), (40, 50)]
+        lons, lats = zip(*(center(c, r) for c, r in cells))
+        got = self.tile.sample(np.array(lons), np.array(lats), sampling="bilinear")
+        expected = [ramp(c, r) for c, r in cells]
+        np.testing.assert_allclose(got, expected, rtol=0, atol=1e-4)
+
+    def test_bilinear_agrees_with_nearest_at_pixel_centers(self):
+        # Corollary: the two samplers must agree exactly at pixel centers, and
+        # this is what pins their shared registration to the same convention.
+        cells = [(3, 4), (33, 17), (50, 12)]
+        lons, lats = zip(*(center(c, r) for c, r in cells))
+        near = self.tile.sample(np.array(lons), np.array(lats), sampling="nearest")
+        bil = self.tile.sample(np.array(lons), np.array(lats), sampling="bilinear")
+        np.testing.assert_allclose(bil, near, rtol=0, atol=1e-4)
 
     def test_bilinear_differs_from_nearest(self):
         lon, lat = lonlat_at(5.3, 8.7)

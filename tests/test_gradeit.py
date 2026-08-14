@@ -8,7 +8,8 @@ from gradeit import gradeit
 from gradeit.coordinate import Coordinate
 from gradeit.elevation import ElevationModel, USGSLocal
 from gradeit.exceptions import InvalidInputError
-from gradeit.filters import BridgeFilter, SavitzkyGolayFilter
+from gradeit.core import _DEFAULT_FILTER
+from gradeit.filters import BridgeFilter, SavitzkyGolayFilter, Wood2014Filter
 from gradeit.io import GradeResult
 
 # The synthetic fixture DB shipped alongside the elevation tests (see
@@ -51,10 +52,13 @@ class GradeitLocalTest(unittest.TestCase):
         self.assertIsNone(result.elevation_ft_filtered)
         self.assertIsNone(result.grade_dec_filtered)
 
-    def test_default_filter_is_bridge_filter(self):
-        # With no elevation_filter argument, gradeit applies a BridgeFilter, so
-        # the filtered fields are populated even though the caller asked for
-        # nothing explicitly.
+    def test_default_filter_is_the_wood_2014_routine(self):
+        # With no elevation_filter argument, gradeit applies the paper's
+        # filtration routine, so the filtered fields are populated even though
+        # the caller asked for nothing explicitly. Pinning the type here makes
+        # any future change to the default a deliberate test edit.
+        self.assertIsInstance(_DEFAULT_FILTER, Wood2014Filter)
+
         result = gradeit(self.coords, elevation_model=self.model)
         self.assertIsNotNone(result.elevation_ft_filtered)
         self.assertIsNotNone(result.grade_dec_filtered)

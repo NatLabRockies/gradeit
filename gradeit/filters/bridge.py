@@ -20,13 +20,13 @@ smooth the cleaned profile.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List, Optional, Tuple
+from typing import List, Optional
 
 import numpy as np
 
 from gradeit.coordinate import Coordinate
+from gradeit.filters._util import consecutive_runs, cumulative_distance_ft
 from gradeit.filters.elevation_filter import ElevationFilter
-from gradeit.grade import get_distances
 
 _FT_PER_MILE = 5280.0
 
@@ -55,11 +55,14 @@ class BridgeFilter(ElevationFilter):
         A candidate run is only accepted if at least one of its points reaches
         this depth. Filters out wide but shallow DEM noise.
     min_bridge_len_ft, max_bridge_len_ft:
-        Length bounds, in feet, for accepted runs. Shorter runs are usually
-        noise; longer runs are usually real terrain (valleys, canyons) the
-        filter cannot honestly distinguish from artifacts.
+        Length bounds, in feet, for accepted runs. Length is measured across
+        the interpolated span -- from the clean anchor before the run to the
+        clean anchor after it -- so a single-point dip still has a non-zero
+        length. Shorter runs are usually noise; longer runs are usually real
+        terrain (valleys, canyons) the filter cannot honestly distinguish from
+        artifacts.
     max_aspect_ratio:
-        Reject runs whose ``length / peak_depth`` exceeds this. A real bridge
+        Reject runs whose ``span / peak_depth`` exceeds this. A real bridge
         artifact is short relative to its depth; a real valley is long
         relative to its depth.
     grade_plausibility_tol:
@@ -89,8 +92,7 @@ class BridgeFilter(ElevationFilter):
         if n < 3:
             return elev.tolist()
 
-        segment_distances = get_distances(coordinates)
-        cumulative_ft = np.concatenate(([0.0], np.cumsum(segment_distances))).astype(np.float64)
+        cumulative_ft = cumulative_distance_ft(coordinates)
 
         baseline = self._baseline(elev, cumulative_ft)
         dip_depth = baseline - elev
@@ -100,7 +102,7 @@ class BridgeFilter(ElevationFilter):
             return elev.tolist()
 
         out = elev.copy()
-        for start, stop in self._consecutive_runs(candidates):
+        for start, stop in consecutive_runs(candidates):
             if not self._accept_run(start, stop, elev, dip_depth, cumulative_ft, n):
                 continue
             out[start : stop + 1] = np.interp(
@@ -140,12 +142,6 @@ class BridgeFilter(ElevationFilter):
                 baseline[i] = min(left_max, right_max)
         return baseline
 
-    def _consecutive_runs(self, indices: np.ndarray) -> List[Tuple[int, int]]:
-        """Group sorted indices into inclusive (start, stop) runs of consecutive values."""
-        breaks = np.flatnonzero(np.diff(indices) != 1) + 1
-        groups = np.split(indices, breaks)
-        return [(int(g[0]), int(g[-1])) for g in groups]
-
     def _accept_run(
         self,
         start: int,
@@ -159,21 +155,26 @@ class BridgeFilter(ElevationFilter):
         if start == 0 or stop == n - 1:
             return False
 
-        length_ft = float(cumulative_ft[stop] - cumulative_ft[start])
-        if length_ft < self.min_bridge_len_ft or length_ft > self.max_bridge_len_ft:
+        # Measure the run across the span actually interpolated -- anchor to
+        # anchor -- rather than between the first and last dip points. Those
+        # coincide for a single-point dip, giving a length of exactly 0 that
+        # min_bridge_len_ft always rejects; at highway speed (~95 ft between
+        # 1 Hz points) a short overpass *is* a single-point dip, which is the
+        # most common bridge artifact in real traces.
+        span_ft = float(cumulative_ft[stop + 1] - cumulative_ft[start - 1])
+        if span_ft <= 0:
+            return False
+        if span_ft < self.min_bridge_len_ft or span_ft > self.max_bridge_len_ft:
             return False
 
         peak_depth = float(dip_depth[start : stop + 1].max())
         if peak_depth < self.min_peak_depth_ft:
             return False
-        if length_ft / peak_depth > self.max_aspect_ratio:
+        if span_ft / peak_depth > self.max_aspect_ratio:
             return False
 
         # Plausibility gate: the recovered grade across the span should be
         # consistent with the surrounding road's median segment grade.
-        span_ft = float(cumulative_ft[stop + 1] - cumulative_ft[start - 1])
-        if span_ft <= 0:
-            return False
         recovered_grade = (elev[stop + 1] - elev[start - 1]) / span_ft
 
         surrounding = self._surrounding_median_grade(start, stop, elev, cumulative_ft)

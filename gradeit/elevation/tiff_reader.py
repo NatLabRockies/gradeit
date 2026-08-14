@@ -262,9 +262,9 @@ class UsgsTile:
 
         Out-of-bounds points and no-data cells yield ``np.nan``. For bilinear
         sampling, a point whose 2x2 neighborhood would cross the tile boundary
-        falls back to nearest-neighbor (a ~1-pixel seam at tile edges); no-data
-        among the four neighbors is handled by renormalizing over the valid
-        ones.
+        falls back to nearest-neighbor (a half-pixel seam around the tile
+        edge); no-data among the four neighbors is handled by renormalizing
+        over the valid ones.
         """
         validate_sampling(sampling)
         assert self.transform is not None
@@ -300,16 +300,25 @@ class UsgsTile:
             result[nearest_ok] = window[ir[nearest_ok] - wr0, ic[nearest_ok] - wc0]
             return result
 
+        # `col`/`row` are corner-referenced (col == 0.0 is the *left edge* of
+        # pixel 0), which is what `nearest` wants. Bilinear interpolates between
+        # pixel *centers*, so shift by half a pixel first: cc == 0.0 is then the
+        # center of pixel 0. Without this the interpolated surface is displaced
+        # half a pixel (~5 m at 1/3 arc-second) south-east.
+        cc, cr = col - 0.5, row - 0.5
+        bc = np.floor(cc).astype(np.int64)
+        br = np.floor(cr).astype(np.int64)
+
         # Bilinear where the full 2x2 footprint is inside the tile; otherwise
-        # fall back to nearest at the 1-pixel edge seam.
-        bilinear_ok = (ic >= 0) & (ic + 1 < w) & (ir >= 0) & (ir + 1 < h)
+        # fall back to nearest in the half-pixel band around the tile edge.
+        bilinear_ok = (bc >= 0) & (bc + 1 < w) & (br >= 0) & (br + 1 < h)
         edge = nearest_ok & ~bilinear_ok
         if edge.any():
             result[edge] = window[ir[edge] - wr0, ic[edge] - wc0]
 
         if bilinear_ok.any():
-            fc, fr = ic[bilinear_ok], ir[bilinear_ok]
-            dx, dy = col[bilinear_ok] - fc, row[bilinear_ok] - fr
+            fc, fr = bc[bilinear_ok], br[bilinear_ok]
+            dx, dy = cc[bilinear_ok] - fc, cr[bilinear_ok] - fr
             c, r = fc - wc0, fr - wr0
             vals = np.stack(
                 [window[r, c], window[r, c + 1], window[r + 1, c], window[r + 1, c + 1]]

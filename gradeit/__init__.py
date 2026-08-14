@@ -13,6 +13,7 @@ from gradeit.filters import (
     BridgeFilter,
     ElevationFilter,
     SavitzkyGolayFilter,
+    Wood2014Filter,
 )
 from gradeit.io import GradeResult
 from gradeit.plotting import plot_grade_map
@@ -25,6 +26,7 @@ __all__ = [
     "USGSApi",
     "USGSLocal",
     "ElevationFilter",
+    "Wood2014Filter",
     "SavitzkyGolayFilter",
     "BridgeFilter",
     "GradeitError",

@@ -23,6 +23,7 @@ if TYPE_CHECKING:
 # Diverging red→yellow→green palette: steep negative grade → red, flat → yellow,
 # steep positive grade → green. Reads naturally as "going down" vs "going up"
 # without being so saturated that mid-range segments disappear into the tiles.
+# Paired with the muted default basemap so the palette carries the signal.
 _DEFAULT_COLORS = ["#d7191c", "#fdae61", "#ffffbf", "#a6d96a", "#1a9641"]
 
 GradeChoice = Literal["auto", "raw", "filtered", "both"]
@@ -35,7 +36,7 @@ def plot_grade_map(
     grade_range_pct: Optional[Tuple[float, float]] = None,
     weight: int = 5,
     opacity: float = 0.85,
-    tiles: str = "OpenStreetMap",
+    tiles: str = "CartoDB positron",
     show_endpoints: bool = True,
 ) -> "folium.Map":
     """Render the trace on an interactive folium map, colored by grade.
@@ -71,8 +72,14 @@ def plot_grade_map(
     opacity:
         Stroke opacity in ``[0, 1]``.
     tiles:
-        Base map tile source passed through to ``folium.Map`` (e.g.
-        ``"OpenStreetMap"``, ``"CartoDB positron"``).
+        Base map tile source passed through to ``folium.Map``. Defaults to
+        ``"CartoDB positron"``, a muted grey basemap: it keeps the grade colors
+        legible (OpenStreetMap's own greens and yellows compete with the
+        palette), and its CDN does not rate-limit embedded use the way
+        openstreetmap.org's tile server does -- OSM's tile usage policy blocks
+        heavy or automated clients, which surfaces as 403s on the rendered map.
+        Other useful values: ``"CartoDB Voyager"`` (more road labeling),
+        ``"CartoDB dark_matter"``, or ``"OpenStreetMap"``.
     show_endpoints:
         If true, add Start/End markers at the first and last coordinates.
 

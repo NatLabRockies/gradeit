@@ -3,8 +3,8 @@ from typing import List, Sequence, Union
 import numpy as np
 
 from gradeit.coordinate import Coordinate
+from gradeit.filters._util import cumulative_distance_ft
 from gradeit.filters.elevation_filter import ElevationFilter
-from gradeit.grade import get_distances
 
 
 def savgol_filter(
@@ -84,8 +84,7 @@ class SavitzkyGolayFilter(ElevationFilter):
         self.polyorder = polyorder
 
     def filter(self, elevation_profile: List[float], coordinates: List[Coordinate]) -> List[float]:
-        distances = get_distances(coordinates)
-        cuml_dist = list(np.append(0, np.cumsum(distances)))
+        cuml_dist = list(cumulative_distance_ft(coordinates))
 
         window = self._resolve_window(cuml_dist)
         smoothed = savgol_filter(elevation_profile, window_length=window, polyorder=self.polyorder)

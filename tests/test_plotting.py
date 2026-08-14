@@ -44,6 +44,22 @@ class PlotGradeMapTest(unittest.TestCase):
         m = plot_grade_map(_make_result())
         self.assertIsInstance(m, folium.Map)
 
+    def test_default_basemap_does_not_use_the_osm_tile_server(self):
+        # openstreetmap.org's tile usage policy blocks heavy/automated clients,
+        # which surfaces as 403s on the rendered map. Pin the default away from
+        # it so a future change back is deliberate.
+        from gradeit.plotting import plot_grade_map
+
+        html = plot_grade_map(_make_result()).get_root().render()
+        self.assertNotIn("tile.openstreetmap.org", html)
+        self.assertIn("basemaps.cartocdn.com", html)
+
+    def test_tiles_argument_is_honored(self):
+        from gradeit.plotting import plot_grade_map
+
+        html = plot_grade_map(_make_result(), tiles="CartoDB dark_matter").get_root().render()
+        self.assertIn("dark_all", html)
+
     def test_auto_single_layer_when_no_filter(self):
         # With no filtered profile, "auto" should not add a LayerControl.
         from gradeit.plotting import plot_grade_map
