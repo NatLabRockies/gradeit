@@ -34,7 +34,7 @@ requires-python = ">=3.10"
 [project.optional-dependencies]
 pandas = ["pandas"]
 plot = ["folium"]
-dev = ["ruff>=0.14,<1", "mypy>=1,<2", "pytest>=8", "scipy", "types-requests", "pre-commit", "ipykernel", "matplotlib", "folium", "pandas"]
+dev = ["ruff==0.16.3", "mypy>=1,<2", "pytest>=8", "scipy", "types-requests", "pre-commit", "ipykernel", "matplotlib", "folium", "pandas"]
 # Everything needed to build the documentation site, including what the
 # executable examples under docs/examples/ import.
 docs = [

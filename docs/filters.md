@@ -145,7 +145,9 @@ class ClampFilter(ElevationFilter):
         self.max_ft = max_ft
 
     def filter(
-        self, elevation_profile: List[float], coordinates: List[Coordinate]
+        self,
+        elevation_profile: List[float],
+        coordinates: List[Coordinate],
     ) -> List[float]:
         return [min(max(e, self.min_ft), self.max_ft) for e in elevation_profile]
 ```

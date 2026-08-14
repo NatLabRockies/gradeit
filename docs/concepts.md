@@ -93,8 +93,7 @@ An abstract base class with one abstract method:
 ```python
 class ElevationModel(metaclass=ABCMeta):
     @abstractmethod
-    def get_elevation(self, trace: List[Coordinate]) -> List[float]:
-        ...
+    def get_elevation(self, trace: List[Coordinate]) -> List[float]: ...
 ```
 
 The contract: return elevation in **feet**, one value per input coordinate, in the **same order**,
@@ -111,8 +110,7 @@ class ElevationFilter(metaclass=ABCMeta):
     @abstractmethod
     def filter(
         self, elevation_profile: List[float], coordinates: List[Coordinate]
-    ) -> List[float]:
-        ...
+    ) -> List[float]: ...
 ```
 
 A filter takes an elevation profile and returns an elevation profile — **never grade**. That

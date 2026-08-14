@@ -54,10 +54,10 @@ from gradeit import gradeit
 result = gradeit(data)
 
 result.elevation_ft_filtered  # numpy array of filtered elevation (feet)
-result.grade_dec_filtered     # numpy array of decimal road grade (rise/run)
-result.elevation_ft           # the raw DEM lookup, always preserved
-result.grade_dec              # grade from the raw lookup, unfiltered
-result.to_dataframe()         # tabular view (requires gradeit[pandas])
+result.grade_dec_filtered  # numpy array of decimal road grade (rise/run)
+result.elevation_ft  # the raw DEM lookup, always preserved
+result.grade_dec  # grade from the raw lookup, unfiltered
+result.to_dataframe()  # tabular view (requires gradeit[pandas])
 ```
 
 Use the `_filtered` arrays. `gradeit()` returns a `GradeResult` of numpy arrays and never mutates
