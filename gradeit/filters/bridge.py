@@ -42,12 +42,33 @@ class BridgeFilter(ElevationFilter):
     grade does not trigger false positives — only a real dip (a span whose
     elevation sits below the road on both sides) does.
 
+    A valley crossing is also "a span whose elevation sits below the road on
+    both sides", and nothing in the geometry separates the two. What separates
+    them is ``baseline_radius_ft``: the filter can only see dips narrower than
+    its baseline window, so that radius is what decides whether a feature is
+    treated as a bridge or left alone. Set it deliberately — see below.
+
     Parameters
     ----------
     baseline_radius_ft:
         Half-width, in feet, of the rolling-max window on each side. Defaults
-        to 1 mile. Should be at least as wide as the longest bridge expected
-        in the trace so each side's window samples real road.
+        to 1 mile.
+
+        **This is the parameter to tune, and the default is only right for
+        traces over gentle terrain.** It is bounded from both directions: wide
+        enough that each side's window reaches real road beyond the bridge, but
+        narrow enough that it does not reach over the surrounding terrain's own
+        relief. Too wide and a genuine descent into a valley and climb back out
+        reads as one enormous "dip", which this filter will happily interpolate
+        a straight line across -- silently flattening real terrain by tens of
+        feet. The acceptance gates below cannot catch that case: a deep valley
+        really is short relative to its depth, so it is not geometrically
+        distinguishable from a tall bridge.
+
+        Scale it to the spans you are correcting -- a few hundred feet for
+        typical overpasses and creek crossings -- not to the default.
+        ``examples/bridge_artifact.py`` walks through a trace where the
+        one-mile default flattens a mile of real 172 ft valley.
     min_dip_depth_ft:
         Per-point threshold for inclusion in a candidate dip run. Points where
         ``baseline - elevation`` is at most this value are not dip candidates.

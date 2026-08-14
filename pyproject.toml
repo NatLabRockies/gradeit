@@ -37,7 +37,7 @@ plot = ["folium"]
 dev = ["ruff>=0.14,<1", "mypy>=1,<2", "pytest>=8", "scipy", "types-requests", "pre-commit", "ipykernel", "matplotlib", "folium"]
 
 [project.urls]
-Homepage = "https://github.com/NatLabRockiesgradeit"
+Homepage = "https://github.com/NatLabRockies/gradeit"
 
 [tool.ruff]
 line-length = 100

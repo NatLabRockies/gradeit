@@ -77,6 +77,17 @@ class PlotGradeMapTest(unittest.TestCase):
         self.assertIn("Filtered grade", names)
         self.assertIn("Raw grade", names)
 
+    def test_filtered_layer_draws_on_top_of_raw(self):
+        # Both layers start visible and share identical coordinates, so the
+        # one added *last* is the only one visible -- Leaflet draws later
+        # additions on top. If this inverts, the map shows the raw artifacts
+        # and the corrected profile is hidden underneath, which reads as
+        # "the filter did nothing".
+        from gradeit.plotting import plot_grade_map
+
+        m = plot_grade_map(_make_result(with_filtered=True))
+        self.assertEqual(_feature_group_order(m), ["Raw grade", "Filtered grade"])
+
     def test_filtered_without_filter_raises(self):
         from gradeit.plotting import plot_grade_map
 
@@ -140,6 +151,19 @@ class PlotGradeMapTest(unittest.TestCase):
 
 def _has_layer_control(m: "folium.Map") -> bool:
     return any(child.__class__.__name__ == "LayerControl" for child in m._children.values())
+
+
+def _feature_group_order(m: "folium.Map") -> list:
+    """FeatureGroup names in the order they were added, which is draw order.
+
+    folium renders ``_children`` in insertion order, and Leaflet draws later
+    additions on top.
+    """
+    return [
+        getattr(child, "layer_name", None)
+        for child in m._children.values()
+        if child.__class__.__name__ == "FeatureGroup"
+    ]
 
 
 def _feature_group_names(m: "folium.Map") -> set:

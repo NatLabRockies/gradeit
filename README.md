@@ -133,9 +133,11 @@ gradeit cleans up the elevation profile through one or more `ElevationFilter`s a
   _Methodology_ below. This is the **default**: `gradeit()` applies it unless you pass a different
   `elevation_filter` (or `None` to disable filtering).
 - `BridgeFilter` is a targeted correction for bare-earth bridge and overpass artifacts: it detects
-  dips that sit below the surrounding road on both sides and interpolates across them. Its
-  detector keys on raw dip depth against a one-mile rolling-max baseline, so it handles spans much
-  longer than `Wood2014Filter`'s outlier rejection will accept.
+  dips that sit below the surrounding road on both sides and interpolates across them. It handles
+  spans much longer than `Wood2014Filter`'s outlier rejection will accept, but it needs tuning —
+  **set `baseline_radius_ft` to the scale of the spans you are correcting.** Its one-mile default
+  suits gentle terrain; on a trace that crosses real valleys, a descent and climb inside that
+  radius reads as one huge "dip" and gets flattened. See `examples/bridge_artifact.py`.
 - `SavitzkyGolayFilter` smooths in the index (point) domain. Superseded by `Wood2014Filter` for
   most uses — because GPS traces are sampled in time, a fixed point-count window has a physical
   width that varies with vehicle speed.
@@ -269,3 +271,20 @@ The separate `BridgeFilter` targets them directly, by detecting dips in elevatio
 that sit below the surrounding road surface on both sides and linearly interpolating the road's elevation across the
 span, effectively "building" a bridge to span the river, valley, etc. where necessary. It is worth adding
 ahead of `Wood2014Filter` for spans longer than the routine's `max_discard_len_ft` will accept.
+
+Tune `baseline_radius_ft` when you do. A real valley is also a dip below the road on both sides, so
+geometry alone cannot tell the two apart — the baseline radius is what draws the line, and its
+one-mile default is only right for gentle terrain.
+
+Two examples cover this end to end:
+
+- `examples/bridge_artifact.py` isolates a single creek crossing from `sample_trip_1`, confirms it
+  is a bare-earth notch rather than a GPS error, and shows the default `Wood2014Filter` fixing it
+  while stock `BridgeFilter` silently flattens a mile of genuine 172 ft valley around it. Needs
+  local USGS tiles.
+- `examples/bridge_filter_long_spans.py` uses `SF_bridge_trip_segment.csv`, which crosses two real
+  artifacts on opposite sides of the default's competence: an ~800 ft crossing the default removes
+  by itself, and the 5,332 ft Carquinez Strait crossing on I-80, where the bare-earth DEM returns
+  the water surface 166 ft below the deck and the raw grade hits +89%. The default cannot touch the
+  long one at any `savgol_window_ft`; `BridgeFilter` clears it once `baseline_radius_ft` covers the
+  span. Needs the `n38w123` and `n39w123` tiles (~705 MB).

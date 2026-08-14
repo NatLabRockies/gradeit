@@ -196,10 +196,14 @@ def _select_layers(grade: GradeChoice, result: GradeResult) -> List[Tuple[str, n
         return [("Filtered grade", result.grade_dec_filtered)]
     if grade == "both":
         assert result.grade_dec_filtered is not None
-        # Put filtered first so it shows on top of the raw layer by default.
+        # Order here is *draw* order: Leaflet renders later-added layers on top,
+        # and both layers start visible. The two traces share identical
+        # coordinates, so whichever is added last is the only one you actually
+        # see until you toggle it off -- put filtered last so the default view
+        # is the corrected profile, not the artifacts it just removed.
         return [
-            ("Filtered grade", result.grade_dec_filtered),
             ("Raw grade", result.grade_dec),
+            ("Filtered grade", result.grade_dec_filtered),
         ]
     raise InvalidInputError(
         f"plot_grade_map(grade={grade!r}) is not one of 'auto', 'raw', 'filtered', 'both'."
