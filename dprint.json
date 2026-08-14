@@ -9,7 +9,8 @@
     "**/.venv",
     "**/build",
     "**/dist",
-    "**/*.egg-info"
+    "**/*.egg-info",
+    "**/docs/_build"
   ],
   "plugins": [
     "https://plugins.dprint.dev/markdown-0.22.1.wasm"

@@ -1,8 +1,13 @@
 *.tif
 # but keep the tiny synthetic test fixture (see scripts/make_test_fixture.py)
 !tests/fixtures/**/*.tif
+# ...and the cropped tiles the docs examples run against (see scripts/make_docs_data.py)
+!docs/data/**/*.tif
 
 *.local*
+
+# notebooks generated from docs/examples/*.py at build time
+docs/examples/*.ipynb
 
 # pixi
 .pixi/

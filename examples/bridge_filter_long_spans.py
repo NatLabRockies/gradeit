@@ -1,9 +1,9 @@
 # %%
 """When `BridgeFilter` earns its place, on real data.
 
-`examples/bridge_artifact.py` shows the default `Wood2014Filter` cleanly removing
-a creek-crossing artifact near Golden, CO with no configuration -- and stock
-`BridgeFilter` making that same trace much worse. That invites an obvious
+`docs/examples/02_filtering_example.py` shows the default `Wood2014Filter` cleanly
+removing a creek-crossing artifact near Golden, CO with no configuration -- and
+stock `BridgeFilter` making that same trace much worse. That invites an obvious
 question: is `BridgeFilter` worth keeping at all?
 
 It is, and this trace shows why. `SF_bridge_trip_segment.csv` runs 65 miles up
@@ -51,7 +51,7 @@ BRIDGES: Dict[str, Tuple[int, int]] = {
 }
 
 # %%
-db_path = Path(os.environ.get("GRADEIT_TILES", REPO_ROOT / "dev-data.local/sf-usgs-tiles"))
+db_path = Path(os.environ.get("GRADEIT_TILES", REPO_ROOT / "sf_tiles"))
 if not db_path.is_dir():
     raise SystemExit(
         f"No USGS tiles at {db_path}.\n"
@@ -212,7 +212,7 @@ for label, elev, grade in (
 # --- 6. Why the same filter wrecked the Denver trace ------------------------
 print(
     """
-Note what changed between this trace and examples/bridge_artifact.py: nothing
+Note what changed between this trace and docs/examples/02_filtering_example.py: nothing
 about the filter. The stock one-mile baseline_radius_ft works here and fails
 badly there, because the radius has to satisfy two conflicting constraints at
 once --

@@ -67,8 +67,8 @@ class BridgeFilter(ElevationFilter):
 
         Scale it to the spans you are correcting -- a few hundred feet for
         typical overpasses and creek crossings -- not to the default.
-        ``examples/bridge_artifact.py`` walks through a trace where the
-        one-mile default flattens a mile of real 172 ft valley.
+        ``docs/examples/02_filtering_example.py`` walks through a trace where
+        the one-mile default flattens 1.5 miles of real valley by up to 130 ft.
     min_dip_depth_ft:
         Per-point threshold for inclusion in a candidate dip run. Points where
         ``baseline - elevation`` is at most this value are not dip candidates.

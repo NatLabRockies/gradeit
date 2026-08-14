@@ -449,7 +449,7 @@ class Wood2014Filter(ElevationFilter):
 
 
 # Kept for callers that want to know what a given trace resolves to without
-# running the filter (used in tests and in scripts/reproduce_figure4.py).
+# running the filter (used in tests and in docs/examples/02_filtering_example.py).
 def resolve_parameters(
     f: Wood2014Filter, total_ft: float, n_nodes: Optional[int] = None
 ) -> Tuple[float, int, int, int]:

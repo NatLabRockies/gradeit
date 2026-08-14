@@ -34,7 +34,17 @@ requires-python = ">=3.10"
 [project.optional-dependencies]
 pandas = ["pandas"]
 plot = ["folium"]
-dev = ["ruff>=0.14,<1", "mypy>=1,<2", "pytest>=8", "scipy", "types-requests", "pre-commit", "ipykernel", "matplotlib", "folium"]
+dev = ["ruff>=0.14,<1", "mypy>=1,<2", "pytest>=8", "scipy", "types-requests", "pre-commit", "ipykernel", "matplotlib", "folium", "pandas"]
+# Everything needed to build the documentation site, including what the
+# executable examples under docs/examples/ import.
+docs = [
+    "jupyter-book>=1.0,<2.0",
+    "sphinx-book-theme>=1.0.0,<2.0",
+    "nbformat",
+    "matplotlib",
+    "pandas",
+    "folium",
+]
 
 [project.urls]
 Homepage = "https://github.com/NatLabRockies/gradeit"
@@ -72,6 +82,7 @@ gradeit = { path = ".", editable = true }
 [tool.pixi.environments]
 default = { solve-group = "default" }
 dev = { features = ["dev", "pandas", "plot"], solve-group = "default" }
+docs = { features = ["docs", "dev", "pandas", "plot"], solve-group = "default" }
 
 [tool.pixi.feature.dev.dependencies]
 dprint = "*"
@@ -83,3 +94,8 @@ fmt_md = "dprint fmt"
 typing = "mypy ."
 test = "pytest tests/"
 check = { depends-on = ["fmt_fix", "lint_fix", "fmt_md", "typing", "test"] }
+
+[tool.pixi.feature.docs.tasks]
+docs_convert = "python docs/examples/_convert_examples_to_notebooks.py"
+docs_build = { cmd = "jupyter-book build docs/", depends-on = ["docs_convert"] }
+docs_clean = "jupyter-book clean docs/"

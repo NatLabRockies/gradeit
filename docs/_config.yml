@@ -1,0 +1,68 @@
+# Book settings
+# Learn more at https://jupyterbook.org/customize/config.html
+
+title: GradeIT
+author: National Laboratory of the Rockies
+
+# Force re-execution of notebooks on each build, so every number and figure on
+# the site comes from actually running the code. The examples read the small
+# committed DEM crops in docs/data/, so this needs no network and takes seconds.
+# See https://jupyterbook.org/content/execute.html
+execute:
+  execute_notebooks: force
+  timeout: 300
+
+# Don't try to build stray markdown files that aren't in _toc.yml.
+only_build_toc_files: true
+
+exclude_patterns:
+  - _build
+  - .DS_Store
+  - "**.ipynb_checkpoints"
+  # docs/data/README.md documents the committed sample data; it is not a page.
+  - "data/**"
+  - "examples/_*.py"
+
+# Define the name of the latex output file for PDF builds
+latex:
+  latex_documents:
+    targetname: gradeit.tex
+
+# Information about where the book exists on the web
+repository:
+  url: https://github.com/NREL/gradeit
+  path_to_book: docs
+  branch: main
+
+# Add GitHub buttons to your book
+# See https://jupyterbook.org/customize/config.html#add-a-link-to-your-repository
+html:
+  use_issues_button: true
+  use_repository_button: true
+
+sphinx:
+  extra_extensions:
+    - "sphinx.ext.autodoc"
+    - "sphinx.ext.napoleon"
+    - "sphinx.ext.viewcode"
+  config:
+    html_theme: sphinx_book_theme
+    language: "python"
+    # Autodoc config reference:
+    # https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html#configuration
+    # private-members stays off: gradeit has a lot of leading-underscore helpers
+    # that are implementation detail, not API.
+    autodoc_default_options:
+      members: true
+      member-order: bysource
+      private-members: false
+      show-inheritance: true
+    autodoc_typehints: description
+    add_module_names: false
+    napoleon_use_param: true
+    # A notebook that fails should fail the build, not publish a page with a
+    # traceback embedded in it.
+    nb_execution_raise_on_error: true
+    suppress_warnings: ["mystnb.unknown_mime_type"]
+  html_context:
+    default_mode: light
