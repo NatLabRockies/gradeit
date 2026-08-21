@@ -1,17 +1,10 @@
 """
 # Bare-Earth Bridges
 
-The USGS Digital Elevation Model is a **bare-earth** model: it describes the
-ground, not the road. Where a road crosses a valley or a body of water on a
-bridge, the DEM returns whatever is underneath — the streambed, the water
-surface — and differentiating that produces grade spikes no vehicle ever drove.
+While the default filter can capture typical road bridges it struggles with unusually long spans.
+To highlight this, let's look an an example of the bridge on I-80 over the Carquinez Strait.
 
-This page uses 420 points of I-80 running north up the east side of San
-Francisco Bay. The segment crosses **two** bare-earth artifacts that sit on
-opposite sides of the default filter's competence, which makes it a good place
-to see exactly where one tool ends and another begins.
-
-Everything runs offline against the committed DEM crop in `docs/data/`.
+This example runs offline against the committed DEM crop in `docs/data/`.
 """
 
 
@@ -25,124 +18,295 @@ def main():
     trace = load_coords("carquinez")
     elevation_model = USGSLocal(TILE_DIR)
 
-    # The two artifacts, as (first, last) index of the bad run.
-    ARTIFACTS = {
-        "short crossing": (33, 39),
-        "Carquinez Strait": (232, 296),
-    }
+    # The artifact, as the (first, last) index of the bad run.
+    FIRST, LAST = 232, 296
+
+    # One palette for every figure on this page: raw DEM is the neutral
+    # reference, the two filter configurations carry the identity colors, and
+    # red is reserved for the artifact itself.
+    RAW = "#6b6b6b"
+    DEFAULT = "#1f77b4"
+    COMBINED = "#e06c00"
+    ARTIFACT = "#b3282d"
+    DECK = "#3d3d3d"
+
+    # Value labels sit on a scrap of the surface so a line never runs through them.
+    LABEL_BOX = dict(facecolor="white", edgecolor="none", alpha=0.85, pad=1.0)
 
     """
-    ## Characterizing the artifacts
+    ## Characterizing the artifact
 
-    First, the raw profile with no filter, so we can measure what is actually
-    wrong. For each artifact we compare the DEM floor against the road deck
-    implied by the clean points on either side.
+    First, look at the raw profile with no filter, so you can measure what
+    is actually wrong. Compare the DEM floor against the road deck implied
+    by the clean points on either side of the crossing.
     """
 
     raw = gradeit(trace, elevation_model=elevation_model, elevation_filter=None)
+    miles = np.cumsum(raw.distances_ft) / 5280
+    cumulative_ft = np.cumsum(raw.distances_ft)
 
-    def deck_ft(first, last):
-        """Elevation the road deck should have, from the clean neighbors."""
-        return (raw.elevation_ft[first - 1] + raw.elevation_ft[last + 1]) / 2
+    # The elevation the road deck should have, from the clean neighbor points.
+    deck_ft = (raw.elevation_ft[FIRST - 1] + raw.elevation_ft[LAST + 1]) / 2
+    span_ft = raw.distances_ft[FIRST : LAST + 2].sum()
 
-    print(f"{'artifact':18}{'span_ft':>9}{'deck_ft':>9}{'DEM floor':>11}{'depth_ft':>10}")
-    for label, (first, last) in ARTIFACTS.items():
-        span = raw.distances_ft[first : last + 2].sum()
-        deck = deck_ft(first, last)
-        floor = raw.elevation_ft[first : last + 1].min()
-        print(f"{label:18}{span:9,.0f}{deck:9.1f}{floor:11.1f}{deck - floor:10.1f}")
+    # Index slice around the crossing, padded by its own span on each side.
+    LO = int(np.searchsorted(cumulative_ft, cumulative_ft[FIRST] - span_ft))
+    HI = min(int(np.searchsorted(cumulative_ft, cumulative_ft[LAST] + span_ft)) + 1, len(trace))
+    x = miles[LO:HI]
 
-    print(f"\nraw max |grade| over the segment: {100 * np.abs(raw.grade_dec).max():.1f}%")
+    def elevation_of(result):
+        """The profile a result should be judged on: filtered if there is one, else raw."""
+        return (
+            result.elevation_ft
+            if result.elevation_ft_filtered is None
+            else (result.elevation_ft_filtered)
+        )
+
+    def residual_ft(result):
+        """The distance the profile still sits below the implied deck."""
+        return abs(elevation_of(result)[FIRST : LAST + 1].min() - deck_ft)
+
+    fig, (ax_elev, ax_grade) = plt.subplots(2, 1, figsize=(9, 6.5), sharex=True)
+
+    floor_i = FIRST + int(np.argmin(raw.elevation_ft[FIRST : LAST + 1]))
+    floor = raw.elevation_ft[floor_i]
+
+    ax_elev.plot(x, raw.elevation_ft[LO:HI], color=RAW, lw=1.6)
+    ax_elev.axvspan(miles[FIRST], miles[LAST], color=ARTIFACT, alpha=0.10, lw=0)
+    ax_elev.hlines(deck_ft, x[0], x[-1], color=DECK, lw=1.2, ls="--")
+    ax_elev.text(
+        x[0], deck_ft, f" implied deck {deck_ft:.1f} ft", va="bottom", fontsize=8, color=DECK
+    )
+    ax_elev.annotate(
+        "",
+        xy=(miles[floor_i], floor),
+        xytext=(miles[floor_i], deck_ft),
+        arrowprops=dict(arrowstyle="<->", color=ARTIFACT, lw=1.4),
+    )
+    ax_elev.text(
+        miles[floor_i],
+        (deck_ft + floor) / 2,
+        f"  {deck_ft - floor:.1f} ft deep",
+        va="center",
+        fontsize=9,
+        color=ARTIFACT,
+    )
+    ax_elev.plot(miles[floor_i], floor, "o", ms=5, color=RAW)
+    ax_elev.annotate(
+        f"DEM floor {floor:.1f} ft",
+        (miles[floor_i], floor),
+        textcoords="offset points",
+        xytext=(0, -10),
+        ha="center",
+        va="top",
+        fontsize=8,
+        color=RAW,
+    )
+    ax_elev.set_ylabel("elevation (ft)")
+    ax_elev.set_title(f"Raw DEM across the Carquinez Strait — {span_ft:,.0f} ft span", fontsize=11)
+    ax_elev.margins(y=0.28)
+
+    grade_pct = 100 * raw.grade_dec[LO:HI]
+    peak = int(np.argmax(np.abs(grade_pct)))
+    ax_grade.plot(x, grade_pct, color=RAW, lw=1.6)
+    ax_grade.axvspan(miles[FIRST], miles[LAST], color=ARTIFACT, alpha=0.10, lw=0)
+    ax_grade.axhline(0, color="k", lw=0.5)
+    ax_grade.plot(x[peak], grade_pct[peak], "o", ms=5, color=ARTIFACT)
+    ax_grade.annotate(
+        f" {abs(grade_pct[peak]):.1f}%",
+        (x[peak], grade_pct[peak]),
+        fontsize=9,
+        color=ARTIFACT,
+        va="center",
+    )
+    ax_grade.set_ylabel("grade (%)")
+    ax_grade.set_xlabel("distance (miles)")
+    ax_grade.margins(y=0.25)
+
+    fig.tight_layout()
+    plt.show()
 
     """
-    A 164 ft drop into open water, recovered over a few hundred feet of road, is
-    what produces that 89% grade. No vehicle climbed an 89% grade on I-80.
+    A 164 ft drop into open water, recovered over a few hundred feet of
+    road, produces this 89% grade.  
 
     ## What the default filter does
 
-    `Wood2014Filter` detects artifacts by **filtration residual**: it smooths the
-    profile and flags points that sit far from their own smoothed version.
+    `Wood2014Filter` detects artifacts by **filtration residual**. It
+    smooths the profile, then flags points that sit far from their own
+    smoothed value.
     """
 
     default = gradeit(trace, elevation_model=elevation_model)
 
-    def residual_ft(result, first, last):
-        """How far the filtered profile still sits below the implied deck."""
-        elevation = result.elevation_ft_filtered
-        if elevation is None:
-            elevation = result.elevation_ft
-        return abs(elevation[first : last + 1].min() - deck_ft(first, last))
+    fig, ax = plt.subplots(figsize=(9, 4))
+    after = residual_ft(default)
+    before = deck_ft - raw.elevation_ft[FIRST : LAST + 1].min()
 
-    print(f"{'artifact':18}{'raw err':>10}{'after default':>15}")
-    for label, (first, last) in ARTIFACTS.items():
-        before = deck_ft(first, last) - raw.elevation_ft[first : last + 1].min()
-        print(f"{label:18}{before:9.1f} {residual_ft(default, first, last):14.1f}")
+    ax.plot(x, raw.elevation_ft[LO:HI], color=RAW, lw=1.4, label="raw DEM")
+    ax.plot(
+        x,
+        default.elevation_ft_filtered[LO:HI],
+        color=DEFAULT,
+        lw=2.0,
+        label="default (Wood2014Filter)",
+    )
+    ax.axvspan(miles[FIRST], miles[LAST], color=ARTIFACT, alpha=0.10, lw=0)
+    ax.hlines(deck_ft, x[0], x[-1], color=DECK, lw=1.2, ls="--")
+    ax.text(x[0], deck_ft, " implied deck", va="bottom", fontsize=8, color=DECK)
+
+    low_i = FIRST + int(np.argmin(default.elevation_ft_filtered[FIRST : LAST + 1]))
+    ax.annotate(
+        "",
+        xy=(miles[low_i], default.elevation_ft_filtered[low_i]),
+        xytext=(miles[low_i], deck_ft),
+        arrowprops=dict(arrowstyle="<->", color=ARTIFACT, lw=1.4),
+    )
+    ax.annotate(
+        f"{after:.1f} ft left",
+        (miles[low_i], (deck_ft + default.elevation_ft_filtered[low_i]) / 2),
+        textcoords="offset points",
+        xytext=(9, 9),
+        fontsize=9,
+        color=ARTIFACT,
+    )
+    ax.set_ylabel("elevation (ft)")
+    ax.set_xlabel("distance (miles)")
+    ax.set_title(f"{before:.1f} ft error → {after:.1f} ft after the default filter", fontsize=11)
+    ax.legend(loc="lower left", fontsize=8)
+    ax.margins(y=0.25)
+    fig.tight_layout()
+    plt.show()
 
     """
-    The short crossing is gone. The Carquinez crossing is essentially untouched.
+    The default filter traces the artifact instead of removing it.
 
-    That is not a tuning failure, it is structural. A residual detector is blind
-    to any feature wider than its own smoothing kernel: the smoother simply
-    follows a wide feature down, and the residual collapses to nothing. The
-    strait is 5,332 ft across — far wider than any sensible kernel.
+    This is not a tuning failure. It is a structural limit. A residual
+    detector cannot see any feature wider than its own smoothing kernel. The
+    smoother simply follows a wide feature down, so the residual collapses to
+    nearly zero. The strait is 5,332 ft across — far wider than any practical
+    kernel size.
 
     ## Widening the window does not help
 
-    If the problem were tuning, a wider `savgol_window_ft` would fix it. Sweeping
-    it shows the opposite — the short crossing gets *worse* while the strait
-    stays broken.
+    If tuning were the problem, a wider `savgol_window_ft` value would fix
+    it. Sweep the value and plot the profile each one produces. The deck
+    never comes out of the water.
     """
 
-    print(f"{'savgol_window_ft':>17}{'short':>9}{'Carquinez':>12}{'min elev_ft':>13}")
-    for window_ft in (600, 1200, 2400, 4800, 9600):
-        swept = gradeit(
+    windows_ft = (600, 1200, 2400, 4800, 9600)
+    swept_windows = [
+        gradeit(
             trace,
             elevation_model=elevation_model,
             elevation_filter=Wood2014Filter(savgol_window_ft=window_ft),
         )
-        errors = [residual_ft(swept, *ARTIFACTS[k]) for k in ARTIFACTS]
-        print(
-            f"{window_ft:17,}{errors[0]:9.1f}{errors[1]:12.1f}"
-            f"{swept.elevation_ft_filtered.min():13.1f}"
+        for window_ft in windows_ft
+    ]
+
+    fig, axes = plt.subplots(1, len(windows_ft), figsize=(12, 3.8), sharex=True, sharey=True)
+
+    for ax, window_ft, swept in zip(axes, windows_ft, swept_windows):
+        filtered = swept.elevation_ft_filtered[LO:HI]
+        ax.plot(x, raw.elevation_ft[LO:HI], color=RAW, lw=1.0, label="raw DEM")
+        ax.plot(x, filtered, color=DEFAULT, lw=1.8, label="filtered")
+        ax.axvspan(miles[FIRST], miles[LAST], color=ARTIFACT, alpha=0.10, lw=0)
+        ax.hlines(deck_ft, x[0], x[-1], color=DECK, lw=1.0, ls="--")
+        ax.axhline(0, color=ARTIFACT, lw=0.9, ls=":")
+        ax.fill_between(x, filtered, 0, where=filtered < 0, color=ARTIFACT, alpha=0.35, lw=0)
+        ax.set_title(f"{window_ft:,} ft", fontsize=10)
+        ax.xaxis.set_major_locator(plt.MaxNLocator(3))
+        ax.tick_params(labelsize=8)
+        lowest = swept.elevation_ft_filtered.min()
+        ax.annotate(
+            f"lowest {lowest:.1f} ft",
+            (0.5, 0.02),
+            xycoords="axes fraction",
+            ha="center",
+            va="bottom",
+            fontsize=8,
+            color=ARTIFACT if lowest < 0 else DECK,
+            bbox=LABEL_BOX,
         )
 
+    axes[0].set_ylabel("elevation (ft)")
+    axes[0].legend(loc="upper left", fontsize=7)
+    axes[0].text(x[0], 0, " sea level", va="bottom", fontsize=7, color=ARTIFACT)
+    axes[len(axes) // 2].set_xlabel("distance (miles)")
+    fig.suptitle("Wood2014Filter profile at each savgol_window_ft", fontsize=12)
+    fig.tight_layout()
+    plt.show()
+
     """
-    Watch the last column. As the window widens the filter does not lift the deck
-    out of the water — it drags the surrounding road *down toward* it, until the
-    profile reports elevations below sea level. Smoothing harder is the wrong
-    tool for this artifact.
+    Watch the road on either side of the crossing. As the window widens, the
+    filter does not lift the deck out of the water. Stronger smoothing is the wrong tool for this
+    artifact.
 
     ## The filter that can reach it
 
     `BridgeFilter` compares each point against a two-sided **rolling-maximum
-    baseline** — an absolute comparison against surrounding high ground rather
-    than against a smoothed version of the signal. That reaches spans the
-    residual method structurally cannot, provided its `baseline_radius_ft`
-    window is wide enough to see real road beyond both ends of the span.
+    baseline**. This is an absolute comparison against the surrounding high
+    ground, not a comparison against a smoothed version of the signal. This
+    method reaches spans that the residual method structurally cannot reach.
+    The `baseline_radius_ft` window must be wide enough to see real road
+    beyond both ends of the span.
     """
 
-    print(f"{'baseline_radius_ft':>19}{'Carquinez err':>15}{'max |grade|':>13}")
-    for radius_ft in (2640, 4000, 5280, 6000, 9000):
-        swept = gradeit(
+    radii_ft = (2640, 4000, 5280, 6000, 9000)
+    swept_radii = [
+        gradeit(
             trace,
             elevation_model=elevation_model,
             elevation_filter=[BridgeFilter(baseline_radius_ft=radius_ft), Wood2014Filter()],
         )
-        print(
-            f"{radius_ft:19,}{residual_ft(swept, *ARTIFACTS['Carquinez Strait']):15.1f}"
-            f"{100 * np.abs(swept.grade_dec_filtered).max():12.1f}%"
+        for radius_ft in radii_ft
+    ]
+
+    fig, axes = plt.subplots(1, len(radii_ft), figsize=(12, 3.8), sharex=True, sharey=True)
+
+    for ax, radius_ft, swept in zip(axes, radii_ft, swept_radii):
+        ax.plot(x, raw.elevation_ft[LO:HI], color=RAW, lw=1.0, label="raw DEM")
+        ax.plot(x, swept.elevation_ft_filtered[LO:HI], color=COMBINED, lw=1.8, label="filtered")
+        ax.axvspan(miles[FIRST], miles[LAST], color=ARTIFACT, alpha=0.10, lw=0)
+        ax.hlines(deck_ft, x[0], x[-1], color=DECK, lw=1.0, ls="--")
+        reaches = radius_ft > span_ft
+        ax.set_title(
+            f"{radius_ft:,} ft" + ("  ✓" if reaches else ""),
+            fontsize=10,
+            color=DECK if reaches else RAW,
+        )
+        ax.xaxis.set_major_locator(plt.MaxNLocator(3))
+        ax.tick_params(labelsize=8)
+        ax.annotate(
+            f"{residual_ft(swept):.1f} ft below deck",
+            (0.5, 0.02),
+            xycoords="axes fraction",
+            ha="center",
+            va="bottom",
+            fontsize=8,
+            color=DECK,
+            bbox=LABEL_BOX,
         )
 
+    axes[0].set_ylabel("elevation (ft)")
+    axes[0].legend(loc="upper right", fontsize=7)
+    axes[len(axes) // 2].set_xlabel("distance (miles)")
+    fig.suptitle(
+        f"BridgeFilter profile at each baseline_radius_ft (span is {span_ft:,.0f} ft)", fontsize=12
+    )
+    fig.tight_layout()
+    plt.show()
+
     """
-    There is a clean threshold: once the radius clears the 5,332 ft span, the
-    correction lands. Below it, the baseline window never escapes the artifact
-    and the filter correctly declines to act.
+    There is a clean threshold. Once the radius clears the 5,332 ft span,
+    the correction succeeds. Below this threshold, the baseline window never
+    escapes the artifact, and the filter correctly declines to act.
 
     ## The recommended pipeline
 
-    Filters compose. Pass a sequence and each consumes the previous one's output.
-    `BridgeFilter` goes **first** — it keys on raw dip magnitude, which any
-    smoother attenuates.
+    Filters compose. Pass a sequence of filters, and each filter consumes the
+    previous filter's output. Put `BridgeFilter` **first**. It keys on the
+    raw dip magnitude, and any smoother attenuates this value.
     """
 
     combined = gradeit(
@@ -151,40 +315,79 @@ def main():
         elevation_filter=[BridgeFilter(baseline_radius_ft=6000.0), Wood2014Filter()],
     )
 
-    print(f"{'artifact':18}{'raw':>9}{'default':>10}{'combined':>10}")
-    for label, (first, last) in ARTIFACTS.items():
-        before = deck_ft(first, last) - raw.elevation_ft[first : last + 1].min()
-        print(
-            f"{label:18}{before:9.1f}{residual_ft(default, first, last):10.1f}"
-            f"{residual_ft(combined, first, last):10.1f}"
-        )
-    print(
-        f"\nmax |grade|  raw {100 * np.abs(raw.grade_dec).max():5.1f}%"
-        f"   default {100 * np.abs(default.grade_dec_filtered).max():5.1f}%"
-        f"   combined {100 * np.abs(combined.grade_dec_filtered).max():5.1f}%"
+    configs = (
+        ("raw", RAW, raw),
+        ("default", DEFAULT, default),
+        ("BridgeFilter + default", COMBINED, combined),
     )
+    errors = [deck_ft - elevation_of(result)[FIRST : LAST + 1].min() for _, _, result in configs]
+    max_grades = [
+        100
+        * np.abs(
+            result.grade_dec if result.grade_dec_filtered is None else result.grade_dec_filtered
+        ).max()
+        for _, _, result in configs
+    ]
+
+    fig, (ax_err, ax_grade) = plt.subplots(1, 2, figsize=(10, 4))
+    labels = [label for label, _, _ in configs]
+    colors = [color for _, color, _ in configs]
+
+    for ax, values, ylabel, title, fmt in (
+        (
+            ax_err,
+            errors,
+            "elevation error at the deck (ft)",
+            "How far the deck still sits below the road",
+            "%.1f",
+        ),
+        (
+            ax_grade,
+            max_grades,
+            "max |grade| over the segment (%)",
+            "The grade spike the artifact produces",
+            "%.1f%%",
+        ),
+    ):
+        bars = ax.bar(labels, values, 0.55, color=colors, edgecolor="white", lw=0.8)
+        ax.bar_label(bars, fmt=fmt, fontsize=9, padding=2, color=DECK)
+        ax.set_ylabel(ylabel)
+        ax.set_title(title, fontsize=10)
+        ax.tick_params(axis="x", labelsize=9)
+        ax.margins(y=0.18)
+        ax.grid(axis="y", alpha=0.25, lw=0.5)
+
+    fig.tight_layout()
+    plt.show()
 
     """
     ## Seeing it
 
-    Both artifacts, three profiles. The strait is the wide one on the right.
+    This plot shows the whole segment across three profiles. The crossing is
+    the shaded span on the right.
     """
 
     fig, (ax_elev, ax_grade) = plt.subplots(2, 1, figsize=(10, 7), sharex=True)
-    miles = np.cumsum(raw.distances_ft) / 5280
 
     for ax, key, ylabel in (
         (ax_elev, "elev", "elevation (ft)"),
         (ax_grade, "grade", "grade (%)"),
     ):
         series = (
-            ("raw DEM", raw.elevation_ft, raw.grade_dec, "0.45", 1.0, "-"),
-            ("default", default.elevation_ft_filtered, default.grade_dec_filtered, "C0", 1.5, "-"),
+            ("raw DEM", raw.elevation_ft, raw.grade_dec, RAW, 1.0, "-"),
+            (
+                "default",
+                default.elevation_ft_filtered,
+                default.grade_dec_filtered,
+                DEFAULT,
+                1.5,
+                "-",
+            ),
             (
                 "BridgeFilter + default",
                 combined.elevation_ft_filtered,
                 combined.grade_dec_filtered,
-                "C1",
+                COMBINED,
                 1.5,
                 "-",
             ),
@@ -194,28 +397,27 @@ def main():
             ax.plot(miles, y, label=label, color=color, lw=lw, ls=ls)
         ax.set_ylabel(ylabel)
         ax.legend(loc="upper left", fontsize=9)
-
-    for first, last in ARTIFACTS.values():
-        for ax in (ax_elev, ax_grade):
-            ax.axvspan(miles[first], miles[last], color="C3", alpha=0.12, lw=0)
+        ax.axvspan(miles[FIRST], miles[LAST], color=ARTIFACT, alpha=0.10, lw=0)
 
     ax_grade.axhline(0, color="k", lw=0.5)
     ax_grade.set_xlabel("distance (miles)")
-    ax_elev.set_title("I-80 north across the Carquinez Strait (artifacts shaded)")
+    ax_elev.set_title("I-80 north across the Carquinez Strait (crossing shaded)")
     fig.tight_layout()
     plt.show()
 
     """
     ## When not to reach for `BridgeFilter`
 
-    A real valley is also "a span that sits below the road on both sides", and
-    nothing in the geometry distinguishes it from a bridge. `baseline_radius_ft`
-    is what draws the line, and its one-mile default is only right for gentle
-    terrain — [How Filtration Works](02_filtering_example) shows that same
-    default erasing 1.5 miles of genuine canyon on the Colorado trace.
+    A real valley also matches the description "a span that sits below the
+    road on both sides." Nothing in the geometry tells the two cases apart.
+    `baseline_radius_ft` draws the line between them. Its one-mile default
+    value is correct only for gentle terrain.
+    [How Filtration Works](02_filtering_example) shows this same default
+    value erasing 1.5 miles of genuine canyon on the Colorado trace.
 
-    The rule that follows: set the radius to the spans you are correcting, and
-    always diff filtered against raw across the whole trace before trusting it.
+    The rule that follows: set the radius to match the spans you want to
+    correct. Always compare filtered output against raw output, across the
+    whole trace, before you trust a filter.
     """
 
 

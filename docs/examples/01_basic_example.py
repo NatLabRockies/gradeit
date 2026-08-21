@@ -1,16 +1,18 @@
 """
 # Your First Grade Profile
 
-This example takes a real GPS trace and appends elevation and road grade to it.
+This example uses a real GPS trace. It adds elevation and road grade data to
+the trace.
 
-The trace is 250 points along US-6 west of Golden, Colorado — about 7.7 miles of
-canyon road, sampled roughly once a second. The elevation comes from the USGS
-1/3 arc-second Digital Elevation Model.
+The trace has 250 points along US-6, west of Golden, Colorado. This is about
+7.7 miles of road through varying terrain. The GPS logged a point about once a second. The
+elevation data comes from the USGS 1/3 arc-second Digital Elevation Model.
 
-Everything here runs offline. The DEM tile is a small crop committed under
-`docs/data/`, cut down from the 411 MB original so the documentation can build on
-CI without downloading anything. See [Elevation Data](../elevation_data) for how
-to point gradeit at the real full-size tiles.
+This example runs offline. The DEM tile is a small crop file, stored under
+`docs/data/`. The original file is 411 MB. The crop file is much smaller, so
+CI can build the documentation without a download. See
+[Elevation Data](../elevation_data) for steps to use the real, full-size
+tiles.
 """
 
 
@@ -25,10 +27,11 @@ def main():
     """
     ## Loading a trace
 
-    `gradeit()` is flexible about input. It accepts a pandas `DataFrame`, a numpy
-    `(n, 2)` array, a dict of `{"latitude": [...], "longitude": [...]}`, or any
-    iterable of `(latitude, longitude)` pairs. Here we use the last form, so
-    nothing depends on pandas yet.
+    `gradeit()` accepts many input types. It accepts a pandas `DataFrame`. It
+    accepts a numpy `(n, 2)` array. It accepts a dict in the form
+    `{"latitude": [...], "longitude": [...]}`. It also accepts any iterable of
+    `(latitude, longitude)` pairs. This example uses the last form, so it does
+    not need pandas yet.
     """
 
     trace = load_coords("golden_creek")
@@ -40,15 +43,18 @@ def main():
     """
     ## Choosing an elevation model
 
-    Elevation comes from an `ElevationModel`. There are two built in:
+    Elevation data comes from an `ElevationModel`. gradeit provides two
+    built-in models:
 
-    - `USGSApi()` — the online USGS Elevation Point Query Service. No setup, but
-      it issues one HTTP request *per point*, so it suits spot checks rather than
-      whole traces. This is the default if you pass nothing.
-    - `USGSLocal(path)` — reads locally downloaded raster tiles. Much faster for
-      a whole trace, at the cost of having the tiles on disk.
+    - `USGSApi()` — the online USGS Elevation Point Query Service. It needs no
+      setup, but it sends one HTTP request *per point*. Use it for spot
+      checks, not for whole traces. This is the default model if you pass
+      none.
+    - `USGSLocal(path)` — reads raster tiles stored on your local disk. It is
+      much faster for a whole trace. You must first download the tiles to
+      disk.
 
-    We use `USGSLocal` pointed at the committed crop.
+    This example uses `USGSLocal` and points it to the committed crop file.
     """
 
     elevation_model = USGSLocal(TILE_DIR)
@@ -56,22 +62,22 @@ def main():
     """
     ## Appending grade
 
-    That is the whole call. With no `elevation_filter` argument, `gradeit()`
-    applies `Wood2014Filter` — the filtration routine from Wood et al. (2014) —
-    which is what you want almost always.
+    This call does the whole job. If you omit the `elevation_filter`
+    argument, `gradeit()` applies `Wood2014Filter`. This is the filtration
+    routine from Wood et al. (2014). Use this default filter in almost all
+    cases.
     """
 
     result = gradeit(trace, elevation_model=elevation_model)
 
     """
-    The return value is a `GradeResult`: a frozen container of numpy arrays. Your
-    input is never modified.
+    `gradeit()` returns a `GradeResult`, a frozen container of numpy arrays.
+    `gradeit()` never modifies your input data.
 
-    Note that both the raw and the filtered profiles are kept. `elevation_ft` and
-    `grade_dec` are the untouched DEM lookup; `elevation_ft_filtered` and
-    `grade_dec_filtered` are the cleaned versions. **Use the filtered ones** —
-    the raw DEM profile contains bridge artifacts and sampling noise that produce
-    grade spikes no vehicle ever drove.
+    `GradeResult` keeps both the raw and the filtered profiles. `elevation_ft`
+    and `grade_dec` hold the raw, unmodified DEM lookup. `elevation_ft_filtered`
+    and `grade_dec_filtered` hold the cleaned values. **Use the filtered
+    values.** The raw DEM profile has bridge artifacts and sampling noise.
     """
 
     print(f"elevation_ft           {result.elevation_ft[:4].round(1)} ...")
@@ -81,10 +87,10 @@ def main():
     print(f"distances_ft           {result.distances_ft[:4].round(1)} ...")
 
     """
-    Grade is a decimal rise-over-run, so multiply by 100 for percent. Distances
-    are in feet, and `distances_ft` carries a leading `0.0` so it lines up
-    point-for-point with the other arrays — the per-segment distances are
-    `distances_ft[1:]`.
+    Grade is a decimal rise-over-run value. Multiply it by 100 to get a
+    percent value. Distances are in feet. `distances_ft` starts with a
+    leading `0.0` value, so each entry lines up with the same index in the
+    other arrays. The per-segment distances are `distances_ft[1:]`.
     """
 
     total_mi = result.distances_ft.sum() / 5280
@@ -96,13 +102,14 @@ def main():
     """
     ## Looking at it as a table
 
-    `to_dataframe()` materializes the result for inspection or export. It needs
-    pandas (`pip install gradeit[pandas]`); `to_dict()` gives you the same
-    columns without it.
+    `to_dataframe()` builds a table from the result, for inspection or
+    export. This method needs pandas (`pip install gradeit[pandas]`). Use
+    `to_dict()` instead if you do not have pandas; it gives you the same
+    columns.
 
-    One naming quirk worth knowing: the raw grade column is called
-    `grade_dec_unfiltered` in the tabular output, even though the attribute on
-    `GradeResult` is `grade_dec`.
+    Note one naming difference: the tabular output names the raw grade column
+    `grade_dec_unfiltered`. The `GradeResult` attribute for the same data is
+    named `grade_dec`.
     """
 
     df = result.to_dataframe()
@@ -111,10 +118,11 @@ def main():
     """
     ## Plotting the profile
 
-    Plotting raw against filtered shows what the filter actually did. The two
-    elevation curves sit almost on top of each other — filtration is meant to
-    remove artifacts, not to reshape terrain — but the grade panel tells a
-    different story, because differentiating a noisy signal amplifies the noise.
+    A plot of the raw profile against the filtered profile shows what the
+    filter did. The two elevation curves sit almost on top of each other.
+    This is expected: filtration removes artifacts, but it does not reshape
+    the terrain. The grade panel tells a different story, because
+    differentiation of a noisy signal amplifies the noise.
     """
 
     fig, (ax_elev, ax_grade) = plt.subplots(2, 1, figsize=(10, 7), sharex=True)
@@ -137,9 +145,11 @@ def main():
     plt.show()
 
     """
-    The spike near mile 3.5 in the raw grade is not a hill. It is a creek
-    crossing where the bare-earth DEM reports the streambed instead of the road
-    deck. [How Filtration Works](02_filtering_example) takes that artifact apart.
+    The spike near mile 4.5 in the raw grade is not a hill. It marks a creek
+    crossing. At this point, the bare-earth DEM reports the streambed
+    elevation instead of the road deck elevation.
+    [How Filtration Works](02_filtering_example) examines this artifact in
+    detail.
     """
 
     print(f"\nraw      max |grade|  {100 * np.abs(result.grade_dec).max():6.2f}%")

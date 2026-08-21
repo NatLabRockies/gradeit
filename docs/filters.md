@@ -1,9 +1,8 @@
 # Filters
 
-Raw DEM elevation profiles carry outliers and unrealistic topography — spatial noise in the GPS
-track, the 1/3 arc-second resolution of the model, and bare-earth artifacts where the road is on
-a structure. GradeIT cleans the profile with one or more `ElevationFilter`s before grade is
-computed.
+Raw DEM elevation profiles can have outliers and incorrect terrain. Causes include GPS position
+noise, DEM resolution, and bare-earth artifacts below road structures. GradeIT uses one or more
+`ElevationFilter` objects before it calculates grade.
 
 ```python
 from gradeit import BridgeFilter, Wood2014Filter, gradeit
@@ -18,16 +17,16 @@ gradeit(
 )
 ```
 
-Sequences apply in order, each filter consuming the previous one's output. Grade is always
-recomputed from the final elevation. All parameters are in **feet**.
+GradeIT applies filter sequences in order. Each filter uses the output from the last filter.
+GradeIT calculates grade from final elevation. All parameters use **feet**.
 
 ## `Wood2014Filter` — the default
 
-Implements steps B–E of [the Wood et al. routine](methodology): resample onto a uniform distance
-grid, smooth, discard and backfill anomalous nodes, smooth again, interpolate back.
+This filter does steps B–E of [the Wood et al. method](methodology). It resamples to a uniform
+distance grid, smooths, removes and fills unusual nodes, smooths again, and interpolates.
 
-This is what you get when you pass nothing, and for most traces it is all you need — including
-for ordinary bridges and overpasses, which it removes without any bridge-specific logic.
+This is the default filter. It is suitable for most traces. It also removes ordinary bridge and
+overpass artifacts without bridge-specific logic.
 
 | Parameter               | Default  | What it controls                                                                                                                   |
 | ----------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------- |
@@ -42,25 +41,23 @@ for ordinary bridges and overpasses, which it removes without any bridge-specifi
 | `max_gap_ft`            | `1000.0` | Unobserved stretches longer than this split the trace into independently filtered segments; points inside such a gap return `NaN`. |
 | `min_node_occupancy`    | `0.35`   | Guard on `interval_ft`: warn when fewer than this fraction of grid nodes contain a GPS point. Set to `0.0` to silence.             |
 
-It is a frozen dataclass, so every knob is a constructor argument and instances are safe to share.
+This frozen dataclass has a constructor argument for each parameter. You can share an instance.
 
 ### Tuning notes
 
-**`savgol_window_ft`** is the smoothness dial. Widening it lowers grade noise but attenuates
-genuine short features, and on a trace with a wide bare-earth artifact it will drag the road
-_toward_ the artifact rather than lifting it out.
+**`savgol_window_ft`** controls smoothness. A wider value reduces grade noise. It also reduces real
+short features. A wide bare-earth artifact can pull the smoothed road toward the artifact.
 
-**`residual_threshold_ft`** decides what counts as an artifact. Lower rejects more aggressively.
-Raising it past roughly twice the default stops catching real artifacts —
-[a worked sweep](examples/02_filtering_example) shows a creek crossing surviving filtration at
-16 ft.
+**`residual_threshold_ft`** defines an artifact. A lower value removes more data. A value about
+twice the default can miss real artifacts. [This example](examples/02_filtering_example) shows a
+creek crossing that remains at 16 ft.
 
-**`residual_grow_ratio`** exists because a wide artifact drags the smoothed curve down with it,
-shrinking the residual in the middle of the artifact. Without hysteresis a per-node test punches
-out the flanks and leaves the floor.
+**`residual_grow_ratio`** helps with wide artifacts. A wide artifact pulls the smoothed curve down.
+This reduces the residual in the center. Without hysteresis, a per-node test removes only the
+edges.
 
-`resolve_parameters()` reports what your feet resolve to in samples on a given trace, without
-running the filter:
+`resolve_parameters()` reports how feet values resolve to samples for a trace. It does not run the
+filter:
 
 ```python
 from gradeit.filters.wood2014 import resolve_parameters
@@ -70,16 +67,15 @@ delta_ft, window, polyorder, binomial_order = resolve_parameters(Wood2014Filter(
 
 ## `BridgeFilter` — targeted bare-earth correction
 
-Detects dips that sit below the surrounding road on **both** sides and interpolates the road's
-elevation across them, effectively building the bridge the DEM is missing.
+This filter finds dips below the nearby road on **both** sides. It interpolates road elevation
+across each dip. This replaces a bridge that the DEM does not show.
 
-The detector compares each point against a baseline built from the rolling **maximum** of
-elevation in a window on each side, taking the minimum of the two side-maxima. That construction
-makes the baseline collapse to the point's own elevation on a steady climb or descent, so uniform
-grade does not trigger false positives — only a genuine dip does.
+The filter compares each point with a baseline from a rolling **maximum** elevation on each side.
+It uses the lower side maximum. During a steady climb or descent, the baseline is the point
+elevation. Uniform grade does not create a false positive.
 
-Because it compares against surrounding high ground rather than against a smoothed version of the
-signal, it reaches spans that `Wood2014Filter`'s residual test structurally cannot.
+The filter uses nearby high ground, not a smoothed signal. Therefore, it can find spans that the
+`Wood2014Filter` residual test cannot find.
 
 | Parameter                | Default           | What it controls                                                                                                                  |
 | ------------------------ | ----------------- | --------------------------------------------------------------------------------------------------------------------------------- |
@@ -92,18 +88,16 @@ signal, it reaches spans that `Wood2014Filter`'s residual test structurally cann
 | `grade_plausibility_tol` | `0.05`            | Reject a correction whose recovered grade differs from the surrounding median segment grade by more than this.                    |
 
 ```{warning}
-**A real valley is also a span that sits below the road on both sides.** Nothing in the geometry
-distinguishes the two, and the acceptance gates above cannot save you — a deep valley genuinely
-is short relative to its depth.
+**A real valley can also sit below the road on both sides.** Geometry does not distinguish a valley
+from a bridge. The checks above cannot always separate them.
 
-`baseline_radius_ft` is what draws the line, and its one-mile default is only right for gentle
-terrain. Scale it to the spans you are actually correcting: a few hundred feet for typical
-overpasses and creek crossings, a few thousand for a major water crossing. Too wide, and a
-genuine descent into a valley and climb back out reads as one enormous dip that the filter will
-happily interpolate a straight line across.
+`baseline_radius_ft` defines the difference. The one-mile default is suitable only for gentle
+terrain. Use hundreds of feet for typical overpasses and creek crossings. Use thousands of feet
+for a major water crossing. A value that is too wide can interpolate a straight line across a real
+valley.
 ```
 
-Two worked examples cover both directions of that failure:
+These examples show both errors:
 
 - [How Filtration Works](examples/02_filtering_example) — the one-mile default flattening 1.5
   miles of real Colorado canyon by up to 130 ft, on a trace the default `Wood2014Filter` handles
@@ -112,8 +106,7 @@ Two worked examples cover both directions of that failure:
   that `Wood2014Filter` cannot touch at any setting, cleared once `baseline_radius_ft` covers the
   span.
 
-**Order matters.** If you use `BridgeFilter`, put it first in the sequence: it keys on raw dip
-magnitude, which any smoother attenuates.
+**Order matters.** Put `BridgeFilter` first. A smoother reduces raw dip magnitude.
 
 ## Writing your own
 
@@ -140,7 +133,6 @@ class ClampFilter(ElevationFilter):
         return [min(max(e, self.min_ft), self.max_ft) for e in elevation_profile]
 ```
 
-Take an elevation profile, return an elevation profile of the same length, in feet. Never return
-grade — GradeIT computes that once, from the final elevation. The coordinates are passed in so you
-can work in real distance along the ground rather than in point indices, which is almost always
-what you want.
+Take an elevation profile. Return an elevation profile of the same length in feet. Do not return
+grade. GradeIT calculates grade from final elevation. The filter receives coordinates so it can use
+real ground distance instead of point indexes.

@@ -2,21 +2,21 @@
 
 ## Environment
 
-The project uses [pixi](https://pixi.sh) for development environments and tasks. After
+The project uses [pixi](https://pixi.sh) for development environments and tasks. After you
 [installing pixi](https://pixi.sh/latest/#installation):
 
 ```bash
 pixi install -e dev
 ```
 
-Environments are declared in `pyproject.toml` under `[tool.pixi.environments]`:
+`pyproject.toml` defines environments under `[tool.pixi.environments]`:
 
 - **`dev`** — the toolchain plus the `pandas` and `plot` extras. Everything below runs here.
 - **`docs`** — `dev` plus Jupyter Book. See [Building the Docs](build_the_docs).
 
 ## The check task
 
-One command runs everything CI runs:
+This command runs all CI checks:
 
 ```bash
 pixi run -e dev check
@@ -32,9 +32,9 @@ That is format → lint → markdown → types → tests:
 | `typing`   | `mypy .`           | the package (`docs/` is excluded) |
 | `test`     | `pytest tests/`    | the test suite                    |
 
-Run pieces individually with `pixi run -e dev test`, `pixi run -e dev typing`, and so on.
+Run individual tasks with `pixi run -e dev test` or `pixi run -e dev typing`.
 
-A [pre-commit](https://pre-commit.com) hook runs `check` on every commit:
+A [pre-commit](https://pre-commit.com) hook runs `check` for each commit:
 
 ```bash
 pixi run -e dev pre-commit install
@@ -53,21 +53,20 @@ pixi run -e dev test
 pixi run -e dev python -m pytest tests/test_wood2014.py -v  # one file
 ```
 
-Tests use `unittest.TestCase` classes, run under pytest. They are fully offline: the one test
-that would hit the USGS API is skipped by default, and elevation tests read a 4 KB synthetic
-GeoTIFF fixture at `tests/fixtures/n40w105/`, regenerable with:
+Tests use `unittest.TestCase` classes and run with pytest. Tests are offline. The USGS API test is
+skipped by default. Elevation tests use a 4 KB synthetic GeoTIFF fixture at
+`tests/fixtures/n40w105/`. Regenerate it with:
 
 ```bash
 pixi run -e dev python scripts/make_test_fixture.py
 ```
 
-That fixture is a deterministic linear ramp, chosen so nearest-neighbor values are exactly known
-and bilinear interpolation of a linear field is analytically exact — which lets the sampling tests
-assert exact values rather than tolerances.
+The fixture is a deterministic linear ramp. Nearest-neighbor values are known exactly. Bilinear
+interpolation of this field is also exact. Sampling tests can use exact values.
 
 ## Conventions
 
-A few rules the codebase holds to; please keep them:
+Keep these codebase rules:
 
 - **Filter parameters are declared in physical units (feet), not sample counts.** A filter's
   behavior must not change with GPS sampling rate or vehicle speed. See
@@ -83,15 +82,14 @@ A few rules the codebase holds to; please keep them:
 
 ## Changing filtration
 
-The default filtration follows Wood et al. (2014), NREL/TP-5400-61109. If you change filtering or
-grade computation, check it against the paper — [Methodology](../methodology) maps its five steps
-onto the code.
+The default filter follows Wood et al. (2014), NREL/TP-5400-61109. If you change filtering or
+grade calculation, compare it with the paper. [Methodology](../methodology) maps the five steps to
+the code.
 
-The paper specifies no numeric parameter values, so the defaults are this package's own reasoned
-choices. If you change one, update the reasoning in the class docstring along with it; that
-docstring is rendered into the [API Reference](../api_docs).
+The paper has no numeric parameter values. Package defaults are package choices. If you change a
+default, update the class docstring. The [API Reference](../api_docs) shows this docstring.
 
 ## Documentation
 
-Prose and examples live in `docs/`. The examples are executed on every docs build, so a change
-that breaks one fails the build. See [Building the Docs](build_the_docs).
+Prose and examples are in `docs/`. The documentation build runs all examples. A broken example
+fails the build. See [Building the Docs](build_the_docs).

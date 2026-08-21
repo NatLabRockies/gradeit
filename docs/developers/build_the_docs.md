@@ -7,7 +7,7 @@ pixi install -e docs
 pixi run -e docs docs_build
 ```
 
-Then open `docs/_build/html/index.html`. Other tasks:
+Then open `docs/_build/html/index.html`. Other commands:
 
 ```bash
 pixi run -e docs docs_convert  # just regenerate the notebooks
@@ -30,12 +30,11 @@ produces a completely different and broken build.
 
 ## How examples become pages
 
-Examples are written as **plain Python scripts** in `docs/examples/`, not as notebooks. A
-converter turns each into an `.ipynb` at build time, and Jupyter Book executes it.
+Examples are **plain Python scripts** in `docs/examples/`, not notebooks. A converter creates an
+`.ipynb` file for each script during the build. Jupyter Book runs each notebook.
 
-That indirection buys two things: the examples are diffable and reviewable as ordinary Python, and
-the same file runs directly as a script — which CI does, so a broken example fails the test run
-rather than the docs deploy.
+This design has two benefits. You can review example changes as Python code. CI can run each file as
+a script. A broken example fails tests before documentation deployment.
 
 The convention, enforced by `docs/examples/_convert_examples_to_notebooks.py`:
 
@@ -67,17 +66,17 @@ if __name__ == "__main__":
 
 Rules:
 
-- The filename must end in **`_example.py`** — that is the converter's glob. Files starting with
+- The filename must end with **`_example.py`**. This is the converter glob. Files that start with
   `_` are helpers and are skipped.
-- All code lives inside `def main():`. The converter strips the `def` line, the
-  `if __name__ == "__main__":` guard, and the `main()` call, dedenting the body by four spaces.
-- **Never use `return` inside `main()`.** Once the wrapper is stripped, a bare `return` is a
-  syntax error at notebook top level.
-- Put imports **inside** `main()`. This keeps `ruff` happy (no `E402`) and keeps them in the first
-  code cell where a reader expects them.
+- Put all code inside `def main():`. The converter removes the `def` line, the
+  `if __name__ == "__main__":` guard, and the `main()` call. It removes four spaces from the body.
+- **Do not use `return` in `main()`.** After the converter removes the wrapper, a bare `return` is
+  a syntax error at notebook top level.
+- Put imports **inside** `main()`. This avoids `ruff` `E402` errors. Imports occur in the first
+  code cell.
 - To display a value, end a cell with the bare expression, as in a notebook.
 
-Generated `.ipynb` files are gitignored — the `.py` is the source of truth.
+Generated `.ipynb` files are gitignored. The `.py` file is the source.
 
 Add a new page by writing the file and adding it to `docs/_toc.yml` **without** the extension:
 
@@ -87,26 +86,23 @@ Add a new page by writing the file and adding it to `docs/_toc.yml` **without** 
 
 ## Notebooks are executed on every build
 
-`_config.yml` sets `execute_notebooks: force` and `nb_execution_raise_on_error: true`, so every
-number and figure on the site comes from actually running the code, and a failing example fails
-the build instead of publishing a page with a traceback in it.
+`_config.yml` sets `execute_notebooks: force` and `nb_execution_raise_on_error: true`. The build
+runs code for every number and figure. A failing example fails the build.
 
-This is only safe because the examples are offline and deterministic — they read the small
-committed DEM crops in `docs/data/`, never the network. **Do not call `USGSApi` from an example:**
-it issues one HTTP request per point, which would both make the build flaky and hammer a public
-service. Document it on a prose page instead.
+Examples are offline and deterministic. They read small DEM crops from `docs/data/`. They do not
+use the network. **Do not call `USGSApi` from an example.** It sends one request for each point.
+This would make the build unreliable and overload a public service. Document it in a prose page.
 
 ```{warning}
-**Do not set `MPLBACKEND=Agg` when building the docs.** The notebook kernel inherits it, which
-disables inline figure capture — the build still succeeds, but every matplotlib plot silently
-vanishes from the published pages. `Agg` belongs only in the CI job that runs the examples as
-plain scripts, where there is no kernel and nothing to capture.
+**Do not set `MPLBACKEND=Agg` when you build documentation.** The notebook kernel inherits this
+setting. It disables inline figure capture. The build succeeds, but published matplotlib plots do
+not appear. Use `Agg` only for CI that runs examples as scripts.
 ```
 
 ## The sample data
 
-The examples run against corridor crops of two real USGS tiles, committed under `docs/data/`
-(440 KB in place of 900 MB). Within those corridors the values are bit-for-bit the source data.
+Examples use corridor crops from two real USGS tiles in `docs/data/`. They need 440 KB instead of
+900 MB. Values in these corridors are identical to source data.
 See [`docs/data/README.md`](https://github.com/NREL/gradeit/blob/main/docs/data/README.md).
 
 Regenerating requires the full source tiles, which are not in the repository:
@@ -115,23 +111,22 @@ Regenerating requires the full source tiles, which are not in the repository:
 pixi run -e dev python scripts/make_docs_data.py --source-dir /path/to/tiles
 ```
 
-The script verifies each crop against the full tile before writing it, and refuses to write if
-they disagree. Trace slice bounds live in the `DEMOS` table at the top of the script — change one
-and you must regenerate, or the crop and the trace will no longer line up.
+The script checks each crop against the full tile before it writes data. It refuses to write if
+they differ. The `DEMOS` table at the top of the script has trace slice bounds. Regenerate data
+after you change a bound.
 
 ## The API reference
 
-`docs/api_docs.rst` is hand-written, with one `automodule` block per public module. Sphinx
-`autodoc` pulls the docstrings, so **docstrings in the package are published documentation** — a
-stale file path or a wrong default in a docstring is a stale or wrong docs page.
+`docs/api_docs.rst` is hand-written. It has one `automodule` block for each public module. Sphinx
+`autodoc` gets docstrings. **Package docstrings are published documentation.** Update incorrect
+paths and defaults in docstrings.
 
 Adding a new public module means adding a block to that file; it is not automatic.
 
 ## Deployment
 
-`.github/workflows/deploy-docs.yaml` builds the book on every pull request that touches `docs/`,
-`gradeit/`, or `pyproject.toml`, and publishes to the `gh-pages` branch on push to `main`. PRs
-build but do not deploy, so a broken notebook is caught before merge.
+`.github/workflows/deploy-docs.yaml` builds the book for each pull request that changes `docs/`,
+`gradeit/`, or `pyproject.toml`. A push to `main` publishes to `gh-pages`. Pull requests build but
+do not publish. This finds broken notebooks before merge.
 
-Because the API reference is generated from docstrings, that workflow watches `gradeit/**` as well
-as `docs/**` — otherwise a docstring fix would never reach the site.
+The API reference uses docstrings. Therefore, this workflow watches `gradeit/**` and `docs/**`.

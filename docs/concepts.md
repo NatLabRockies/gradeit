@@ -1,10 +1,10 @@
 # Concepts
 
-The vocabulary GradeIT uses, and the conventions that are easy to get wrong.
+GradeIT terms and important conventions.
 
 ## Units
 
-GradeIT is unit-explicit in its names and consistent about it:
+GradeIT names show units:
 
 | Quantity  | Unit                            | Suffix |
 | --------- | ------------------------------- | ------ |
@@ -16,18 +16,16 @@ GradeIT is unit-explicit in its names and consistent about it:
 
 Grade is a **decimal**, not a percentage: a 6% grade is `0.06`. Multiply by 100 to display.
 
-Filter parameters are declared in **feet**, never in sample counts — a design rule, not an
-accident. GPS traces are sampled in time, so a fixed point-count window has a physical width that
-changes with vehicle speed. Declaring widths in feet keeps a filter's behavior the same whether
-the vehicle was crawling or at highway speed. See
+Filter parameters use **feet**, never sample counts. GPS traces use time sampling. A fixed
+point-count window has a different physical width at different vehicle speeds. Widths in feet keep
+filter behavior consistent. See
 [How Filtration Works](examples/02_filtering_example) for a measurement of how much that matters.
 
-Elevation models return **feet** too, including custom ones. GradeIT does no unit conversion on
-your behalf.
+Elevation models, including custom models, return **feet**. GradeIT does not convert units.
 
 ## `Coordinate`
 
-A frozen dataclass holding `latitude` and `longitude`:
+A frozen dataclass with `latitude` and `longitude`:
 
 ```python
 from gradeit import Coordinate
@@ -35,12 +33,12 @@ from gradeit import Coordinate
 point = Coordinate.from_lat_lon(39.7392, -105.0)
 ```
 
-You rarely construct these — `gradeit()` builds them from whatever you pass. They show up on
-`GradeResult.coordinates` and as the argument to `ElevationModel.get_elevation()`.
+You rarely create these objects. `gradeit()` creates them from your input. They occur in
+`GradeResult.coordinates` and `ElevationModel.get_elevation()`.
 
 ## Coordinate input
 
-`gradeit()` accepts several forms, detected in this order:
+`gradeit()` accepts these forms in this order:
 
 1. a numpy array of shape `(n, 2)` with `(latitude, longitude)` rows
 2. anything with a `.columns` attribute — a pandas DataFrame, duck-typed
@@ -50,8 +48,7 @@ You rarely construct these — `gradeit()` builds them from whatever you pass. T
 `lat_col` and `lon_col` (default `"latitude"` / `"longitude"`) apply only to forms 2 and 3.
 Anything else raises `InvalidInputError`.
 
-Note the ordering convention: **latitude first**, matching the `(lat, lon)` convention rather
-than the `(x, y)` one.
+Use **latitude first**. GradeIT uses `(lat, lon)`, not `(x, y)`.
 
 ## `GradeResult`
 
@@ -66,21 +63,19 @@ result.elevation_ft_filtered  # np.ndarray | None
 result.grade_dec_filtered  # np.ndarray | None
 ```
 
-Two conventions worth internalizing:
+Important conventions:
 
 - **`distances_ft` carries a leading `0.0`** so it aligns point-for-point with the elevation and
   grade arrays. The per-segment distances are `distances_ft[1:]`, and `distances_ft.sum()` is the
   total trace length.
-- **The `_filtered` fields are `None` exactly when filtering did not run.** They are not silently
-  set equal to the raw arrays, so `result.grade_dec_filtered is None` is a reliable test for
-  "I disabled filtering".
+- **The `_filtered` fields are `None` only when filtering does not run.** They are not copies of
+  raw arrays. Use `result.grade_dec_filtered is None` to test for disabled filtering.
 
-`to_dict()` and `to_dataframe()` materialize the result:
+`to_dict()` and `to_dataframe()` create result data:
 
 ```{warning}
 In the tabular output the raw grade column is named **`grade_dec_unfiltered`**, while the
-attribute is `grade_dec`. This is for backward compatibility with older GradeIT output. Every
-other column name matches its attribute.
+attribute is `grade_dec`. This name supports older GradeIT output. All other column names match their attributes.
 ```
 
 `to_dataframe()` raises `MissingDependencyError` if pandas is not installed; `to_dict()` always
@@ -96,10 +91,9 @@ class ElevationModel(metaclass=ABCMeta):
     def get_elevation(self, trace: List[Coordinate]) -> List[float]: ...
 ```
 
-The contract: return elevation in **feet**, one value per input coordinate, in the **same order**,
-using **`NaN`** for points you have no data for. Built in: `USGSApi` and `USGSLocal`
-([Elevation Data](elevation_data)). Writing your own is
-[a short example](examples/05_custom_elevation_model_example).
+Return elevation in **feet**. Return one value for each input coordinate in the **same order**. Use
+**`NaN`** for a point without data. GradeIT includes `USGSApi` and `USGSLocal`. See
+[Elevation Data](elevation_data) and [this example](examples/05_custom_elevation_model_example).
 
 ## `ElevationFilter`
 
@@ -113,20 +107,18 @@ class ElevationFilter(metaclass=ABCMeta):
     ) -> List[float]: ...
 ```
 
-A filter takes an elevation profile and returns an elevation profile — **never grade**. That
-symmetry is what makes filters composable: pass a sequence and each one consumes the previous
-one's output. Grade is computed once, at the end, from the final elevation, so elevation and
-grade can never disagree.
+A filter takes an elevation profile and returns an elevation profile. It does **not** return grade.
+You can pass a filter sequence. Each filter uses the output from the last filter. GradeIT calculates
+grade from final elevation.
 
-Filters receive the coordinates as well as the elevations because most of them need real
-distances along the ground, not point indices.
+Filters receive coordinates and elevations. Most filters need ground distances, not point indexes.
 
 Built in: `Wood2014Filter` (the default) and `BridgeFilter`. See [Filters](filters).
 
 ## Exceptions
 
-All GradeIT errors derive from `GradeitError`, and the specific ones also subclass the matching
-builtin so existing `except ValueError:` handlers keep working:
+All GradeIT errors derive from `GradeitError`. Specific errors also subclass the matching built-in
+error. Existing `except ValueError:` handlers keep working:
 
 | Exception                | Also a        | Raised when                                     |
 | ------------------------ | ------------- | ----------------------------------------------- |
@@ -135,11 +127,10 @@ builtin so existing `except ValueError:` handlers keep working:
 | `MissingDependencyError` | `ImportError` | an optional extra is needed but not installed   |
 | `ElevationLookupError`   | —             | an elevation source returned something unusable |
 
-Note that a missing raster tile raises `FileNotFoundError` rather than a GradeIT error, and that
-points with no elevation data are `NaN` rather than an exception.
+A missing raster tile raises `FileNotFoundError`, not a GradeIT error. A point without elevation
+data is `NaN`, not an exception.
 
-Warnings derive from `GradeitWarning` (a `UserWarning`, not a `GradeitError` — warnings are not
-errors):
+Warnings derive from `GradeitWarning`. It is a `UserWarning`, not a `GradeitError`:
 
 | Warning             | Raised when                                                           |
 | ------------------- | --------------------------------------------------------------------- |

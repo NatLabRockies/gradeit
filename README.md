@@ -1,32 +1,31 @@
 # GradeIT
 
-Road Grade Inference Tool (GradeIT) - a python package, developed by the National Laboratory of
-the Rockies, to append elevation and road grade to a sequence of GPS points.
+GradeIT is a Python package from the National Laboratory of the Rockies. It adds elevation and road
+grade to a sequence of GPS points.
 
 **📖 [Full documentation](https://nrel.github.io/gradeit/)**
 
 ## Overview
 
-GradeIT looks up and filters elevation and derives road grade from the
-[USGS Digital Elevation Model](https://www.usgs.gov/core-science-systems/ngp/3dep) to append to GPS
-points, typically for vehicles traveling on paved roads. The python package offers options to use
-either the freely accessible USGS [Elevation Point Query Service](https://epqs.nationalmap.gov/v1/)
-or a locally available raster database of the elevation model, which provides much faster results.
+GradeIT gets elevation from the [USGS Digital Elevation Model](https://www.usgs.gov/core-science-systems/ngp/3dep). It filters the elevation and calculates
+road grade. GradeIT is for GPS points from vehicles on paved roads.
 
-The USGS model is **bare-earth**: it describes the ground, not the road. Where a road crosses water
-or a valley on a structure, the raw lookup returns what is underneath, and differentiating that
-produces grade spikes of tens of percent that no vehicle ever drove. Removing those without
-flattening the real terrain around them is most of what GradeIT does.
+You can use the USGS [Elevation Point Query Service](https://epqs.nationalmap.gov/v1/) or local
+raster tiles. The online service is easy to use. Local tiles give faster results.
+
+The USGS model is **bare-earth**. It shows the ground, not the road. A bridge over water or a valley
+returns the elevation below the bridge. This data creates large grade spikes. GradeIT removes these
+spikes and preserves nearby terrain.
 
 ## Setup
 
-gradeit requires python 3.10 or newer.
+GradeIT requires Python 3.10 or newer.
 
 ```bash
 pip install gradeit
 ```
 
-or install from source:
+To install from source:
 
 ```bash
 git clone https://github.com/NREL/gradeit.git
@@ -34,15 +33,15 @@ cd gradeit
 pip install .
 ```
 
-gradeit has no hard dependency on pandas. Install the optional extras you need:
+GradeIT does not require pandas. Install these optional extras as needed:
 
 ```bash
 pip install gradeit[pandas]  # DataFrame input + GradeResult.to_dataframe()
 pip install gradeit[plot]    # interactive folium map of the trace colored by grade
 ```
 
-Everything installs from PyPI wheels on Linux, macOS, and Windows - no GDAL, no system geospatial
-stack. See [Installation](https://nrel.github.io/gradeit/installation.html).
+PyPI wheels install on Linux, macOS, and Windows. You do not need GDAL or a system geospatial stack.
+See [Installation](https://nrel.github.io/gradeit/installation.html).
 
 ## Getting Started
 
@@ -60,12 +59,12 @@ result.grade_dec  # grade from the raw lookup, unfiltered
 result.to_dataframe()  # tabular view (requires gradeit[pandas])
 ```
 
-Use the `_filtered` arrays. `gradeit()` returns a `GradeResult` of numpy arrays and never mutates
-its input.
+Use the `_filtered` arrays. `gradeit()` returns a `GradeResult` that contains NumPy arrays. It does
+not change its input.
 
-Elevation comes from an `ElevationModel`, selected with the `elevation_model` argument. By default
-it uses `USGSApi()` - the online query service, which needs no setup but issues one request per
-point. For whole-trace lookups, point `USGSLocal` at a local copy of the raster tiles instead:
+The `elevation_model` argument selects an `ElevationModel`. By default, GradeIT uses `USGSApi()`.
+This online service needs no setup, but it makes one request for each point. Use `USGSLocal` with
+local raster tiles for a full trace:
 
 ```python
 from gradeit import USGSLocal, gradeit
@@ -73,26 +72,23 @@ from gradeit import USGSLocal, gradeit
 result = gradeit(data, elevation_model=USGSLocal("path/to/tiles/"))
 ```
 
-By default `gradeit()` also runs a `Wood2014Filter` over the elevation profile, implementing the
-five-step filtration routine of Wood et al. (2014). Pass `elevation_filter=None` to disable
-filtering, or a sequence of filters to compose them.
+By default, `gradeit()` uses `Wood2014Filter` on the elevation profile. This filter uses the
+five-step method from Wood et al. (2014). Set `elevation_filter=None` to disable filtering. You can
+also pass a sequence of filters.
 
 ## Documentation
 
-The [documentation site](https://nrel.github.io/gradeit/) has runnable examples and the full
+The [documentation site](https://nrel.github.io/gradeit/) has runnable examples and the full API
 reference:
 
-- [Quickstart](https://nrel.github.io/gradeit/quickstart.html) - input forms, output fields, and
-  the two choices that matter
-- [Elevation Data](https://nrel.github.io/gradeit/elevation_data.html) - getting the USGS tiles,
-  and how much disk they need
-- [Methodology](https://nrel.github.io/gradeit/methodology.html) - the Wood et al. (2014) routine,
-  step by step
-- [Filters](https://nrel.github.io/gradeit/filters.html) - every parameter, with defaults and
-  tuning guidance
+- [Quickstart](https://nrel.github.io/gradeit/quickstart.html) - input, output, elevation models,
+  and filters
+- [Elevation Data](https://nrel.github.io/gradeit/elevation_data.html) - USGS tiles and disk space
+- [Methodology](https://nrel.github.io/gradeit/methodology.html) - the Wood et al. (2014) method
+- [Filters](https://nrel.github.io/gradeit/filters.html) - parameters, defaults, and tuning
 - [API Reference](https://nrel.github.io/gradeit/api_docs.html)
 
-The example pages run on small committed data crops, so they execute in seconds:
+The example pages use small data crops in the repository. They run in seconds:
 
 - [Your First Grade Profile](https://nrel.github.io/gradeit/examples/01_basic_example.html)
 - [How Filtration Works](https://nrel.github.io/gradeit/examples/02_filtering_example.html)
@@ -102,21 +98,20 @@ The example pages run on small committed data crops, so they execute in seconds:
 
 ## Examples on real data
 
-`examples/` holds the full-scale walkthroughs. Unlike the documentation examples, these run over
-complete traces and need the real USGS tiles downloaded first (hundreds of MB to ~14 GB), so they
-are meant to be run by hand rather than on CI:
+`examples/` contains full examples. Unlike the documentation examples, they use complete traces and
+need real USGS tiles. The tiles need hundreds of MB to about 14 GB. Run these examples by hand, not
+in CI:
 
 - `examples/basic.py` - a 45-mile Colorado trip end to end, including the interactive map. Needs
   the Colorado tiles.
-- `examples/bridge_filter_long_spans.py` - 65 miles up the east side of San Francisco Bay, crossing
-  two artifacts on opposite sides of the default filter's competence. Needs `n38w123` and `n39w123`
-  (~705 MB).
+- `examples/bridge_filter_long_spans.py` - 65 miles on the east side of San Francisco Bay. It needs
+  `n38w123` and `n39w123` (about 705 MB).
 
 Download tiles with `scripts/get_usgs_tiles.py`; see `scripts/README.md`.
 
 ## Development
 
-This project uses [pixi](https://pixi.sh) to manage development environments and tasks. After
+This project uses [pixi](https://pixi.sh) for development environments and tasks. After you
 [installing pixi](https://pixi.sh/latest/#installation):
 
 ```bash
@@ -125,8 +120,8 @@ pixi run -e dev check   # ruff format + lint, dprint (markdown), mypy, and tests
 pixi run -e dev test    # run the test suite
 ```
 
-Formatting and linting use [ruff](https://docs.astral.sh/ruff/), and markdown files are formatted
-with [dprint](https://dprint.dev/). To build the documentation site:
+Formatting and linting use [ruff](https://docs.astral.sh/ruff/). Markdown files use
+[dprint](https://dprint.dev/). To build the documentation site:
 
 ```bash
 pixi install -e docs
@@ -153,9 +148,9 @@ If you use GradeIT in published work, please cite the software:
 }
 ```
 
-`CITATION.cff` in the repository root carries the same metadata in machine-readable form; GitHub
-renders it as "Cite this repository" in the sidebar.
+`CITATION.cff` in the repository root has the same metadata in a machine-readable form. GitHub
+shows it as "Cite this repository" in the sidebar.
 
-The filtration methodology GradeIT implements is described separately in Wood et al. (2014) - cite
-that as well if the method itself is what matters to your work. See
+Wood et al. (2014) describes the filter method. Cite that paper if the method is important to your
+work. See
 [Methodology](https://nrel.github.io/gradeit/methodology.html).

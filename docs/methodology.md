@@ -1,15 +1,14 @@
 # Methodology
 
-GradeIT's default filtration implements the five-step routine of Wood et al. (2014).
+The default GradeIT filter uses the five-step method from Wood et al. (2014).
 
 > Wood, Eric, E. Burton, A. Duran, and J. Gonder. _Appending High-Resolution Elevation Data to
 > GPS Speed Traces for Vehicle Energy Modeling and Simulation._ NREL/TP-5400-61109. National
 > Renewable Energy Laboratory, Golden, CO (United States), 2014.
 
 ```{note}
-That is the reference for the **method**. To cite the **software**, see the Citation section on
-the [home page](intro) — the two are separate, and citing the paper does not credit this package
-or its authors.
+This paper is the reference for the **method**. To cite the **software**, see Citation on the
+[home page](intro). These are separate references.
 ```
 
 ```{image} imgs/grade_filters.png
@@ -19,61 +18,39 @@ or its authors.
 
 ## The five steps
 
-Step A is the raw input. `Wood2014Filter` carries out steps B through E.
+Step A is the raw input. `Wood2014Filter` does steps B through E.
 
-| Step  | What happens                                                                                                                           |
-| ----- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| **A** | Raw elevation versus distance, straight from the DEM.                                                                                  |
-| **B** | Elevation is downsampled onto a uniformly spaced **distance** grid, each node carrying the **median** of the raw points falling in it. |
-| **C** | The downsampled profile passes through a combined **Savitzky-Golay and binomial** filter, and the pre/post difference is computed.     |
-| **D** | Nodes whose filtration residual exceeds a threshold are **discarded and backfilled** by interpolation.                                 |
-| **E** | The backfilled profile is filtered again, then elevation at the **original** distance values is recovered by interpolation.            |
+| Step  | What happens                                                                                                                |
+| ----- | --------------------------------------------------------------------------------------------------------------------------- |
+| **A** | Raw elevation versus distance, straight from the DEM.                                                                       |
+| **B** | GradeIT resamples elevation on a uniform **distance** grid. Each node has the **median** of raw points in that node.        |
+| **C** | GradeIT applies a combined **Savitzky-Golay and binomial** filter. It calculates the difference before and after filtering. |
+| **D** | GradeIT removes nodes with a filter residual above a threshold. It fills these nodes by interpolation.                      |
+| **E** | GradeIT filters the filled profile again. It interpolates elevation at the **original** distances.                          |
 
-Grade is then computed as the derivative of the final filtered elevation with respect to
-distance, matching the paper's definition. GradeIT always recomputes grade from the final
-elevation, so the two can never drift apart.
+GradeIT calculates grade from the derivative of final filtered elevation by distance. This matches
+the paper. GradeIT always calculates grade from final elevation.
 
-## Why step B is the load-bearing one
+## Why step B is important
 
-GPS traces are sampled in **time**. Their spacing in **distance** therefore varies with vehicle
-speed — and it varies a lot. On the 250-point Colorado trace used throughout these examples,
-median point spacing is 133 ft while the 5th and 95th percentiles are 51 ft and 370 ft, with
-individual gaps from 10 ft to 840 ft.
+GPS traces use **time** sampling. Therefore, point spacing in **distance** changes with vehicle
+speed. In the 250-point Colorado trace, median spacing is 133 ft. The 5th and 95th percentiles are
+51 ft and 370 ft. Gaps range from 10 ft to 840 ft.
 
-Smoothing that signal by point index gives a filter whose physical cutoff swings sevenfold along
-a single trace: aggressive where the vehicle crawled, barely present where it sped up. Resampling
-onto a fixed distance grid first makes the cutoff a fixed number of feet everywhere, which is why
-the paper specifies steps C–E on the uniform grid rather than on the original samples.
-
-This is also why every `Wood2014Filter` parameter is declared in feet rather than in samples.
+Point-index smoothing gives a filter with a different physical width at each vehicle speed.
+Resampling to a fixed distance grid gives the filter a fixed width in feet. The paper therefore
+uses the uniform grid for steps C–E.
 
 ## Why the residual, not the drop
 
 Step D discards points by **filtration residual** — the difference between a node and its own
 smoothed value — rather than by how far elevation drops.
 
-That distinction matters more than it looks. A smoother is itself dragged toward an artifact, so
-a 55 ft bridge drop leaves a residual of only about 11 ft. Setting the threshold to the "tens of
-feet" the paper attributes to the raw artifact would catch nothing at all. GradeIT's 8 ft default
-is the DEM's own stated 2.44 m vertical RMSE: a residual larger than the elevation model's
-1-sigma accuracy is not explainable as DEM noise.
-
-It also explains a structural limit. A residual detector is blind to any feature **wider than its
-own smoothing kernel**, because the smoother simply follows a wide feature down and the residual
-collapses. That is why no amount of widening `savgol_window_ft` will remove a mile-long bridge —
-see [Bare-Earth Bridges](examples/03_bridges_example), where widening the window instead drags
-the road below sea level.
-
-## The paper specifies no numeric values
-
-This is worth stating plainly: **Wood et al. give no parameter values** — not the grid interval,
-not the filter widths, not the discard threshold. The defaults in `Wood2014Filter` are this
-package's choices, reasoned from the DEM's ~33 ft post spacing and 2.44 m vertical RMSE and
-documented parameter by parameter in the class docstring and in [Filters](filters).
-
-They are a considered starting point, not a reproduction of the paper's own settings, which are
-not published. Treat them as such if your traces differ substantially from highway driving over
-1/3 arc-second terrain.
+This difference is important. A smoother moves toward an artifact. A 55 ft bridge drop can leave a
+residual of about 11 ft. GradeIT uses an 8 ft default.
+A residual detector cannot find a feature **wider than its smoothing kernel**. The smoother follows
+a wide feature, so the residual becomes small. Increasing `savgol_window_ft` cannot remove a
+mile-long bridge. See [Bare-Earth Bridges](examples/03_bridges_example).
 
 ## Bare-earth bridges and overpasses
 
@@ -81,17 +58,14 @@ The USGS DEM is a bare-earth product: road infrastructure is not in it. Where a 
 river, a valley, or another road, the model describes what is underneath the bridge rather than
 the deck.
 
-Step D catches these incidentally — a bare-earth artifact is simply a large filtration residual,
-so the routine removes it without any bridge-specific logic. That covers the common case of
-culverts, creek crossings, and ordinary overpasses.
+Step D finds many bare-earth artifacts because they have a large filter residual. It does not need
+large bridge-specific logic. This includes culverts, creek crossings, and ordinary overpasses.
 
-For spans wider than the smoothing kernel can see, `BridgeFilter` attacks the problem differently,
-comparing each point against a two-sided rolling-maximum baseline instead of against a smoothed
-version of itself. It reaches artifacts the residual method structurally cannot — at the cost of
-needing to be told, through `baseline_radius_ft`, what scale of span counts as a bridge.
+For spans wider than the smoothing kernel (think a large bridge like the Golden Gate Bridge), use `BridgeFilter`. It compares each point with a
+two-sided rolling-maximum baseline. It can find artifacts that the residual method cannot find.
+Set `baseline_radius_ft` to define the bridge span scale.
 
-That parameter is doing real work, because **a valley is also a span that sits below the road on
-both sides**. Nothing in the geometry separates the two cases; the radius is what draws the line.
-Both failure modes are demonstrated on real traces in
+This parameter is important. **A valley also sits below the road on both sides.** Geometry does not
+separate a valley from a bridge. The radius defines the difference. See real traces in
 [How Filtration Works](examples/02_filtering_example) and
 [Bare-Earth Bridges](examples/03_bridges_example).

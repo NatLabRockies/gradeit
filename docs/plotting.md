@@ -1,8 +1,8 @@
 # Plotting
 
 GradeIT can draw a trace on an interactive [folium](https://python-visualization.github.io/folium/)
-map with each segment colored by its grade. It is the fastest way to find DEM artifacts, which
-show up as sharp red notches where the bare-earth model dips into whatever the road is crossing.
+map. The color of each segment shows its grade. The map helps you find DEM artifacts. These appear
+as sharp red notches where the bare-earth model drops below the road.
 
 ```bash
 pip install gradeit[plot]
@@ -17,18 +17,17 @@ m = result.plot_map()  # equivalent to plot_grade_map(result)
 m.save("trace.html")
 ```
 
-`plot_map()` is a convenience wrapper on `GradeResult`; both return a `folium.Map`, which renders
-inline in a notebook. See [Mapping a Trace](examples/04_plotting_example) for a live one.
+`plot_map()` is a `GradeResult` wrapper. Both functions return a `folium.Map`. A notebook can show
+this map inline. See [Mapping a Trace](examples/04_plotting_example).
 
 ## Layers
 
-When the result has both a raw and a filtered profile, the map draws them as two toggleable
-layers — both visible at load, filtered on top. Untick **Filtered grade** in the layer control to
-see the raw artifacts underneath. That side-by-side is the point: it shows exactly where the
-filter intervened and lets you judge whether it should have.
+If the result has raw and filtered profiles, the map draws two toggleable layers. Both layers are
+visible when the map opens. The filtered layer is on top. Clear **Filtered grade** to see raw
+artifacts. This shows where the filter changed the result.
 
-Hovering a segment reveals its array index, grade, elevation, and length, so you can go straight
-from something suspicious on the map to the corresponding row in your data.
+Point to a segment to see its array index, grade, elevation, and length. You can then find the
+matching row in your data.
 
 ## Options
 
@@ -44,37 +43,32 @@ plot_grade_map(
 )
 ```
 
-**`grade`** picks the layers. `"auto"` draws both when filtering ran and raw otherwise;
-`"filtered"` and `"both"` require that `gradeit()` was called with a filter.
+**`grade`** selects layers. `"auto"` draws both layers when filtering ran. Otherwise, it draws the
+raw layer. `"filtered"` and `"both"` require a filter.
 
-**`grade_range_pct`** pins the color scale. Left as `None`, the range is set symmetrically around
-zero from the trace's largest absolute grade, so the midpoint color always means flat. That is
-convenient but it makes two maps incomparable, and a single artifact can stretch the scale until
-all the real terrain washes to one color — pin it to something like `(-8, 8)` when that happens.
+**`grade_range_pct`** sets the color scale. If it is `None`, GradeIT sets a symmetric range around
+zero from the largest absolute grade. The midpoint color means flat. Set a range such as `(-8, 8)`
+to compare maps or to prevent one artifact from changing the scale.
 
-**`tiles`** sets the basemap, passed through to `folium.Map`. The default `"CartoDB positron"` is
-a muted grey, chosen so the grade colors carry the signal rather than competing with OpenStreetMap's
-own greens and yellows. `"CartoDB Voyager"` adds more road labeling; `"CartoDB dark_matter"` is
-the dark equivalent.
+**`tiles`** sets the base map and passes the value to `folium.Map`. The default is
+`"CartoDB positron"`. Its gray colors keep attention on grade. `"CartoDB Voyager"` shows more road
+labels. `"CartoDB dark_matter"` uses a dark style.
 
 ```{note}
-**Blank map or 403 errors on the basemap.** openstreetmap.org's
-[tile usage policy](https://operations.osmfoundation.org/policies/tiles/) blocks heavy or
-automated clients, and a blocked client receives 403s instead of tiles. That is why
-`"OpenStreetMap"` is not the default. If you switch to it and the map comes up blank, that is the
-cause — switch back to one of the CartoDB basemaps.
+**Blank map or 403 base-map errors.** The
+[OpenStreetMap tile policy](https://operations.osmfoundation.org/policies/tiles/) blocks some heavy
+or automated clients. A blocked client receives 403 errors. `"OpenStreetMap"` is not the default
+for this reason. Use a CartoDB base map if the map is blank.
 ```
 
 ```{note}
-**Untrusted notebooks.** Inline display can show "Make this notebook trusted to load map". The VS
-Code Interactive Window has no trust toggle; `.ipynb` files do, via Command Palette → "Notebook:
-Manage Trust". The simplest workaround either way is `m.save("trace.html")` and open it in a
-browser.
+**Untrusted notebooks.** An inline display can show "Make this notebook trusted to load map". The
+VS Code Interactive Window has no trust setting. For `.ipynb` files, use **Notebook: Manage Trust**
+in the Command Palette. You can also save `trace.html` and open it in a browser.
 ```
 
 ## A note on size
 
-Each segment becomes its own polyline with its own tooltip, so the generated HTML grows with the
-point count — a few hundred points is well under a megabyte, but a multi-thousand-point trace
-produces a large file that is slow to open. For long traces, plot a slice, subsample, or pass
-`grade="filtered"` to halve the geometry.
+Each segment becomes a polyline with a tooltip. Generated HTML size increases with point count. A
+trace with thousands of points creates a large file that opens slowly. For a long trace, plot a
+slice, subsample, or pass `grade="filtered"`.

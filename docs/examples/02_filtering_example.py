@@ -1,15 +1,16 @@
 """
 # How Filtration Works
 
-`gradeit()` filters the elevation profile before it computes grade, and by
-default that filter is `Wood2014Filter` — the five-step routine from Wood et al.
-(2014), NREL/TP-5400-61109.
+`gradeit()` filters the elevation profile before it computes grade. By
+default, `gradeit()` uses `Wood2014Filter`. This is the five-step routine
+from Wood et al. (2014), NREL/TP-5400-61109.
 
-This page opens it up: what the steps do, why the knobs are declared in *feet*
-rather than sample counts, and what happens when you turn them. It uses the same
-Golden, Colorado trace as [Your First Grade Profile](01_basic_example).
+This page explains the steps. It shows why the parameters use *feet* instead
+of sample counts. It also shows what happens when you change these
+parameters. It uses the same Golden, Colorado trace as
+[Your First Grade Profile](01_basic_example).
 
-See [Methodology](../methodology) for the paper's five steps and
+See [Methodology](../methodology) for the paper's five steps. See
 [Filters](../filters) for the full parameter reference.
 """
 
@@ -28,8 +29,8 @@ def main():
     """
     ## Start with no filter at all
 
-    Passing `elevation_filter=None` gives you the raw DEM lookup. That is the
-    honest baseline to compare against.
+    Pass `elevation_filter=None` to get the raw DEM lookup. Use this as the
+    honest baseline for comparison.
     """
 
     raw = gradeit(trace, elevation_model=elevation_model, elevation_filter=None)
@@ -40,8 +41,8 @@ def main():
     """
     ## Why the parameters are in feet
 
-    GPS traces are sampled in **time**, so their spacing in **distance** swings
-    with vehicle speed. On this trace:
+    A GPS trace is sampled in **time**. So its spacing in **distance**
+    changes with vehicle speed. On this trace:
     """
 
     spacing = raw.distances_ft[1:]
@@ -51,15 +52,15 @@ def main():
     print(f"                     range  {spacing.min():.0f} to {spacing.max():.0f}")
 
     """
-    That is a sevenfold swing between the 5th and 95th percentile. A filter with
-    a fixed *point-count* window would therefore have a physical cutoff that
-    varies sevenfold along a single trace — smoothing hard where the vehicle
-    crawled and barely at all where it sped up.
+    This is a sevenfold change between the 5th and 95th percentile. A filter
+    with a fixed *point-count* window would have a physical cutoff that
+    varies sevenfold along a single trace. It would smooth hard where the
+    vehicle moved slowly, and barely at all where the vehicle moved fast.
 
-    Step B of the routine resamples onto a uniform distance grid first, which is
-    what makes a fixed cutoff in feet possible. `resolve_parameters()` shows what
-    the declared feet resolve to on this particular trace, without running the
-    filter:
+    Step B of the routine resamples the trace onto a uniform distance grid
+    first. This step makes a fixed cutoff in feet possible.
+    `resolve_parameters()` shows what the declared feet resolve to on this
+    trace, without running the filter:
     """
 
     total_ft = raw.distances_ft.sum()
@@ -73,14 +74,16 @@ def main():
     print(f"binomial order         {binomial_order}  (from binomial_sigma_ft=100)")
 
     """
-    So a 600 ft window becomes a 7-node kernel here. Change `interval_ft` and the
-    node count changes to keep the same 600 ft of road under the kernel.
+    A 600 ft window becomes a 7-node kernel here. If you change
+    `interval_ft`, the node count changes to keep the same 600 ft of road
+    under the kernel.
 
     ## What the default actually changed
 
-    The creek crossing sits at index 119 of this trace. The bare-earth DEM has no
-    bridge deck in it, so the lookup drops into the streambed and differentiating
-    that produces a grade spike no vehicle drove.
+    The creek crossing sits at index 119 of this trace. The bare-earth DEM
+    has no bridge deck in it. So the lookup drops into the streambed, and
+    differentiation of that value produces a grade spike that no vehicle
+    drove.
     """
 
     filtered = gradeit(trace, elevation_model=elevation_model)
@@ -108,16 +111,18 @@ def main():
     )
 
     """
-    Nothing above is bridge-specific. Step D discards nodes whose *filtration
-    residual* is too large to be DEM noise and backfills them by interpolation,
-    and a bare-earth artifact is exactly a large residual — so the default
-    catches it without ever being told that bridges exist.
+    Nothing above is bridge-specific. Step D discards nodes whose
+    *filtration residual* is too large to be DEM noise. It then backfills
+    these nodes by interpolation. A bare-earth artifact always has a large
+    residual. So the default filter catches it, without ever being told that
+    bridges exist.
 
     ## Filtration should not reshape terrain
 
-    The paper is explicit that filtration should not have a transformational
-    effect on the underlying elevation layer. Checking that is easy: the grade
-    tail should collapse while the elevation profile barely moves.
+    The paper states that filtration should not have a transformational
+    effect on the underlying elevation layer. This claim is easy to check:
+    the grade tail should collapse, while the elevation profile barely
+    moves.
     """
 
     raw_pct = np.abs(100 * raw.grade_dec)
@@ -132,9 +137,9 @@ def main():
     """
     ## Turning the knobs
 
-    `Wood2014Filter` is a frozen dataclass; every knob is a constructor argument.
-    Widening `savgol_window_ft` buys a smoother grade signal at the cost of
-    attenuating short real features:
+    `Wood2014Filter` is a frozen dataclass. Every parameter is a constructor
+    argument. A wider `savgol_window_ft` value gives a smoother grade signal,
+    but it also attenuates short, real features:
     """
 
     print("savgol_window_ft   max|grade|   p99   median |filtered-raw|")
@@ -149,10 +154,11 @@ def main():
         print(f"{window_ft:12d} ft {g.max():9.2f}% {np.percentile(g, 99):6.2f}% {drift:14.2f} ft")
 
     """
-    `residual_threshold_ft` is the more interesting one: it decides what counts
-    as an artifact. Its 8 ft default is the DEM's own 2.44 m vertical RMSE — a
-    residual bigger than the elevation model's 1-sigma accuracy is not
-    explainable as noise. Raise it too far and the creek stops being rejected:
+    `residual_threshold_ft` is the more interesting parameter: it decides
+    what counts as an artifact. Its 8 ft default value is the DEM's own
+    2.44 m vertical RMSE. A residual bigger than the elevation model's
+    1-sigma accuracy cannot be explained as noise. If you raise the
+    threshold too far, the filter stops rejecting the creek:
     """
 
     print("residual_threshold_ft   creek elev_ft   max|grade|")
@@ -168,18 +174,20 @@ def main():
         )
 
     """
-    At 16 ft and above the creek survives filtration and the grade spike comes
-    back. The defaults are not arbitrary.
+    At 16 ft and above, the creek survives filtration and the grade spike
+    returns. The default values are not arbitrary.
 
     ## A filter that is wrong for this trace
 
-    `BridgeFilter` targets bare-earth spans directly, by finding dips that sit
-    below the surrounding road on both sides. That description also fits a real
-    valley, and geometry alone cannot separate the two — what separates them is
-    `baseline_radius_ft`, whose default is one mile.
+    `BridgeFilter` targets bare-earth spans directly. It finds dips that sit
+    below the surrounding road on both sides. This description also matches
+    a real valley. Geometry alone cannot tell the two apart. The
+    `baseline_radius_ft` parameter separates them; its default value is one
+    mile.
 
-    This trace runs through real canyon terrain, so the default radius is much
-    too wide, and the filter interpolates straight across a genuine valley:
+    This trace runs through real canyon terrain. So the default radius is
+    much too wide, and the filter interpolates straight across a genuine
+    valley:
     """
 
     over = gradeit(trace, elevation_model=elevation_model, elevation_filter=BridgeFilter())
@@ -195,11 +203,12 @@ def main():
     )
 
     """
-    That is real terrain being erased, quietly. The lesson is not that
-    `BridgeFilter` is broken — [Bare-Earth Bridges](03_bridges_example) shows a
-    trace where it is the only thing that works — but that its radius has to be
-    scaled to the spans you are correcting, and that you should always diff
-    filtered against raw across the *whole* trace before trusting a filter.
+    This is real terrain, erased quietly. The lesson is not that
+    `BridgeFilter` is broken. [Bare-Earth Bridges](03_bridges_example) shows
+    a trace where `BridgeFilter` is the only filter that works. The lesson
+    is that you must scale the radius to the spans you want to correct. You
+    should also always compare filtered output against raw output, across
+    the *whole* trace, before you trust a filter.
     """
 
     fig, ax = plt.subplots(figsize=(10, 5))

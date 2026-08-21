@@ -1,12 +1,10 @@
 # GradeIT
 
-**Road Grade Inference Tool** — append elevation and road grade to a sequence of GPS points.
+**Road Grade Inference Tool** — add elevation and road grade to GPS points.
 
-GradeIT is a Python package developed by the National Laboratory of the Rockies. Give it a
-sequence of GPS coordinates and it looks up elevation from the
-[USGS Digital Elevation Model](https://www.usgs.gov/core-science-systems/ngp/3dep), cleans the
-elevation profile, and derives road grade — typically for vehicles traveling on paved roads,
-where grade drives energy consumption.
+GradeIT is a Python package from the National Laboratory of the Rockies. Give it GPS coordinates.
+It gets elevation from the [USGS Digital Elevation Model](https://www.usgs.gov/core-science-systems/ngp/3dep), filters the elevation profile, and
+calculates road grade. It is for vehicles on paved roads.
 
 ```python
 from gradeit import gradeit
@@ -20,20 +18,16 @@ result.elevation_ft  # the raw DEM lookup, always preserved
 
 ## The problem this solves
 
-Looking up elevation is the easy part. The hard part is that the USGS DEM is a **bare-earth**
-model: it describes the ground, not the road surface. Where a road crosses a river on a bridge,
-the DEM reports the water. Where it crosses a valley on a viaduct, the DEM reports the valley
-floor.
+The USGS DEM is a **bare-earth** model. It shows the ground, not the road surface. A bridge across
+a river returns the elevation of the water. A viaduct across a valley returns the valley floor.
 
-Differentiating that to get grade produces spikes of tens of percent that no vehicle ever drove.
-On the sample trace in [Bare-Earth Bridges](examples/03_bridges_example), the raw DEM implies an
-**89% grade** on Interstate 80. Wood et al. (2014) note these artifacts are "unsuitable for
-downstream vehicle simulation programs."
+These values create grade spikes that no vehicle drove. In
+[Bare-Earth Bridges](examples/03_bridges_example), the raw DEM gives an **89% grade** on Interstate
+80. Wood et al. (2014) say that these artifacts are unsuitable for vehicle simulation.
 
-GradeIT's job is to remove them without flattening the real terrain around them — which is
-harder than it sounds, because a bridge and a valley look identical to a naive detector. The
-default filter implements the five-step routine from
-[Wood et al. (2014)](methodology), and it is what you get if you pass nothing.
+GradeIT removes these artifacts and preserves the nearby terrain. This is difficult because a
+bridge and a valley can have the same shape. The default filter uses the five-step method from
+[Wood et al. (2014)](methodology).
 
 ## Where to go
 
@@ -69,5 +63,5 @@ The repository also carries a
 [`CITATION.cff`](https://github.com/NREL/gradeit/blob/main/CITATION.cff), which GitHub renders as
 "Cite this repository".
 
-GradeIT implements a filtration methodology published separately; if the method itself is what
-matters to your work, cite [Wood et al. (2014)](methodology) as well.
+GradeIT uses a filter method from a separate publication. Cite
+[Wood et al. (2014)](methodology) if you use the method.

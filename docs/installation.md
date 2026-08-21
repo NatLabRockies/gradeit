@@ -6,7 +6,7 @@ GradeIT requires **Python 3.10 or newer**.
 pip install gradeit
 ```
 
-Or from source:
+To install from source:
 
 ```bash
 git clone https://github.com/NREL/gradeit.git
@@ -16,8 +16,7 @@ pip install .
 
 ## Extras
 
-The core install is deliberately small — numpy plus a pure-Python GeoTIFF reader. Optional
-features live behind extras:
+The core install includes NumPy and a pure-Python GeoTIFF reader. Optional features use extras:
 
 ```bash
 pip install gradeit[pandas]  # DataFrame input and GradeResult.to_dataframe()
@@ -25,20 +24,20 @@ pip install gradeit[plot]    # interactive folium map colored by grade
 pip install gradeit[pandas,plot]
 ```
 
-GradeIT has no hard dependency on pandas. `gradeit()` accepts numpy arrays, dicts, and plain
-lists of `(latitude, longitude)` pairs, and returns numpy arrays — so pandas is only needed if
-you want to hand it a DataFrame or get one back.
+GradeIT does not require pandas. `gradeit()` accepts NumPy arrays, dictionaries, and lists of
+`(latitude, longitude)` pairs. It returns NumPy arrays. Install pandas only for DataFrame input or
+output.
 
 ## No GDAL required
 
-GradeIT reads USGS GeoTIFFs through [tifffile](https://pypi.org/project/tifffile/) and
-[imagecodecs](https://pypi.org/project/imagecodecs/) rather than GDAL or rasterio. Everything
-installs from PyPI wheels on Linux, macOS, and Windows, with no system geospatial stack and no
-conda environment needed. CI verifies this on all three platforms.
+GradeIT reads USGS GeoTIFFs with [tifffile](https://pypi.org/project/tifffile/) and
+[imagecodecs](https://pypi.org/project/imagecodecs/). It does not use GDAL or rasterio. PyPI wheels
+install on Linux, macOS, and Windows. You do not need a system geospatial stack or a conda
+environment. CI tests all three platforms.
 
-The trade-off is that GradeIT reads the specific kind of raster the USGS 3DEP program ships:
-single-band, north-up, geographic (lon/lat) GeoTIFFs. Projected or rotated rasters are rejected
-with a clear error rather than silently sampled at the wrong place.
+GradeIT reads the raster type from the USGS 3DEP program: single-band, north-up, geographic
+longitude/latitude GeoTIFFs. GradeIT rejects projected or rotated rasters. This prevents sampling
+at an incorrect location.
 
 ## Verifying the install
 
@@ -48,8 +47,8 @@ import gradeit
 print(gradeit.__all__)
 ```
 
-To check a real lookup end to end without downloading any raster tiles, use the online query
-service — it needs no setup, but issues one HTTP request per point, so keep it to a handful:
+Use the online query service to test an elevation lookup without raster tiles. It needs no setup,
+but it sends one HTTP request for each point. Use only a few points:
 
 ```python
 from gradeit import gradeit
@@ -63,7 +62,7 @@ For anything larger than a spot check, see [Elevation Data](elevation_data).
 
 ## Development setup
 
-The project uses [pixi](https://pixi.sh) to manage environments and tasks. After
+The project uses [pixi](https://pixi.sh) for environments and tasks. After you
 [installing pixi](https://pixi.sh/latest/#installation):
 
 ```bash

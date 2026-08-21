@@ -1,15 +1,15 @@
 """
 # Bringing Your Own Elevation Source
 
-gradeit ships two elevation models — `USGSApi` and `USGSLocal` — but neither is
-privileged. `elevation_model` accepts any object implementing the
-`ElevationModel` interface, which is a single method.
+gradeit includes two elevation models: `USGSApi` and `USGSLocal`. Neither
+model has special status. The `elevation_model` parameter accepts any object
+that implements the `ElevationModel` interface, which has a single method.
 
-That is the seam to use when your elevation comes from somewhere gradeit does not
-know about: a different national DEM, a lidar survey, a database, a vendor API,
-or synthetic terrain in a test.
+Use this interface when your elevation data comes from a source gradeit does
+not know about: a different national DEM, a lidar survey, a database, a
+vendor API, or synthetic terrain in a test.
 
-This page needs no data files and no network at all.
+This page needs no data files and no network connection.
 """
 
 
@@ -35,20 +35,22 @@ def main():
 
     The contract is small but strict:
 
-    - **Input** is a list of `Coordinate` — frozen dataclasses with `.latitude`
-      and `.longitude` attributes, in decimal degrees.
-    - **Output** is elevation in **feet**, one value per input coordinate, in the
-      same order. gradeit does no unit conversion on your behalf; if your source
-      speaks meters, convert before returning.
-    - **Unknown elevation is `float("nan")`**, not `None` and not a sentinel like
-      `-9999`. Both built-in models use `NaN` for points outside their coverage,
-      and the filters are written to expect it.
+    - **Input** is a list of `Coordinate` objects. These are frozen
+      dataclasses with `.latitude` and `.longitude` attributes, in decimal
+      degrees.
+    - **Output** is elevation in **feet**, one value per input coordinate, in
+      the same order. gradeit does not convert units for you. If your source
+      reports meters, convert the values before you return them.
+    - **Unknown elevation is `float("nan")`**. It is not `None`, and it is
+      not a sentinel value like `-9999`. Both built-in models return `NaN`
+      for points outside their coverage, and the filters expect this value.
 
     ## A synthetic model
 
-    Here is a complete implementation. It puts a hill on the landscape as a
-    Gaussian bump, which gives a smooth, analytically known profile — handy for
-    testing filters against a signal whose true shape you know.
+    Here is a complete implementation. It places a hill on the landscape as
+    a Gaussian bump. This gives a smooth profile with a known shape, which
+    is useful for testing filters against a signal whose true shape you
+    already know.
     """
 
     class SyntheticTerrain(ElevationModel):
@@ -70,7 +72,8 @@ def main():
             return out
 
     """
-    That is all it takes. Now drive a straight west-to-east trace over the hill:
+    That is all it takes. Now drive a straight west-to-east trace over the
+    hill:
     """
 
     center = Coordinate.from_lat_lon(39.75, -105.2)
@@ -88,9 +91,9 @@ def main():
     )
 
     """
-    Because this terrain is smooth and noise-free, filtration has almost nothing
-    to remove — which is exactly the sanity check you want. A filter that
-    meaningfully alters clean input is a filter that will distort real terrain.
+    This terrain is smooth and noise-free, so filtration has almost nothing
+    to remove. This is exactly the sanity check you want: a filter that
+    changes clean input in a meaningful way will also distort real terrain.
     """
 
     drift = np.abs(result.elevation_ft_filtered - result.elevation_ft)
@@ -100,8 +103,9 @@ def main():
     """
     ## Reporting gaps in coverage
 
-    Return `NaN` where you have no data. This model refuses to answer outside a
-    bounding box, the way `USGSLocal` returns `NaN` outside its tiles.
+    Return `NaN` where you have no data. This model refuses to answer
+    outside a bounding box, the same way `USGSLocal` returns `NaN` outside
+    its tiles.
     """
 
     class BoundedTerrain(ElevationModel):
@@ -132,9 +136,10 @@ def main():
     """
     ## Caching an expensive source
 
-    Because the interface is one method, wrapping is easy. If your real source is
-    a slow network call — `USGSApi` issues one HTTP request *per point* — a cache
-    is worth adding, especially when several traces revisit the same roads.
+    The interface has only one method, so wrapping it is easy. If your real
+    source makes a slow network call — `USGSApi` sends one HTTP request *per
+    point* — a cache is worth adding, especially when several traces revisit
+    the same roads.
     """
 
     class CachedElevation(ElevationModel):
@@ -165,16 +170,17 @@ def main():
 
     """
     ```{note}
-    The cache key rounds coordinates, so points closer together than the rounding
-    share an answer. At six decimal places that is about four inches — well below
-    the DEM's ~33 ft post spacing, so it cannot change a result.
+    The cache key rounds coordinates, so points closer together than the
+    rounding distance share the same answer. At six decimal places, this
+    distance is about four inches. This is well below the DEM's ~33 ft post
+    spacing, so it cannot change a result.
     ```
 
     ## Where to go next
 
-    See [Elevation Data](../elevation_data) for the two built-in models and how to
-    obtain the real USGS tiles, and [Concepts](../concepts) for the rest of the
-    interfaces gradeit exposes.
+    See [Elevation Data](../elevation_data) for the two built-in models and
+    steps to obtain the real USGS tiles. See [Concepts](../concepts) for the
+    rest of the interfaces gradeit exposes.
     """
 
 

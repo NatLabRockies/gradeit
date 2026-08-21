@@ -1,6 +1,6 @@
 # Quickstart
 
-The whole library is one function.
+The main library function is `gradeit()`.
 
 ```python
 from gradeit import gradeit
@@ -8,11 +8,9 @@ from gradeit import gradeit
 result = gradeit(trace)
 ```
 
-Everything else is choosing where elevation comes from and how it gets cleaned.
-
 ## Input
 
-`trace` can be any of these — GradeIT detects the form:
+A `trace` is a sequence of points and can have any of these forms. GradeIT detects the form:
 
 ```python
 import numpy as np
@@ -27,18 +25,18 @@ gradeit([(39.74, -105.0), (39.75, -105.0)])  # (lat, lon) pairs
 gradeit([Coordinate.from_lat_lon(39.74, -105.0), ...])  # Coordinate objects
 ```
 
-If your DataFrame uses different column names, say so:
+Set the column names if your DataFrame uses different names:
 
 ```python
 gradeit(df, lat_col="lat", lon_col="lon")
 ```
 
-Points must be **in travel order** — grade is computed between consecutive points — and there
-must be at least two of them. Your input is never modified.
+Points must be in **travel order**. GradeIT calculates grade between consecutive points. You must
+provide at least two points. GradeIT does not change your input.
 
 ## Output
 
-`gradeit()` returns a `GradeResult`, a frozen container of numpy arrays:
+`gradeit()` returns a `GradeResult`. This frozen container has NumPy arrays:
 
 ```python
 result.elevation_ft  # raw DEM lookup, feet
@@ -49,14 +47,11 @@ result.distances_ft  # distance from the previous point, feet
 result.coordinates  # the parsed input coordinates
 ```
 
-**Use the `_filtered` arrays.** The raw profile is kept so you can audit what changed, but it
-contains bare-earth artifacts and sampling noise that produce grade spikes no vehicle drove. The
-`_filtered` fields are `None` if — and only if — you disabled filtering, which makes the
-filtered-or-not contract explicit rather than silent.
+**Use the `_filtered` arrays.** The raw profile stays available for comparison. It contains
+bare-earth artifacts and sampling noise. These can create grade spikes.
 
-Grade is a **decimal** rise over run, so multiply by 100 for percent. `distances_ft` carries a
-leading `0.0` so it aligns point-for-point with the other arrays; the per-segment distances are
-`distances_ft[1:]`.
+Grade is a **decimal** rise over run. Multiply it by 100 to get a percentage. `distances_ft` starts
+with `0.0`.
 
 To get a table:
 
@@ -72,10 +67,10 @@ on `GradeResult` is `grade_dec`. The other names match.
 
 ## Choosing an elevation model
 
-The default is `USGSApi()`, the online USGS Elevation Point Query Service. It needs no setup, but
-it makes one HTTP request **per point** — fine for a spot check, far too slow for a trace.
+The default is `USGSApi()`, the online USGS Elevation Point Query Service. It needs no setup. It
+makes one HTTP request for each point. Use it only for testing and not running large traces.
 
-For real traces, download the raster tiles once and use `USGSLocal`:
+For a large trace, download raster tiles and use `USGSLocal`:
 
 ```python
 from gradeit import USGSLocal, gradeit
@@ -83,19 +78,18 @@ from gradeit import USGSLocal, gradeit
 result = gradeit(trace, elevation_model=USGSLocal("path/to/tiles"))
 ```
 
-See [Elevation Data](elevation_data) for how to get the tiles, and
-[Custom Elevation Sources](examples/05_custom_elevation_model_example) if your elevation comes
-from somewhere else entirely.
+See [Elevation Data](elevation_data) to get the tiles. See
+[Custom Elevation Sources](examples/05_custom_elevation_model_example) to use another data source.
 
 ## Choosing a filter
 
-Passing nothing gives you `Wood2014Filter`, which is the right answer almost always:
+If you do not pass a filter, GradeIT uses `Wood2014Filter`. This is suitable for most traces:
 
 ```python
 result = gradeit(trace, elevation_model=model)  # Wood2014Filter applied
 ```
 
-To disable filtering, or to compose filters:
+To disable filtering or use more than one filter:
 
 ```python
 from gradeit import BridgeFilter, Wood2014Filter
@@ -109,12 +103,10 @@ gradeit(
 )
 ```
 
-Sequences are applied in order, each consuming the previous filter's output, and grade is always
-recomputed from the final elevation so the two never disagree. If you use `BridgeFilter`, put it
-first — it keys on raw dip magnitude, which any smoother attenuates.
-
-See [Filters](filters) for the full parameter reference and
-[How Filtration Works](examples/02_filtering_example) for what turning the knobs actually does.
+GradeIT applies filters in order. Each filter receives the output from the last filter. GradeIT
+calculates grade from the final elevation. If you have large bridge artifacts, put `BridgeFilter` first.
+See [Filters](filters) for all parameters. See
+[How Filtration Works](examples/02_filtering_example) for filter behavior.
 
 ## Next
 
