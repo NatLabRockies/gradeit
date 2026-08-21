@@ -79,7 +79,7 @@ def deck(start: int, stop: int) -> np.ndarray:
     return np.interp(
         cum_ft[start : stop + 1],
         [cum_ft[start - 1], cum_ft[stop + 1]],
-        [raw.elevation_ft[start - 1], raw.elevation_ft[stop + 1]],
+        [raw.elevation_ft_unfiltered[start - 1], raw.elevation_ft_unfiltered[stop + 1]],
     )
 
 
@@ -94,7 +94,7 @@ print(f"{len(trace)} points, {cum_ft[-1] / 5280:.1f} mi\n")
 print(f"  {'':18} {'span_ft':>8} {'depth_ft':>9} {'aspect':>7}  location")
 for name, (s, t) in BRIDGES.items():
     span = float(cum_ft[t + 1] - cum_ft[s - 1])
-    depth = float((deck(s, t) - raw.elevation_ft[s : t + 1]).max())
+    depth = float((deck(s, t) - raw.elevation_ft_unfiltered[s : t + 1]).max())
     mid = (s + t) // 2
     print(
         f"  {name:18} {span:8.0f} {depth:9.1f} {span / depth:7.1f}"
@@ -102,15 +102,19 @@ for name, (s, t) in BRIDGES.items():
     )
 
 s, t = BRIDGES["Carquinez Strait"]
-print(f"\nRaw profile across the Carquinez Strait (deck ~{raw.elevation_ft[s - 1]:.0f} ft):\n")
+print(
+    f"\nRaw profile across the Carquinez Strait (deck ~{raw.elevation_ft_unfiltered[s - 1]:.0f} ft):\n"
+)
 print("   idx    elev_ft   grade%")
 for i in range(s - 3, t + 4, 8):
-    print(f"  {i:5d} {raw.elevation_ft[i]:9.1f} {100 * raw.grade_dec[i]:8.2f}")
+    print(
+        f"  {i:5d} {raw.elevation_ft_unfiltered[i]:9.1f} {100 * raw.grade_dec_unfiltered[i]:8.2f}"
+    )
 print(
     f"\nThe DEM sits on the water for {cum_ft[t] - cum_ft[s]:.0f} ft at ~"
-    f"{raw.elevation_ft[s : t + 1].min():.1f} ft elevation, so the trace 'descends' "
-    f"{100 * raw.grade_dec[s : t + 2].min():.0f}%\ninto the strait and 'climbs' "
-    f"{100 * raw.grade_dec[s : t + 2].max():+.0f}% out of it."
+    f"{raw.elevation_ft_unfiltered[s : t + 1].min():.1f} ft elevation, so the trace 'descends' "
+    f"{100 * raw.grade_dec_unfiltered[s : t + 2].min():.0f}%\ninto the strait and 'climbs' "
+    f"{100 * raw.grade_dec_unfiltered[s : t + 2].max():+.0f}% out of it."
 )
 
 # %%
@@ -127,7 +131,7 @@ print("Max error against the road deck, in feet:\n")
 print(f"  {'':18} {'raw DEM':>10} {'Wood2014Filter()':>18}")
 for name, (bs, bt) in BRIDGES.items():
     print(
-        f"  {name:18} {error_on(bs, bt, raw.elevation_ft):10.1f}"
+        f"  {name:18} {error_on(bs, bt, raw.elevation_ft_unfiltered):10.1f}"
         f" {error_on(bs, bt, default.elevation_ft_filtered):18.1f}"
     )
 print(
@@ -197,7 +201,7 @@ assert best.grade_dec_filtered is not None
 
 print(f"  {'':34} {'short':>8} {'Carquinez':>11} {'max|g|':>9} {'p99|g|':>9}")
 for label, elev, grade in (
-    ("raw DEM", raw.elevation_ft, raw.grade_dec),
+    ("raw DEM", raw.elevation_ft_unfiltered, raw.grade_dec_unfiltered),
     ("Wood2014Filter()  [default]", default.elevation_ft_filtered, default.grade_dec_filtered),
     ("BridgeFilter(6000) + Wood2014", best.elevation_ft_filtered, best.grade_dec_filtered),
 ):
@@ -251,7 +255,7 @@ window = slice(s - 120, t + 120)
 miles = cum_ft / 5280.0
 fig, (ax_e, ax_g) = plt.subplots(2, 1, figsize=(11, 7), sharex=True)
 
-ax_e.plot(miles[window], raw.elevation_ft[window], lw=1.0, color="0.6", label="Raw USGS")
+ax_e.plot(miles[window], raw.elevation_ft_unfiltered[window], lw=1.0, color="0.6", label="Raw USGS")
 ax_e.plot(
     miles[window],
     default.elevation_ft_filtered[window],
@@ -270,7 +274,9 @@ ax_e.set_ylabel("Elevation, ft")
 ax_e.legend(loc="lower right")
 ax_e.grid(alpha=0.3)
 
-ax_g.plot(miles[window], 100 * raw.grade_dec[window], lw=1.0, color="0.6", label="Raw USGS")
+ax_g.plot(
+    miles[window], 100 * raw.grade_dec_unfiltered[window], lw=1.0, color="0.6", label="Raw USGS"
+)
 ax_g.plot(
     miles[window],
     100 * default.grade_dec_filtered[window],

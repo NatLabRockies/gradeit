@@ -3,15 +3,9 @@
 
 `gradeit()` filters the elevation profile before it computes grade. By
 default, `gradeit()` uses `Wood2014Filter`. This is the five-step routine
-from Wood et al. (2014), NREL/TP-5400-61109.
+from Wood et al. (2014), [Paper link](https://docs.nlr.gov/docs/fy14osti/61109.pdf).
 
-This page explains the steps. It shows why the parameters use *feet* instead
-of sample counts. It also shows what happens when you change these
-parameters. It uses the same Golden, Colorado trace as
-[Your First Grade Profile](01_basic_example).
-
-See [Methodology](../methodology) for the paper's five steps. See
-[Filters](../filters) for the full parameter reference.
+See [Methodology](../methodology) for more detail on the methodology.
 """
 
 
@@ -20,11 +14,21 @@ def main():
     import numpy as np
 
     from _data import TILE_DIR, load_coords
-    from gradeit import BridgeFilter, USGSLocal, Wood2014Filter, gradeit
-    from gradeit.filters.wood2014 import resolve_parameters
+    from gradeit import BridgeFilter, USGSLocal, gradeit
 
     trace = load_coords("golden_creek")
     elevation_model = USGSLocal(TILE_DIR)
+
+    # One palette for every figure on this page: the raw DEM is the neutral
+    # reference, the filtered profile carries the identity color, and red is
+    # reserved for what the filter is supposed to catch.
+    RAW = "#6b6b6b"
+    FILTERED = "#1f77b4"
+    BRIDGE = "#e06c00"
+    ARTIFACT = "#b3282d"
+
+    # Value labels sit on a scrap of the surface so a line never runs through them.
+    LABEL_BOX = dict(facecolor="white", edgecolor="none", alpha=0.85, pad=1.0)
 
     """
     ## Start with no filter at all
@@ -34,189 +38,180 @@ def main():
     """
 
     raw = gradeit(trace, elevation_model=elevation_model, elevation_filter=None)
+    miles = np.cumsum(raw.distances_ft) / 5280
 
-    print(f"filtered arrays populated? {raw.elevation_ft_filtered is not None}")
-    print(f"raw max |grade|  {100 * np.abs(raw.grade_dec).max():.2f}%")
+    fig, (ax_elev, ax_grade) = plt.subplots(2, 1, figsize=(10, 6), sharex=True)
 
-    """
-    ## Why the parameters are in feet
-
-    A GPS trace is sampled in **time**. So its spacing in **distance**
-    changes with vehicle speed. On this trace:
-    """
-
-    spacing = raw.distances_ft[1:]
-    print(f"point spacing (ft):  median {np.median(spacing):.0f}")
-    print(f"                     p5     {np.percentile(spacing, 5):.0f}")
-    print(f"                     p95    {np.percentile(spacing, 95):.0f}")
-    print(f"                     range  {spacing.min():.0f} to {spacing.max():.0f}")
-
-    """
-    This is a sevenfold change between the 5th and 95th percentile. A filter
-    with a fixed *point-count* window would have a physical cutoff that
-    varies sevenfold along a single trace. It would smooth hard where the
-    vehicle moved slowly, and barely at all where the vehicle moved fast.
-
-    Step B of the routine resamples the trace onto a uniform distance grid
-    first. This step makes a fixed cutoff in feet possible.
-    `resolve_parameters()` shows what the declared feet resolve to on this
-    trace, without running the filter:
-    """
-
-    total_ft = raw.distances_ft.sum()
-    delta_ft, savgol_window, polyorder, binomial_order = resolve_parameters(
-        Wood2014Filter(), total_ft
+    ax_elev.plot(miles, raw.elevation_ft_unfiltered, color=RAW, lw=1.2)
+    ax_elev.set_ylabel("elevation (ft)")
+    ax_elev.set_title(
+        "Raw DEM lookup, no filter (elevation_filter=None) — "
+        f"{raw.distances_ft.sum() / 5280:.1f} miles near Golden, Colorado",
+        fontsize=11,
     )
-    print(f"trace length           {total_ft:,.0f} ft")
-    print(f"grid spacing           {delta_ft:.2f} ft  (from interval_ft=100)")
-    print(f"Savitzky-Golay window  {savgol_window} nodes  (from savgol_window_ft=600)")
-    print(f"polynomial order       {polyorder}")
-    print(f"binomial order         {binomial_order}  (from binomial_sigma_ft=100)")
+
+    raw_pct = 100 * raw.grade_dec_unfiltered
+    spike = int(np.argmax(np.abs(raw_pct)))
+    ax_grade.plot(miles, raw_pct, color=RAW, lw=1.2)
+    ax_grade.axhline(0, color="k", lw=0.5)
+    ax_grade.plot(miles[spike], raw_pct[spike], "o", ms=5, color=ARTIFACT)
+    ax_grade.annotate(
+        f"  {abs(raw_pct[spike]):.2f}%",
+        (miles[spike], raw_pct[spike]),
+        fontsize=9,
+        color=ARTIFACT,
+        va="center",
+    )
+    ax_grade.set_ylabel("grade (%)")
+    ax_grade.set_xlabel("distance (miles)")
+    ax_grade.margins(y=0.2)
+
+    fig.tight_layout()
+    plt.show()
 
     """
-    A 600 ft window becomes a 7-node kernel here. If you change
-    `interval_ft`, the node count changes to keep the same 600 ft of road
-    under the kernel.
+    ## Bare Earth Artifacts
 
-    ## What the default actually changed
-
-    The creek crossing sits at index 119 of this trace. The bare-earth DEM
-    has no bridge deck in it. So the lookup drops into the streambed, and
-    differentiation of that value produces a grade spike that no vehicle
-    drove.
+    Next, let's look at a case where the DEM shows a artifact from using a bare-earth model.
+    In this example, we'll zoom in on a section where the road crosses over a river.
+    The elevation that gets reported back to us shows the elevation drop down and then go back up.
+    But, in reality, the road was constructed to go over the river and so the real grade is much less.
     """
 
     filtered = gradeit(trace, elevation_model=elevation_model)
     creek = 119
+    assert np.argmax(np.abs(filtered.elevation_ft_filtered - raw.elevation_ft_unfiltered)) == creek
 
-    lo, hi = creek - 3, creek + 4
-    assert np.argmax(np.abs(filtered.elevation_ft_filtered - raw.elevation_ft)) == creek
+    deck = (raw.elevation_ft_unfiltered[creek - 1] + raw.elevation_ft_unfiltered[creek + 1]) / 2
+    lo, hi = creek - 12, creek + 13
+    x = miles[lo:hi]
 
-    print("        raw DEM            default filter")
-    print(" idx    elev_ft  grade     elev_ft  grade")
-    for i in range(lo, hi):
-        mark = "  <-- creek" if i == creek else ""
-        print(
-            f" {i:4d} {raw.elevation_ft[i]:9.1f} {100 * raw.grade_dec[i]:6.1f}%"
-            f"  {filtered.elevation_ft_filtered[i]:9.1f} "
-            f"{100 * filtered.grade_dec_filtered[i]:6.1f}%{mark}"
+    fig, (ax_elev, ax_grade) = plt.subplots(2, 1, figsize=(9, 6), sharex=True)
+
+    for ax, key, ylabel in ((ax_elev, "elev", "elevation (ft)"), (ax_grade, "grade", "grade (%)")):
+        raw_y = raw.elevation_ft_unfiltered if key == "elev" else 100 * raw.grade_dec_unfiltered
+        filt_y = (
+            filtered.elevation_ft_filtered if key == "elev" else 100 * filtered.grade_dec_filtered
+        )
+        ax.plot(x, raw_y[lo:hi], color=RAW, lw=1.4, label="raw DEM")
+        ax.plot(x, filt_y[lo:hi], color=FILTERED, lw=2.0, label="default filter")
+        ax.axvline(miles[creek], color=ARTIFACT, lw=1.0, ls=":")
+        ax.set_ylabel(ylabel)
+        ax.margins(y=0.25)
+
+    for label, series, color, dy in (
+        ("raw", raw.elevation_ft_unfiltered, RAW, -12),
+        ("filtered", filtered.elevation_ft_filtered, FILTERED, 14),
+    ):
+        ax_elev.plot(miles[creek], series[creek], "o", ms=5, color=color)
+        ax_elev.annotate(
+            f"{label} {series[creek]:,.1f} ft ({series[creek] - deck:+.1f})",
+            (miles[creek], series[creek]),
+            textcoords="offset points",
+            xytext=(10, dy),
+            fontsize=8,
+            color=color,
+            bbox=LABEL_BOX,
         )
 
-    deck = (raw.elevation_ft[creek - 1] + raw.elevation_ft[creek + 1]) / 2
-    print(f"\nroad deck implied by the clean neighbors: {deck:.1f} ft")
-    print(f"  raw      {raw.elevation_ft[creek]:.1f} ft ({raw.elevation_ft[creek] - deck:+.1f})")
-    print(
-        f"  filtered {filtered.elevation_ft_filtered[creek]:.1f} ft "
-        f"({filtered.elevation_ft_filtered[creek] - deck:+.1f})"
-    )
+    ax_grade.axhline(0, color="k", lw=0.5)
+    ax_grade.set_xlabel("distance (miles)")
+    ax_elev.legend(loc="upper right", fontsize=8)
+    ax_elev.set_title("The creek crossing at index 119", fontsize=11)
+    fig.tight_layout()
+    plt.show()
 
     """
-    Nothing above is bridge-specific. Step D discards nodes whose
-    *filtration residual* is too large to be DEM noise. It then backfills
-    these nodes by interpolation. A bare-earth artifact always has a large
-    residual. So the default filter catches it, without ever being told that
-    bridges exist.
-
-    ## Filtration should not reshape terrain
-
-    The paper states that filtration should not have a transformational
-    effect on the underlying elevation layer. This claim is easy to check:
-    the grade tail should collapse, while the elevation profile barely
-    moves.
-    """
-
-    raw_pct = np.abs(100 * raw.grade_dec)
-    filt_pct = np.abs(100 * filtered.grade_dec_filtered)
-    print(f"{'':10}{'max':>8}{'p99':>8}{'p95':>8}")
-    for label, g in (("raw", raw_pct), ("filtered", filt_pct)):
-        print(f"{label:10}{g.max():7.2f}%{np.percentile(g, 99):7.2f}%{np.percentile(g, 95):7.2f}%")
-    moved = np.abs(filtered.elevation_ft_filtered - raw.elevation_ft)
-    print(f"\nmedian |filtered - raw| elevation: {np.median(moved):.2f} ft")
-    print(f"max    |filtered - raw| elevation: {moved.max():.2f} ft  (at the creek)")
-
-    """
-    ## Turning the knobs
-
-    `Wood2014Filter` is a frozen dataclass. Every parameter is a constructor
-    argument. A wider `savgol_window_ft` value gives a smoother grade signal,
-    but it also attenuates short, real features:
-    """
-
-    print("savgol_window_ft   max|grade|   p99   median |filtered-raw|")
-    for window_ft in (300, 600, 1200, 2400):
-        swept = gradeit(
-            trace,
-            elevation_model=elevation_model,
-            elevation_filter=Wood2014Filter(savgol_window_ft=window_ft),
-        )
-        g = 100 * np.abs(swept.grade_dec_filtered)
-        drift = np.median(np.abs(swept.elevation_ft_filtered - raw.elevation_ft))
-        print(f"{window_ft:12d} ft {g.max():9.2f}% {np.percentile(g, 99):6.2f}% {drift:14.2f} ft")
-
-    """
-    `residual_threshold_ft` is the more interesting parameter: it decides
-    what counts as an artifact. Its 8 ft default value is the DEM's own
-    2.44 m vertical RMSE. A residual bigger than the elevation model's
-    1-sigma accuracy cannot be explained as noise. If you raise the
-    threshold too far, the filter stops rejecting the creek:
-    """
-
-    print("residual_threshold_ft   creek elev_ft   max|grade|")
-    for threshold in (4, 8, 16, 32):
-        swept = gradeit(
-            trace,
-            elevation_model=elevation_model,
-            elevation_filter=Wood2014Filter(residual_threshold_ft=threshold),
-        )
-        print(
-            f"{threshold:17d} ft {swept.elevation_ft_filtered[creek]:14.1f} "
-            f"{100 * np.abs(swept.grade_dec_filtered).max():11.2f}%"
-        )
-
-    """
-    At 16 ft and above, the creek survives filtration and the grade spike
-    returns. The default values are not arbitrary.
+    Notice how the filtered elevation profile correcly captures and corrects for this artifact.
 
     ## A filter that is wrong for this trace
 
-    `BridgeFilter` targets bare-earth spans directly. It finds dips that sit
-    below the surrounding road on both sides. This description also matches
-    a real valley. Geometry alone cannot tell the two apart. The
-    `baseline_radius_ft` parameter separates them; its default value is one
-    mile.
+    In addition to the default elevation filter, we also have a `BridgeFilter` that is used to detect and correct long bridge spans that the default filter can't catch.
+    But, this filter can also catch real valleys where the road actually follows the terrain and so it should be used with caution.
+    To show an example of that we can apply the bridge filter to our trace and see what happens. 
 
-    This trace runs through real canyon terrain. So the default radius is
-    much too wide, and the filter interpolates straight across a genuine
-    valley:
     """
 
     over = gradeit(trace, elevation_model=elevation_model, elevation_filter=BridgeFilter())
-    delta = np.abs(over.elevation_ft_filtered - raw.elevation_ft)
+    delta = np.abs(over.elevation_ft_filtered - raw.elevation_ft_unfiltered)
     touched = np.flatnonzero(delta > 1.0)
-    span_ft = raw.distances_ft[touched.min() : touched.max() + 1].sum()
+    erased_ft = raw.distances_ft[touched.min() : touched.max() + 1].sum()
 
-    print(f"stock BridgeFilter moved {touched.size} of {len(trace)} points")
-    print(f"  across {span_ft:,.0f} ft ({span_ft / 5280:.2f} miles) of road")
-    print(f"  by up to {delta.max():.1f} ft")
-    print(
-        f"default Wood2014Filter moved {int((moved > 1.0).sum())} points, max {moved.max():.1f} ft"
+    lo = max(touched.min() - 25, 0)
+    hi = min(touched.max() + 25, len(trace))
+    x = miles[lo:hi]
+    deepest = int(np.argmax(delta))
+
+    fig, ax = plt.subplots(figsize=(10, 4.4))
+    ax.axvspan(miles[touched.min()], miles[touched.max()], color=BRIDGE, alpha=0.12, lw=0)
+    ax.plot(x, raw.elevation_ft_unfiltered[lo:hi], color=RAW, lw=1.4, label="raw DEM")
+    ax.plot(
+        x,
+        filtered.elevation_ft_filtered[lo:hi],
+        color=FILTERED,
+        lw=1.6,
+        label="Wood2014Filter (default)",
     )
+    ax.plot(
+        x,
+        over.elevation_ft_filtered[lo:hi],
+        color=BRIDGE,
+        lw=2.0,
+        ls="--",
+        label="BridgeFilter() 1-mile default",
+    )
+    ax.annotate(
+        "",
+        xy=(miles[deepest], raw.elevation_ft_unfiltered[deepest]),
+        xytext=(miles[deepest], over.elevation_ft_filtered[deepest]),
+        arrowprops=dict(arrowstyle="<->", color=BRIDGE, lw=1.4),
+    )
+    ax.annotate(
+        f"{delta.max():.1f} ft of canyon removed",
+        (
+            miles[deepest],
+            (raw.elevation_ft_unfiltered[deepest] + over.elevation_ft_filtered[deepest]) / 2,
+        ),
+        textcoords="offset points",
+        xytext=(9, 0),
+        va="center",
+        fontsize=9,
+        color=BRIDGE,
+    )
+    ax.set_ylabel("elevation (ft)")
+    ax.set_xlabel("distance (miles)")
+    ax.set_title(
+        f"BridgeFilter moved {touched.size} of {len(trace)} points across "
+        f"{erased_ft:,.0f} ft ({erased_ft / 5280:.2f} miles) ",
+        fontsize=10,
+    )
+    ax.legend(loc="lower left", fontsize=8)
+    ax.margins(y=0.2)
+    fig.tight_layout()
+    plt.show()
 
     """
-    This is real terrain, erased quietly. The lesson is not that
-    `BridgeFilter` is broken. [Bare-Earth Bridges](03_bridges_example) shows
+    Note that the `BridgeFilter` incorrectly added a bridge over a real valley.
+    It's not that `BridgeFilter` is broken. [Bare-Earth Bridges](03_bridges_example) shows
     a trace where `BridgeFilter` is the only filter that works. The lesson
-    is that you must scale the radius to the spans you want to correct. You
-    should also always compare filtered output against raw output, across
-    the *whole* trace, before you trust a filter.
-    """
+    is that you must scale the radius to the spans you want to correct.     """
 
     fig, ax = plt.subplots(figsize=(10, 5))
-    miles = np.cumsum(raw.distances_ft) / 5280
-    ax.plot(miles, raw.elevation_ft, lw=1, alpha=0.5, color="0.4", label="raw DEM")
-    ax.plot(miles, filtered.elevation_ft_filtered, lw=1.6, label="Wood2014Filter (default)")
+    ax.plot(miles, raw.elevation_ft_unfiltered, lw=1, alpha=0.5, color=RAW, label="raw DEM")
     ax.plot(
-        miles, over.elevation_ft_filtered, lw=1.4, ls="--", label="BridgeFilter() 1-mile default"
+        miles,
+        filtered.elevation_ft_filtered,
+        lw=1.6,
+        color=FILTERED,
+        label="Wood2014Filter (default)",
+    )
+    ax.plot(
+        miles,
+        over.elevation_ft_filtered,
+        lw=1.4,
+        ls="--",
+        color=BRIDGE,
+        label="BridgeFilter() 1-mile default",
     )
     ax.set_xlabel("distance (miles)")
     ax.set_ylabel("elevation (ft)")

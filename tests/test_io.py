@@ -75,12 +75,18 @@ class GradeResultTest(unittest.TestCase):
         self.dist = np.array([0.0, 100.0])
         self.grade = np.array([0.0, 0.1])
 
-    def test_to_dict_unfiltered_keys(self):
+    def test_to_dict_keys_without_filtering(self):
         result = GradeResult(self.coords, self.elev, self.dist, self.grade)
         d = result.to_dict()
         self.assertEqual(
             set(d),
-            {"latitude", "longitude", "elevation_ft", "distances_ft", "grade_dec_unfiltered"},
+            {
+                "latitude",
+                "longitude",
+                "elevation_ft_unfiltered",
+                "distances_ft",
+                "grade_dec_unfiltered",
+            },
         )
         self.assertEqual(d["grade_dec_unfiltered"], [0.0, 0.1])
 
@@ -103,7 +109,13 @@ class GradeResultTest(unittest.TestCase):
         df = result.to_dataframe()
         self.assertEqual(
             list(df.columns),
-            ["latitude", "longitude", "elevation_ft", "distances_ft", "grade_dec_unfiltered"],
+            [
+                "latitude",
+                "longitude",
+                "elevation_ft_unfiltered",
+                "distances_ft",
+                "grade_dec_unfiltered",
+            ],
         )
         self.assertEqual(len(df), 2)
 

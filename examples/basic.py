@@ -19,8 +19,9 @@ example_trace.head()
 # %%
 
 # choose the elevation model;
-# gradeit() defaults to USGSApi() (the online query service, no setup needed),
-# but for whole-trace lookups the local raster model (USGSLocal) is much faster.
+# gradeit() defaults to USGSApi() (the online 3DEP service, no setup needed,
+# batched requests), but the local raster model (USGSLocal) is faster still and
+# does not depend on a public service.
 # USGSLocal requires you download the USGS raster tiles; see the
 # scripts/get_usgs_tiles.py script. Sample traces 1, 2, and 3 are in Colorado,
 # so you can use the colorado_tiles.txt file as an input to the script.
@@ -63,15 +64,15 @@ print(" idx    elev_ft   grade      elev_ft   grade")
 for i in range(DIP - 3, DIP + 4):
     flag = "  <-- creek" if i == DIP else ""
     print(
-        f" {i:4d} {result.elevation_ft[i]:9.2f} {100 * result.grade_dec[i]:7.2f}%"
+        f" {i:4d} {result.elevation_ft_unfiltered[i]:9.2f} {100 * result.grade_dec_unfiltered[i]:7.2f}%"
         f"  {result.elevation_ft_filtered[i]:9.2f} {100 * result.grade_dec_filtered[i]:7.2f}%{flag}"
     )
 
-deck = (result.elevation_ft[DIP - 1] + result.elevation_ft[DIP + 1]) / 2
+deck = (result.elevation_ft_unfiltered[DIP - 1] + result.elevation_ft_unfiltered[DIP + 1]) / 2
 print(
     f"\nRoad deck between the clean neighbors: {deck:.1f} ft"
-    f"\n  raw      {result.elevation_ft[DIP]:.1f} ft "
-    f"({result.elevation_ft[DIP] - deck:+.1f} ft) -> grade {100 * result.grade_dec[DIP]:+.1f}%"
+    f"\n  raw      {result.elevation_ft_unfiltered[DIP]:.1f} ft "
+    f"({result.elevation_ft_unfiltered[DIP] - deck:+.1f} ft) -> grade {100 * result.grade_dec_unfiltered[DIP]:+.1f}%"
     f"\n  filtered {result.elevation_ft_filtered[DIP]:.1f} ft "
     f"({result.elevation_ft_filtered[DIP] - deck:+.1f} ft) -> grade "
     f"{100 * result.grade_dec_filtered[DIP]:+.1f}%"
@@ -82,14 +83,14 @@ print(
 # flattening the distribution, because it is removing artifacts rather than
 # reshaping terrain. (The paper makes the same point -- filtration should not
 # have a transformational effect on the base USGS layer.)
-raw_pct = np.abs(100 * result.grade_dec)
+raw_pct = np.abs(100 * result.grade_dec_unfiltered)
 filt_pct = np.abs(100 * result.grade_dec_filtered)
 print(f"{'':10} {'max':>8} {'p99':>8} {'p95':>8}")
 for label, g in (("raw", raw_pct), ("filtered", filt_pct)):
     print(f"{label:10} {g.max():7.2f}% {np.percentile(g, 99):7.2f}% {np.percentile(g, 95):7.2f}%")
 print(
     "median |filtered - raw| elevation: "
-    f"{np.median(np.abs(result.elevation_ft_filtered - result.elevation_ft)):.2f} ft"
+    f"{np.median(np.abs(result.elevation_ft_filtered - result.elevation_ft_unfiltered)):.2f} ft"
 )
 
 # %%
@@ -98,7 +99,7 @@ df_w_grade = result.to_dataframe()
 df_w_grade.head()
 
 # %%
-df_w_grade.elevation_ft.plot()
+df_w_grade.elevation_ft_unfiltered.plot()
 # %%
 df_w_grade.elevation_ft_filtered.plot()
 # %%

@@ -43,7 +43,7 @@ def plot_grade_map(
 
     Each segment between consecutive coordinates is drawn as a short polyline
     colored by the grade of that segment. Hovering reveals the segment's
-    array index (e.g. ``result.grade_dec[i]``), grade, elevation, and segment
+    array index (e.g. ``result.grade_dec_unfiltered[i]``), grade, elevation, and segment
     length, so it is easy to find bridge/overpass artifacts where the
     bare-earth DEM dips into the valley underneath -- and to jump straight to
     the corresponding row in the underlying data.
@@ -125,7 +125,7 @@ def plot_grade_map(
     elev_for_tooltip = (
         result.elevation_ft_filtered
         if result.elevation_ft_filtered is not None
-        else result.elevation_ft
+        else result.elevation_ft_unfiltered
     )
 
     m = folium.Map(tiles=tiles)
@@ -189,7 +189,7 @@ def _select_layers(grade: GradeChoice, result: GradeResult) -> List[Tuple[str, n
         )
 
     if grade == "raw":
-        return [("Raw grade", result.grade_dec)]
+        return [("Raw grade", result.grade_dec_unfiltered)]
     if grade == "filtered":
         # mypy: narrowed by the has_filtered check above
         assert result.grade_dec_filtered is not None
@@ -202,7 +202,7 @@ def _select_layers(grade: GradeChoice, result: GradeResult) -> List[Tuple[str, n
         # see until you toggle it off -- put filtered last so the default view
         # is the corrected profile, not the artifacts it just removed.
         return [
-            ("Raw grade", result.grade_dec),
+            ("Raw grade", result.grade_dec_unfiltered),
             ("Filtered grade", result.grade_dec_filtered),
         ]
     raise InvalidInputError(
@@ -264,7 +264,7 @@ def _add_segments(
         elev_text = f"{float(elevation_arr[i]):.1f} ft" if np.isfinite(elevation_arr[i]) else "n/a"
         seg_len_text = f"{float(distances_ft[i]):.1f} ft"
 
-        # `i` is the array index in result.grade_dec / .elevation_ft / .coordinates
+        # `i` indexes result.grade_dec_unfiltered / .elevation_ft_unfiltered / .coordinates
         # for the end of this segment, so the tooltip doubles as a lookup key.
         tooltip = folium.Tooltip(
             f"<b>{label}</b><br>"

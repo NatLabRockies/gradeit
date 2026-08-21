@@ -90,8 +90,8 @@ Add a new page by writing the file and adding it to `docs/_toc.yml` **without** 
 runs code for every number and figure. A failing example fails the build.
 
 Examples are offline and deterministic. They read small DEM crops from `docs/data/`. They do not
-use the network. **Do not call `USGSApi` from an example.** It sends one request for each point.
-This would make the build unreliable and overload a public service. Document it in a prose page.
+use the network. **Do not call `USGSApi` from an example.** Even though it batches its
+requests, it still depends on a public service, which would make the build unreliable. Document it in a prose page.
 
 ```{warning}
 **Do not set `MPLBACKEND=Agg` when you build documentation.** The notebook kernel inherits this

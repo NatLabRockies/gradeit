@@ -1,15 +1,9 @@
 """
 # Bringing Your Own Elevation Source
 
-gradeit includes two elevation models: `USGSApi` and `USGSLocal`. Neither
-model has special status. The `elevation_model` parameter accepts any object
-that implements the `ElevationModel` interface, which has a single method.
-
 Use this interface when your elevation data comes from a source gradeit does
 not know about: a different national DEM, a lidar survey, a database, a
 vendor API, or synthetic terrain in a test.
-
-This page needs no data files and no network connection.
 """
 
 
@@ -81,12 +75,14 @@ def main():
 
     result = gradeit(trace, elevation_model=SyntheticTerrain(center))
 
-    peak = int(np.argmax(result.elevation_ft))
+    peak = int(np.argmax(result.elevation_ft_unfiltered))
     print(f"{len(trace)} points, {result.distances_ft.sum() / 5280:.2f} miles")
-    print(f"peak at index {peak}: {result.elevation_ft[peak]:.1f} ft")
-    print(f"elevation range: {result.elevation_ft.min():.1f} to {result.elevation_ft.max():.1f} ft")
+    print(f"peak at index {peak}: {result.elevation_ft_unfiltered[peak]:.1f} ft")
     print(
-        f"max |grade|: raw {100 * np.abs(result.grade_dec).max():.2f}%, "
+        f"elevation range: {result.elevation_ft_unfiltered.min():.1f} to {result.elevation_ft_unfiltered.max():.1f} ft"
+    )
+    print(
+        f"max |grade|: raw {100 * np.abs(result.grade_dec_unfiltered).max():.2f}%, "
         f"filtered {100 * np.abs(result.grade_dec_filtered).max():.2f}%"
     )
 
@@ -96,7 +92,7 @@ def main():
     changes clean input in a meaningful way will also distort real terrain.
     """
 
-    drift = np.abs(result.elevation_ft_filtered - result.elevation_ft)
+    drift = np.abs(result.elevation_ft_filtered - result.elevation_ft_unfiltered)
     print(f"median |filtered - raw|: {np.median(drift):.3f} ft")
     print(f"max    |filtered - raw|: {drift.max():.3f} ft")
 
@@ -128,7 +124,7 @@ def main():
         elevation_model=BoundedTerrain(SyntheticTerrain(center), -105.21, -105.19),
         elevation_filter=None,
     )
-    covered = np.isfinite(bounded.elevation_ft)
+    covered = np.isfinite(bounded.elevation_ft_unfiltered)
     print(
         f"{covered.sum()} of {len(trace)} points inside coverage, {(~covered).sum()} returned NaN"
     )
@@ -137,9 +133,8 @@ def main():
     ## Caching an expensive source
 
     The interface has only one method, so wrapping it is easy. If your real
-    source makes a slow network call — `USGSApi` sends one HTTP request *per
-    point* — a cache is worth adding, especially when several traces revisit
-    the same roads.
+    source makes a slow network call, a cache is worth adding, especially when
+    several traces revisit the same roads.
     """
 
     class CachedElevation(ElevationModel):

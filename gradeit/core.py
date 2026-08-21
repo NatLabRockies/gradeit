@@ -56,9 +56,10 @@ def gradeit(
     Returns
     -------
     GradeResult
-        A container of numpy arrays (raw elevation, distances, grade, and the
-        filtered profiles when filtering ran). Use ``.to_dataframe()`` or
-        ``.to_dict()`` to materialize it. The input object is never mutated.
+        A container of numpy arrays. Elevation and grade each come in an
+        ``_unfiltered`` form (the raw lookup) and, when filtering ran, a
+        ``_filtered`` form. Use ``.to_dataframe()`` or ``.to_dict()`` to
+        materialize it. The input object is never mutated.
     """
     coordinates = to_coordinates(data, lat_col=lat_col, lon_col=lon_col)
     if len(coordinates) < 2:
@@ -67,14 +68,16 @@ def gradeit(
     emodel = elevation_model or USGSApi()
 
     elevation_list = emodel.get_elevation(coordinates)
-    elevation_ft = np.asarray(elevation_list, dtype=np.float64)
+    elevation_ft_unfiltered = np.asarray(elevation_list, dtype=np.float64)
 
     # distances_ft carries a leading 0 so it aligns point-for-point with the
     # elevation/grade arrays; the per-segment distances are distances_ft[1:].
     segment_distances = get_distances(coordinates)
     distances_ft = np.asarray([0.0] + segment_distances, dtype=np.float64)
 
-    grade_dec = np.asarray(get_grade(elevation_list, distances=segment_distances), dtype=np.float64)
+    grade_dec_unfiltered = np.asarray(
+        get_grade(elevation_list, distances=segment_distances), dtype=np.float64
+    )
 
     elevation_ft_filtered: Optional[np.ndarray] = None
     grade_dec_filtered: Optional[np.ndarray] = None
@@ -90,9 +93,9 @@ def gradeit(
 
     return GradeResult(
         coordinates=coordinates,
-        elevation_ft=elevation_ft,
+        elevation_ft_unfiltered=elevation_ft_unfiltered,
         distances_ft=distances_ft,
-        grade_dec=grade_dec,
+        grade_dec_unfiltered=grade_dec_unfiltered,
         elevation_ft_filtered=elevation_ft_filtered,
         grade_dec_filtered=grade_dec_filtered,
     )

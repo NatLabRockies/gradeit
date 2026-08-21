@@ -2,9 +2,11 @@
 
 **Road Grade Inference Tool** — add elevation and road grade to GPS points.
 
-GradeIT is a Python package from the National Laboratory of the Rockies. Give it GPS coordinates.
+GradeIT is a Python package from the National Laboratory of the Rockies.
+It takes GPS coordinates as input and returns the corresponding elevation and road grade.
 It gets elevation from the [USGS Digital Elevation Model](https://www.usgs.gov/core-science-systems/ngp/3dep), filters the elevation profile, and
-calculates road grade. It is for vehicles on paved roads.
+calculates road grade.
+The typical and tested application for this is to add elevation and road grade information to vehicle telematics data.
 
 ```python
 from gradeit import gradeit
@@ -13,21 +15,21 @@ result = gradeit(trace)
 
 result.grade_dec_filtered  # decimal road grade (rise/run), per point
 result.elevation_ft_filtered  # cleaned elevation, feet
-result.elevation_ft  # the raw DEM lookup, always preserved
+result.elevation_ft_unfiltered  # the raw DEM lookup, always preserved
 ```
 
 ## The problem this solves
 
-The USGS DEM is a **bare-earth** model. It shows the ground, not the road surface. A bridge across
-a river returns the elevation of the water. A viaduct across a valley returns the valley floor.
+Vehicle telematics data might collect GPS elevation data but these signals are often noisy and unreliable for calculating accurate road grade.
 
-These values create grade spikes that no vehicle drove. In
-[Bare-Earth Bridges](examples/03_bridges_example), the raw DEM gives an **89% grade** on Interstate
-80. Wood et al. (2014) say that these artifacts are unsuitable for vehicle simulation.
+To compensate for this, we can reference real collected elevation data but it comes with own challenges.
 
-GradeIT removes these artifacts and preserves the nearby terrain. This is difficult because a
-bridge and a valley can have the same shape. The default filter uses the five-step method from
-[Wood et al. (2014)](methodology).
+Namely, in GradeIT, we use a bare-earth digital elevation model.
+It shows the elevation of the ground, not the road surface, creating artifacts that need to be corrected.
+
+GradeIT removes these artifacts and preserves the nearby terrain.
+
+Take a look at [the methodology](methodology) for more details.
 
 ## Where to go
 
@@ -47,21 +49,18 @@ bridge and a valley can have the same shape. The default filter uses the five-st
 If you use GradeIT in published work, please cite the software:
 
 > National Laboratory of the Rockies. _GradeIT: Road Grade Inference Tool_ (version 0.2.0)
-> [Computer software]. https://github.com/NREL/gradeit
+> [Computer software]. https://github.com/NatLabRockies/gradeit
 
 ```bibtex
 @software{gradeit,
   title    = {{GradeIT}: Road Grade Inference Tool},
   author   = {{National Laboratory of the Rockies}},
   version  = {0.2.0},
-  url      = {https://github.com/NREL/gradeit},
+  url      = {https://github.com/NatLabRockies/gradeit},
   license  = {BSD-3-Clause}
 }
 ```
 
 The repository also carries a
-[`CITATION.cff`](https://github.com/NREL/gradeit/blob/main/CITATION.cff), which GitHub renders as
+[`CITATION.cff`](https://github.com/NatLabRockies/gradeit/blob/main/CITATION.cff), which GitHub renders as
 "Cite this repository".
-
-GradeIT uses a filter method from a separate publication. Cite
-[Wood et al. (2014)](methodology) if you use the method.

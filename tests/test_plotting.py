@@ -28,9 +28,9 @@ def _make_result(with_filtered: bool = False) -> GradeResult:
     filt_grade = grade * 0.5 if with_filtered else None
     return GradeResult(
         coordinates=coords,
-        elevation_ft=elev,
+        elevation_ft_unfiltered=elev,
         distances_ft=dist,
-        grade_dec=grade,
+        grade_dec_unfiltered=grade,
         elevation_ft_filtered=filt_elev,
         grade_dec_filtered=filt_grade,
     )
@@ -117,9 +117,9 @@ class PlotGradeMapTest(unittest.TestCase):
 
         result = GradeResult(
             coordinates=[Coordinate.from_lat_lon(39.0, -105.0)],
-            elevation_ft=np.array([7000.0]),
+            elevation_ft_unfiltered=np.array([7000.0]),
             distances_ft=np.array([0.0]),
-            grade_dec=np.array([0.0]),
+            grade_dec_unfiltered=np.array([0.0]),
         )
         with self.assertRaises(InvalidInputError):
             plot_grade_map(result)
@@ -130,7 +130,7 @@ class PlotGradeMapTest(unittest.TestCase):
 
     def test_tooltip_includes_segment_index(self):
         # Hover tooltip must expose the array index for cross-referencing
-        # against result.grade_dec / .elevation_ft / .coordinates.
+        # against result.grade_dec_unfiltered / .elevation_ft_unfiltered / .coordinates.
         from gradeit.plotting import plot_grade_map
 
         m = plot_grade_map(_make_result())
@@ -144,7 +144,7 @@ class PlotGradeMapTest(unittest.TestCase):
         from gradeit.plotting import plot_grade_map
 
         result = _make_result()
-        result.grade_dec[1] = np.nan
+        result.grade_dec_unfiltered[1] = np.nan
         m = plot_grade_map(result)
         self.assertIsInstance(m, folium.Map)
 

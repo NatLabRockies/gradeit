@@ -49,33 +49,17 @@ This frozen dataclass has a constructor argument for each parameter. You can sha
 short features. A wide bare-earth artifact can pull the smoothed road toward the artifact.
 
 **`residual_threshold_ft`** defines an artifact. A lower value removes more data. A value about
-twice the default can miss real artifacts. [This example](examples/02_filtering_example) shows a
-creek crossing that remains at 16 ft.
+twice the default can miss real artifacts. [This example](examples/02_filtering_example) shows more details.
 
 **`residual_grow_ratio`** helps with wide artifacts. A wide artifact pulls the smoothed curve down.
 This reduces the residual in the center. Without hysteresis, a per-node test removes only the
 edges.
 
-`resolve_parameters()` reports how feet values resolve to samples for a trace. It does not run the
-filter:
-
-```python
-from gradeit.filters.wood2014 import resolve_parameters
-
-delta_ft, window, polyorder, binomial_order = resolve_parameters(Wood2014Filter(), total_ft)
-```
-
 ## `BridgeFilter` — targeted bare-earth correction
 
-This filter finds dips below the nearby road on **both** sides. It interpolates road elevation
-across each dip. This replaces a bridge that the DEM does not show.
-
-The filter compares each point with a baseline from a rolling **maximum** elevation on each side.
-It uses the lower side maximum. During a steady climb or descent, the baseline is the point
-elevation. Uniform grade does not create a false positive.
-
-The filter uses nearby high ground, not a smoothed signal. Therefore, it can find spans that the
-`Wood2014Filter` residual test cannot find.
+This filter is useful for large bridges that can't be detected by the residual method alone.
+To do this the `BridgeFilter` looks for a dip that is lower than the nearby road on **both** sides.
+It interpolates road elevation across each dip.
 
 | Parameter                | Default           | What it controls                                                                                                                  |
 | ------------------------ | ----------------- | --------------------------------------------------------------------------------------------------------------------------------- |
@@ -88,8 +72,8 @@ The filter uses nearby high ground, not a smoothed signal. Therefore, it can fin
 | `grade_plausibility_tol` | `0.05`            | Reject a correction whose recovered grade differs from the surrounding median segment grade by more than this.                    |
 
 ```{warning}
-**A real valley can also sit below the road on both sides.** Geometry does not distinguish a valley
-from a bridge. The checks above cannot always separate them.
+Elevation does not distinguish a valley wihtout a bridge from a valley with a bridge. 
+The checks above cannot always separate them.
 
 `baseline_radius_ft` defines the difference. The one-mile default is suitable only for gentle
 terrain. Use hundreds of feet for typical overpasses and creek crossings. Use thousands of feet

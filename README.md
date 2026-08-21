@@ -10,8 +10,9 @@ grade to a sequence of GPS points.
 GradeIT gets elevation from the [USGS Digital Elevation Model](https://www.usgs.gov/core-science-systems/ngp/3dep). It filters the elevation and calculates
 road grade. GradeIT is for GPS points from vehicles on paved roads.
 
-You can use the USGS [Elevation Point Query Service](https://epqs.nationalmap.gov/v1/) or local
-raster tiles. The online service is easy to use. Local tiles give faster results.
+You can use the online USGS [3DEP](https://www.usgs.gov/3d-elevation-program) service or local
+raster tiles. The online service is easy to use and batches its requests. Local tiles are faster
+still.
 
 The USGS model is **bare-earth**. It shows the ground, not the road. A bridge over water or a valley
 returns the elevation below the bridge. This data creates large grade spikes. GradeIT removes these
@@ -54,8 +55,8 @@ result = gradeit(data)
 
 result.elevation_ft_filtered  # numpy array of filtered elevation (feet)
 result.grade_dec_filtered  # numpy array of decimal road grade (rise/run)
-result.elevation_ft  # the raw DEM lookup, always preserved
-result.grade_dec  # grade from the raw lookup, unfiltered
+result.elevation_ft_unfiltered  # the raw DEM lookup, always preserved
+result.grade_dec_unfiltered  # grade from the raw lookup
 result.to_dataframe()  # tabular view (requires gradeit[pandas])
 ```
 
@@ -63,8 +64,8 @@ Use the `_filtered` arrays. `gradeit()` returns a `GradeResult` that contains Nu
 not change its input.
 
 The `elevation_model` argument selects an `ElevationModel`. By default, GradeIT uses `USGSApi()`.
-This online service needs no setup, but it makes one request for each point. Use `USGSLocal` with
-local raster tiles for a full trace:
+This online service needs no setup and batches up to 1,000 points per request. Use `USGSLocal` with
+local raster tiles to avoid depending on a public service:
 
 ```python
 from gradeit import USGSLocal, gradeit

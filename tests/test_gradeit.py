@@ -44,9 +44,9 @@ class GradeitLocalTest(unittest.TestCase):
         result = gradeit(self.coords, elevation_model=self.model, elevation_filter=None)
         self.assertIsInstance(result, GradeResult)
         n = len(self.coords)
-        self.assertEqual(result.elevation_ft.shape, (n,))
+        self.assertEqual(result.elevation_ft_unfiltered.shape, (n,))
         self.assertEqual(result.distances_ft.shape, (n,))
-        self.assertEqual(result.grade_dec.shape, (n,))
+        self.assertEqual(result.grade_dec_unfiltered.shape, (n,))
         self.assertEqual(result.distances_ft[0], 0.0)
         # Filtering explicitly disabled -> filtered fields stay None.
         self.assertIsNone(result.elevation_ft_filtered)
@@ -62,7 +62,7 @@ class GradeitLocalTest(unittest.TestCase):
         result = gradeit(self.coords, elevation_model=self.model)
         self.assertIsNotNone(result.elevation_ft_filtered)
         self.assertIsNotNone(result.grade_dec_filtered)
-        self.assertEqual(result.elevation_ft_filtered.shape, result.elevation_ft.shape)
+        self.assertEqual(result.elevation_ft_filtered.shape, result.elevation_ft_unfiltered.shape)
 
     def test_empty_filter_sequence_disables_filtering(self):
         result = gradeit(self.coords, elevation_model=self.model, elevation_filter=[])
@@ -77,7 +77,7 @@ class GradeitLocalTest(unittest.TestCase):
         )
         self.assertIsNotNone(result.elevation_ft_filtered)
         self.assertIsNotNone(result.grade_dec_filtered)
-        self.assertEqual(result.elevation_ft_filtered.shape, result.elevation_ft.shape)
+        self.assertEqual(result.elevation_ft_filtered.shape, result.elevation_ft_unfiltered.shape)
 
     def test_elevation_filter_sequence_applies_in_order(self):
         # A sequence runs the filters left-to-right and recomputes grade once
@@ -91,7 +91,7 @@ class GradeitLocalTest(unittest.TestCase):
         self.assertIsNotNone(result.elevation_ft_filtered)
         self.assertIsNotNone(result.grade_dec_filtered)
         # Raw arrays untouched.
-        self.assertEqual(result.elevation_ft.shape, (len(self.coords),))
+        self.assertEqual(result.elevation_ft_unfiltered.shape, (len(self.coords),))
 
     def test_elevation_filter_true_raises_invalid_input(self):
         # The boolean shortcut has been removed; passing True is an error.
@@ -112,7 +112,9 @@ class GradeitInjectionTest(unittest.TestCase):
     def test_custom_elevation_model(self):
         coords = [Coordinate.from_lat_lon(39.0 + 0.01 * i, -105.0) for i in range(5)]
         result = gradeit(coords, elevation_model=StubModel())
-        np.testing.assert_array_equal(result.elevation_ft, [1000.0, 1010.0, 1020.0, 1030.0, 1040.0])
+        np.testing.assert_array_equal(
+            result.elevation_ft_unfiltered, [1000.0, 1010.0, 1020.0, 1030.0, 1040.0]
+        )
 
 
 class GradeitErrorTest(unittest.TestCase):

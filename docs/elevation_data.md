@@ -10,11 +10,37 @@ from gradeit import USGSApi, gradeit
 result = gradeit(trace, elevation_model=USGSApi())  # this is the default
 ```
 
-`USGSApi` queries the USGS [Elevation Point Query Service](https://epqs.nationalmap.gov/v1/). It
-needs no setup, disk space, or downloads. It sends one HTTP request for each point.
+`USGSApi` queries the USGS [3D Elevation Program](https://www.usgs.gov/3d-elevation-program) (3DEP)
+bare-earth service. It doesn't require any setup. Points are sent in batches of up to 1,000 per
+request, so a trace costs a handful of requests rather than one per point. The values are identical
+to the [Elevation Point Query Service](https://epqs.nationalmap.gov/v1/), which is a single-point
+wrapper over the same data.
 
-Use `USGSApi` to check a few coordinates. Do not use it for a full trace. A 1,400-point trace needs
-1,400 requests. The service can be unavailable or rate-limited. Use `USGSLocal` for full traces.
+Batching makes the online model usable for whole traces: a 2,500-point trace takes about six seconds.
+`USGSLocal` is still faster and doesn't depend on a public service, so prefer it for repeated or
+bulk work. Take a look at [Downloading USGS Tiles](#getting-the-tiles) for instructions on how to
+get the local DEM tiles.
+
+### Options
+
+```python
+USGSApi(
+    batch_size=1000,  # points per request; capped at the service limit of 1000
+    sampling="nearest",  # or "bilinear"
+    timeout=60.0,  # seconds per request
+    max_retries=3,  # attempts per batch on timeout or a 429/5xx response
+)
+```
+
+`sampling="nearest"` returns the cell containing the point, which is what the Elevation Point Query
+Service returns. `sampling="bilinear"` asks the service to interpolate the surrounding cells,
+matching the default of `USGSLocal`. Note that the two models therefore differ by default; pass the
+same `sampling` to both if you compare them.
+
+### Missing data
+
+Points outside the service's coverage return **`NaN`**, the same as `USGSLocal`. The service omits
+those points from its response rather than reporting an error.
 
 ## `USGSLocal` — local raster tiles
 
@@ -103,19 +129,8 @@ printf 'n38w123\nn39w123\n' > sf_tiles.txt
 python scripts/get_usgs_tiles.py --tile-data sf_tiles.txt --output-dir sf_tiles/
 ```
 
-## What this site's examples use
-
-The examples on this site do not download data. They use small crops of two real tiles in
-`docs/data/tiles/`. The crops cover narrow corridors around two short traces. They need 440 KB
-instead of 900 MB.
-
-Inside these corridors, values are identical to the full dataset. Outside these corridors, the
-tiles have no data. `USGSLocal("docs/data/tiles")` returns `NaN` for other traces. See
-[`docs/data/README.md`](https://github.com/NREL/gradeit/blob/main/docs/data/README.md) for
-details and `scripts/make_docs_data.py` for how they were produced.
-
 ## Something else entirely
 
-`ElevationModel` has one method. You can use another DEM, a lidar survey, a database, or a vendor
+`ElevationModel` can be customized. You can use another DEM, a lidar survey, a database, or a vendor
 API. See
 [Custom Elevation Sources](examples/05_custom_elevation_model_example).

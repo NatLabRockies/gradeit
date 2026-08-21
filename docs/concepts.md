@@ -56,9 +56,9 @@ A frozen dataclass of numpy arrays. All arrays have the same length as the input
 
 ```python
 result.coordinates  # List[Coordinate]
-result.elevation_ft  # np.ndarray, raw DEM lookup
+result.elevation_ft_unfiltered  # np.ndarray, raw DEM lookup
 result.distances_ft  # np.ndarray, distance from previous point
-result.grade_dec  # np.ndarray, grade from the raw lookup
+result.grade_dec_unfiltered  # np.ndarray, grade from the raw lookup
 result.elevation_ft_filtered  # np.ndarray | None
 result.grade_dec_filtered  # np.ndarray | None
 ```
@@ -68,18 +68,6 @@ Important conventions:
 - **`distances_ft` carries a leading `0.0`** so it aligns point-for-point with the elevation and
   grade arrays. The per-segment distances are `distances_ft[1:]`, and `distances_ft.sum()` is the
   total trace length.
-- **The `_filtered` fields are `None` only when filtering does not run.** They are not copies of
-  raw arrays. Use `result.grade_dec_filtered is None` to test for disabled filtering.
-
-`to_dict()` and `to_dataframe()` create result data:
-
-```{warning}
-In the tabular output the raw grade column is named **`grade_dec_unfiltered`**, while the
-attribute is `grade_dec`. This name supports older GradeIT output. All other column names match their attributes.
-```
-
-`to_dataframe()` raises `MissingDependencyError` if pandas is not installed; `to_dict()` always
-works.
 
 ## `ElevationModel`
 
@@ -110,8 +98,6 @@ class ElevationFilter(metaclass=ABCMeta):
 A filter takes an elevation profile and returns an elevation profile. It does **not** return grade.
 You can pass a filter sequence. Each filter uses the output from the last filter. GradeIT calculates
 grade from final elevation.
-
-Filters receive coordinates and elevations. Most filters need ground distances, not point indexes.
 
 Built in: `Wood2014Filter` (the default) and `BridgeFilter`. See [Filters](filters).
 

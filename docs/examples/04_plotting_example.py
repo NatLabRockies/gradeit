@@ -1,11 +1,7 @@
 """
 # Mapping a Trace
 
-Numbers tell you *that* a filter changed the data. A map tells you **where**.
-gradeit includes an interactive folium map. This map draws each segment of
-the trace, colored by its grade. This makes bare-earth artifacts obvious at a
-glance: they show up as sharp red notches on the raw layer, where the DEM
-dips into whatever the road crosses.
+If you want to inspect the results in a bit more detail, you can use the interactive map.
 
 This feature needs the plotting extra:
 
@@ -24,7 +20,7 @@ def main():
     trace = load_coords("golden_creek")
     result = gradeit(trace, elevation_model=USGSLocal(TILE_DIR))
 
-    print(f"raw max |grade|      {100 * np.abs(result.grade_dec).max():.1f}%")
+    print(f"raw max |grade|      {100 * np.abs(result.grade_dec_unfiltered).max():.1f}%")
     print(f"filtered max |grade| {100 * np.abs(result.grade_dec_filtered).max():.1f}%")
 
     """
@@ -37,16 +33,10 @@ def main():
     as two layers that you can toggle. Both layers are visible when the map
     loads, with the filtered layer on top. Use the layer control in the top
     right to untick **Filtered grade** and reveal the raw layer underneath.
-    Around the creek crossing, the raw layer dives deep red, while the
-    filtered layer stays level.
 
     Hover over any segment to see its array index, grade, elevation, and
     length. This lets you jump straight from something suspicious on the map
     to the matching row in your data.
-
-    The trace has a 30% raw spike. Left unpinned, this spike would stretch
-    the color scale until every ordinary road grade washed out. So this
-    example pins the scale to +/-8%.
     """
 
     m = result.plot_map(grade_range_pct=(-8, 8))

@@ -69,8 +69,8 @@ class DocsDataTest(unittest.TestCase):
         for name in EXPECTED_TRACES:
             with self.subTest(trace=name):
                 result = gradeit(load_trace(name), elevation_model=USGSLocal(TILE_DIR))
-                self.assertTrue(np.isfinite(result.elevation_ft).all())
-                self.assertTrue(np.isfinite(result.grade_dec).all())
+                self.assertTrue(np.isfinite(result.elevation_ft_unfiltered).all())
+                self.assertTrue(np.isfinite(result.grade_dec_unfiltered).all())
                 self.assertIsNotNone(result.elevation_ft_filtered)
                 self.assertIsNotNone(result.grade_dec_filtered)
                 self.assertTrue(np.isfinite(result.elevation_ft_filtered).all())
@@ -85,7 +85,7 @@ class DocsDataTest(unittest.TestCase):
         """
         golden = gradeit(load_trace("golden_creek"), elevation_model=USGSLocal(TILE_DIR))
         # The bare-earth creek notch at local index 119 (source index 719).
-        correction = np.abs(golden.elevation_ft_filtered - golden.elevation_ft)
+        correction = np.abs(golden.elevation_ft_filtered - golden.elevation_ft_unfiltered)
         self.assertEqual(int(np.argmax(correction)), 119)
         self.assertGreater(correction[119], 30.0)
 
@@ -93,9 +93,9 @@ class DocsDataTest(unittest.TestCase):
             load_trace("carquinez"), elevation_model=USGSLocal(TILE_DIR), elevation_filter=None
         )
         # The strait crossing drives the raw grade past 80%.
-        self.assertGreater(100 * np.abs(carquinez.grade_dec).max(), 80.0)
+        self.assertGreater(100 * np.abs(carquinez.grade_dec_unfiltered).max(), 80.0)
         # ...and the DEM reports the water surface, near sea level.
-        self.assertLess(carquinez.elevation_ft[232:297].min(), 10.0)
+        self.assertLess(carquinez.elevation_ft_unfiltered[232:297].min(), 10.0)
 
 
 if __name__ == "__main__":

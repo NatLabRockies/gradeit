@@ -23,7 +23,6 @@ parts:
       - file: concepts
       - file: methodology
       - file: filters
-      - file: plotting
 
   - caption: Reference
     chapters:

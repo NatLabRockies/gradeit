@@ -104,33 +104,36 @@ class GradeResult:
     """The output of :func:`gradeit.gradeit`.
 
     Holds plain numpy arrays (and the source coordinates) so the core stays
-    independent of pandas. The optional ``*_filtered`` fields are populated only
-    when filtering ran, making the filtered-or-not contract explicit.
+    independent of pandas. Every elevation and grade field carries an explicit
+    ``_unfiltered`` or ``_filtered`` suffix, so no field's provenance depends on
+    remembering a default. The ``*_filtered`` fields are populated only when
+    filtering ran, making the filtered-or-not contract explicit.
 
     Use :meth:`to_dict` or :meth:`to_dataframe` to materialize the result in a
     tabular form.
     """
 
     coordinates: List[Coordinate]
-    elevation_ft: np.ndarray
+    elevation_ft_unfiltered: np.ndarray
     distances_ft: np.ndarray
-    grade_dec: np.ndarray
+    grade_dec_unfiltered: np.ndarray
     elevation_ft_filtered: Optional[np.ndarray] = None
     grade_dec_filtered: Optional[np.ndarray] = None
 
     def to_dict(self) -> Dict[str, list]:
         """Return the result as a column-name -> list mapping.
 
-        Column names match the historical gradeit output: ``latitude``,
-        ``longitude``, ``elevation_ft``, ``distances_ft``, ``grade_dec_unfiltered``,
-        plus ``elevation_ft_filtered`` / ``grade_dec_filtered`` when present.
+        Every column is named for the attribute it comes from: ``latitude``,
+        ``longitude``, ``elevation_ft_unfiltered``, ``distances_ft``,
+        ``grade_dec_unfiltered``, plus ``elevation_ft_filtered`` /
+        ``grade_dec_filtered`` when present.
         """
         out: Dict[str, list] = {
             "latitude": [c.latitude for c in self.coordinates],
             "longitude": [c.longitude for c in self.coordinates],
-            "elevation_ft": self.elevation_ft.tolist(),
+            "elevation_ft_unfiltered": self.elevation_ft_unfiltered.tolist(),
             "distances_ft": self.distances_ft.tolist(),
-            "grade_dec_unfiltered": self.grade_dec.tolist(),
+            "grade_dec_unfiltered": self.grade_dec_unfiltered.tolist(),
         }
         if self.elevation_ft_filtered is not None:
             out["elevation_ft_filtered"] = self.elevation_ft_filtered.tolist()

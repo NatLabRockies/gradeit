@@ -46,7 +46,7 @@ def main():
     cumulative_ft = np.cumsum(raw.distances_ft)
 
     # The elevation the road deck should have, from the clean neighbor points.
-    deck_ft = (raw.elevation_ft[FIRST - 1] + raw.elevation_ft[LAST + 1]) / 2
+    deck_ft = (raw.elevation_ft_unfiltered[FIRST - 1] + raw.elevation_ft_unfiltered[LAST + 1]) / 2
     span_ft = raw.distances_ft[FIRST : LAST + 2].sum()
 
     # Index slice around the crossing, padded by its own span on each side.
@@ -57,7 +57,7 @@ def main():
     def elevation_of(result):
         """The profile a result should be judged on: filtered if there is one, else raw."""
         return (
-            result.elevation_ft
+            result.elevation_ft_unfiltered
             if result.elevation_ft_filtered is None
             else (result.elevation_ft_filtered)
         )
@@ -68,10 +68,10 @@ def main():
 
     fig, (ax_elev, ax_grade) = plt.subplots(2, 1, figsize=(9, 6.5), sharex=True)
 
-    floor_i = FIRST + int(np.argmin(raw.elevation_ft[FIRST : LAST + 1]))
-    floor = raw.elevation_ft[floor_i]
+    floor_i = FIRST + int(np.argmin(raw.elevation_ft_unfiltered[FIRST : LAST + 1]))
+    floor = raw.elevation_ft_unfiltered[floor_i]
 
-    ax_elev.plot(x, raw.elevation_ft[LO:HI], color=RAW, lw=1.6)
+    ax_elev.plot(x, raw.elevation_ft_unfiltered[LO:HI], color=RAW, lw=1.6)
     ax_elev.axvspan(miles[FIRST], miles[LAST], color=ARTIFACT, alpha=0.10, lw=0)
     ax_elev.hlines(deck_ft, x[0], x[-1], color=DECK, lw=1.2, ls="--")
     ax_elev.text(
@@ -106,7 +106,7 @@ def main():
     ax_elev.set_title(f"Raw DEM across the Carquinez Strait — {span_ft:,.0f} ft span", fontsize=11)
     ax_elev.margins(y=0.28)
 
-    grade_pct = 100 * raw.grade_dec[LO:HI]
+    grade_pct = 100 * raw.grade_dec_unfiltered[LO:HI]
     peak = int(np.argmax(np.abs(grade_pct)))
     ax_grade.plot(x, grade_pct, color=RAW, lw=1.6)
     ax_grade.axvspan(miles[FIRST], miles[LAST], color=ARTIFACT, alpha=0.10, lw=0)
@@ -141,9 +141,9 @@ def main():
 
     fig, ax = plt.subplots(figsize=(9, 4))
     after = residual_ft(default)
-    before = deck_ft - raw.elevation_ft[FIRST : LAST + 1].min()
+    before = deck_ft - raw.elevation_ft_unfiltered[FIRST : LAST + 1].min()
 
-    ax.plot(x, raw.elevation_ft[LO:HI], color=RAW, lw=1.4, label="raw DEM")
+    ax.plot(x, raw.elevation_ft_unfiltered[LO:HI], color=RAW, lw=1.4, label="raw DEM")
     ax.plot(
         x,
         default.elevation_ft_filtered[LO:HI],
@@ -184,7 +184,7 @@ def main():
     This is not a tuning failure. It is a structural limit. A residual
     detector cannot see any feature wider than its own smoothing kernel. The
     smoother simply follows a wide feature down, so the residual collapses to
-    nearly zero. The strait is 5,332 ft across — far wider than any practical
+    nearly zero. The strait is almost a mile across — far wider than any practical
     kernel size.
 
     ## Widening the window does not help
@@ -208,7 +208,7 @@ def main():
 
     for ax, window_ft, swept in zip(axes, windows_ft, swept_windows):
         filtered = swept.elevation_ft_filtered[LO:HI]
-        ax.plot(x, raw.elevation_ft[LO:HI], color=RAW, lw=1.0, label="raw DEM")
+        ax.plot(x, raw.elevation_ft_unfiltered[LO:HI], color=RAW, lw=1.0, label="raw DEM")
         ax.plot(x, filtered, color=DEFAULT, lw=1.8, label="filtered")
         ax.axvspan(miles[FIRST], miles[LAST], color=ARTIFACT, alpha=0.10, lw=0)
         ax.hlines(deck_ft, x[0], x[-1], color=DECK, lw=1.0, ls="--")
@@ -265,7 +265,7 @@ def main():
     fig, axes = plt.subplots(1, len(radii_ft), figsize=(12, 3.8), sharex=True, sharey=True)
 
     for ax, radius_ft, swept in zip(axes, radii_ft, swept_radii):
-        ax.plot(x, raw.elevation_ft[LO:HI], color=RAW, lw=1.0, label="raw DEM")
+        ax.plot(x, raw.elevation_ft_unfiltered[LO:HI], color=RAW, lw=1.0, label="raw DEM")
         ax.plot(x, swept.elevation_ft_filtered[LO:HI], color=COMBINED, lw=1.8, label="filtered")
         ax.axvspan(miles[FIRST], miles[LAST], color=ARTIFACT, alpha=0.10, lw=0)
         ax.hlines(deck_ft, x[0], x[-1], color=DECK, lw=1.0, ls="--")
@@ -324,7 +324,9 @@ def main():
     max_grades = [
         100
         * np.abs(
-            result.grade_dec if result.grade_dec_filtered is None else result.grade_dec_filtered
+            result.grade_dec_unfiltered
+            if result.grade_dec_filtered is None
+            else result.grade_dec_filtered
         ).max()
         for _, _, result in configs
     ]
@@ -374,7 +376,7 @@ def main():
         (ax_grade, "grade", "grade (%)"),
     ):
         series = (
-            ("raw DEM", raw.elevation_ft, raw.grade_dec, RAW, 1.0, "-"),
+            ("raw DEM", raw.elevation_ft_unfiltered, raw.grade_dec_unfiltered, RAW, 1.0, "-"),
             (
                 "default",
                 default.elevation_ft_filtered,
@@ -413,11 +415,7 @@ def main():
     `baseline_radius_ft` draws the line between them. Its one-mile default
     value is correct only for gentle terrain.
     [How Filtration Works](02_filtering_example) shows this same default
-    value erasing 1.5 miles of genuine canyon on the Colorado trace.
-
-    The rule that follows: set the radius to match the spans you want to
-    correct. Always compare filtered output against raw output, across the
-    whole trace, before you trust a filter.
+    value erasing 1.5 miles of a real road dip through a valley in the Colorado trace.
     """
 
 

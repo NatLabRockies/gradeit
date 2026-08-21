@@ -32,33 +32,25 @@ output.
 
 GradeIT reads USGS GeoTIFFs with [tifffile](https://pypi.org/project/tifffile/) and
 [imagecodecs](https://pypi.org/project/imagecodecs/). It does not use GDAL or rasterio. PyPI wheels
-install on Linux, macOS, and Windows. You do not need a system geospatial stack or a conda
-environment. CI tests all three platforms.
+install on Linux, macOS, and Windows. You should not need a system geospatial stack.
 
-GradeIT reads the raster type from the USGS 3DEP program: single-band, north-up, geographic
-longitude/latitude GeoTIFFs. GradeIT rejects projected or rotated rasters. This prevents sampling
-at an incorrect location.
+The tradeoff is that GradeIT only reads the raster type from the USGS 3DEP program: single-band, north-up, geographic longitude/latitude GeoTIFFs.
 
 ## Verifying the install
 
 ```python
 import gradeit
-
-print(gradeit.__all__)
 ```
 
-Use the online query service to test an elevation lookup without raster tiles. It needs no setup,
-but it sends one HTTP request for each point. Use only a few points:
+Test a couple of points.
 
 ```python
 from gradeit import gradeit
 
 # Two points a few hundred feet apart on a Colorado highway.
 result = gradeit([(39.7392, -105.0), (39.7398, -105.0)])
-print(result.elevation_ft)
+print(result.elevation_ft_unfiltered)
 ```
-
-For anything larger than a spot check, see [Elevation Data](elevation_data).
 
 ## Development setup
 
