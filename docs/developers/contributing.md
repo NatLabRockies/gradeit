@@ -82,7 +82,7 @@ Keep these codebase rules:
 
 ## Changing filtration
 
-The default filter follows Wood et al. (2014), NREL/TP-5400-61109. If you change filtering or
+The default filter follows Wood et al. (2014), NLR/TP-5400-61109. If you change filtering or
 grade calculation, compare it with the paper. [Methodology](../methodology) maps the five steps to
 the code.
 

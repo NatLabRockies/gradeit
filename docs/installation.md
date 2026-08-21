@@ -9,14 +9,15 @@ pip install gradeit
 To install from source:
 
 ```bash
-git clone https://github.com/NREL/gradeit.git
+git clone https://github.com/NatLabRockies/gradeit.git
 cd gradeit
 pip install .
 ```
 
 ## Extras
 
-The core install includes NumPy and a pure-Python GeoTIFF reader. Optional features use extras:
+The core install includes NumPy, `requests` for the default online elevation model, and a
+GeoTIFF reader. Optional features use extras:
 
 ```bash
 pip install gradeit[pandas]  # DataFrame input and GradeResult.to_dataframe()

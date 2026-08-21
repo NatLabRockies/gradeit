@@ -30,7 +30,7 @@ latex:
 
 # Information about where the book exists on the web
 repository:
-  url: https://github.com/NREL/gradeit
+  url: https://github.com/NatLabRockies/gradeit
   path_to_book: docs
   branch: main
 

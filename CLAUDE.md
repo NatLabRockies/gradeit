@@ -6,7 +6,7 @@ GradeIT (Road Grade Inference Tool) is a python package that appends elevation a
 
 The public API is the top-level package: `from gradeit import gradeit, GradeResult, USGSApi, USGSLocal, Wood2014Filter, BridgeFilter, ...` (see `gradeit/__init__.py`). The orchestration lives in `gradeit/core.py`.
 
-The methodology follows Wood et al. (2014), NREL/TP-5400-61109. When changing filtering or grade computation, check it against that paper — `README.md` has a _Methodology_ section mapping the paper's five steps onto the code.
+The methodology follows Wood et al. (2014), NLR/TP-5400-61109. When changing filtering or grade computation, check it against that paper — `README.md` has a _Methodology_ section mapping the paper's five steps onto the code.
 
 - `gradeit()` accepts flexible input (DataFrame / numpy `(n,2)` / dict / iterable of `Coordinate` or `(lat, lon)`) via `gradeit/io.py:to_coordinates`, and returns a pandas-free `GradeResult` (numpy arrays + `.to_dataframe()` / `.to_dict()`). It never mutates its input. pandas is an optional dependency, imported lazily only in `GradeResult.to_dataframe()`.
 - Every elevation/grade field on `GradeResult` carries an explicit `_unfiltered` or `_filtered` suffix (`elevation_ft_unfiltered`, `grade_dec_unfiltered`, `elevation_ft_filtered`, `grade_dec_filtered`), and `to_dict()` / `to_dataframe()` use those same names as column names. Nothing is bare: no field's provenance depends on remembering a default. Keep both halves in step when adding a field.
@@ -19,7 +19,8 @@ The methodology follows Wood et al. (2014), NREL/TP-5400-61109. When changing fi
 ## Common Commands
 
 This project uses [pixi](https://pixi.sh) for development environments.
-The native geospatial stack (rasterio/GDAL, shapely) comes from conda-forge.
+There is no native geospatial stack: GeoTIFFs are read with tifffile/imagecodecs, so
+GDAL, rasterio and shapely are deliberately _not_ dependencies. Keep it that way — `.github/workflows/ci.yml` asserts the package installs from PyPI wheels alone.
 
 ### Running the full check (format, lint, types, tests)
 

@@ -16,8 +16,8 @@ authors:
   - name: "National Laboratory of the Rockies"
 version: "0.2.0"
 license: BSD-3-Clause
-repository-code: "https://github.com/NREL/gradeit"
-url: "https://nrel.github.io/gradeit/"
+repository-code: "https://github.com/NatLabRockies/gradeit"
+url: "https://natlabrockies.github.io/gradeit/"
 keywords:
   - gps
   - elevation
@@ -39,8 +39,8 @@ references:
       - family-names: Gonder
         given-names: Jeffrey
     year: 2014
-    number: "NREL/TP-5400-61109"
+    number: "NLR/TP-5400-61109"
     institution:
-      name: National Renewable Energy Laboratory
+      name: National Laboratory of the Rockies
     location:
       name: "Golden, CO, United States"

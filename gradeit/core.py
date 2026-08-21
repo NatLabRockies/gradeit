@@ -32,8 +32,9 @@ def gradeit(
         ``(latitude, longitude)`` pairs. See :func:`gradeit.io.to_coordinates`.
     elevation_model:
         The :class:`~gradeit.elevation.ElevationModel` that supplies elevation.
-        Defaults to :class:`~gradeit.elevation.USGSApi` (the online USGS
-        Elevation Point Query Service, no setup required). For bulk traces,
+        Defaults to :class:`~gradeit.elevation.USGSApi` (the online USGS 3DEP
+        service, no setup required; it reproduces the Elevation Point Query
+        Service's values but batches points per request). For bulk traces,
         pass :class:`~gradeit.elevation.USGSLocal` pointed at downloaded raster
         tiles, or any custom ``ElevationModel`` instance.
     elevation_filter:
@@ -41,7 +42,7 @@ def gradeit(
         :class:`ElevationFilter` instance or a sequence of them (applied in
         order, each consuming the previous filter's output). Defaults to
         :class:`~gradeit.filters.Wood2014Filter`, the filtration routine of
-        Wood et al. (2014), NREL/TP-5400-61109: resample onto a uniform
+        Wood et al. (2014), NLR/TP-5400-61109: resample onto a uniform
         distance grid, smooth, reject and backfill anomalous points, smooth
         again, and interpolate back. Pass ``None`` (or ``[]``) to skip
         filtering entirely.

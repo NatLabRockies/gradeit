@@ -72,7 +72,7 @@ It interpolates road elevation across each dip.
 | `grade_plausibility_tol` | `0.05`            | Reject a correction whose recovered grade differs from the surrounding median segment grade by more than this.                    |
 
 ```{warning}
-Elevation does not distinguish a valley wihtout a bridge from a valley with a bridge. 
+Elevation does not distinguish a valley without a bridge from a valley with a bridge.
 The checks above cannot always separate them.
 
 `baseline_radius_ft` defines the difference. The one-mile default is suitable only for gentle

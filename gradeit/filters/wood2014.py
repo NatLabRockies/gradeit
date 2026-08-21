@@ -2,7 +2,7 @@
 
 Implements the five-step routine tabulated as Table 1 of Wood, Burton, Duran &
 Gonder, *Appending High-Resolution Elevation Data to GPS Speed Traces for
-Vehicle Energy Modeling and Simulation*, NREL/TP-5400-61109 (2014):
+Vehicle Energy Modeling and Simulation*, NLR/TP-5400-61109 (2014):
 
 * **A.** Raw elevation versus distance.
 * **B.** Elevation is downsampled onto uniformly spaced distance intervals,
@@ -189,7 +189,7 @@ def _supported_segments(
 
 @dataclass(frozen=True)
 class Wood2014Filter(ElevationFilter):
-    """Elevation filtration per Wood et al. (2014), NREL/TP-5400-61109.
+    """Elevation filtration per Wood et al. (2014), NLR/TP-5400-61109.
 
     Resamples the elevation profile onto a uniform distance grid (median per
     node), smooths it with a combined Savitzky-Golay and binomial filter,

@@ -92,6 +92,8 @@ in the directory.
 If every point returns `NaN`, you may have the correct directory and incorrect tiles. Check the
 grid reference for the first coordinate.
 
+(getting-the-tiles)=
+
 ## Getting the tiles
 
 The 1/3 arc-second dataset covers the conterminous United States. It has about 33 ft (10 m) post
@@ -109,7 +111,7 @@ Flags:
 
 - `--output-dir` — where to write tiles. Defaults to `usgs_tiles/`.
 - `--tile-data` — a text file listing tile names, one per line. Defaults to
-  `scripts/usgs_tiles.txt`, which is all 1,432 CONUS tiles.
+  `scripts/usgs_tiles.txt`, which is all 1,433 CONUS tiles.
 - `--nprocs` — parallel downloads. Defaults to 4.
 
 ### Budget the disk first

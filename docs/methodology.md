@@ -3,8 +3,8 @@
 The default GradeIT filter uses the five-step method from Wood et al. (2014).
 
 > Wood, Eric, E. Burton, A. Duran, and J. Gonder. _Appending High-Resolution Elevation Data to
-> GPS Speed Traces for Vehicle Energy Modeling and Simulation._ NREL/TP-5400-61109. National
-> Renewable Energy Laboratory, Golden, CO (United States), 2014.
+> GPS Speed Traces for Vehicle Energy Modeling and Simulation._ NLR/TP-5400-61109. National
+> Laboratory of the Rockies, Golden, CO (United States), 2014.
 
 ```{note}
 This paper is the reference for the **method**. To cite the **software**, see Citation on the

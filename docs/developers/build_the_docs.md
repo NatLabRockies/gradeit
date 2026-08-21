@@ -101,9 +101,9 @@ not appear. Use `Agg` only for CI that runs examples as scripts.
 
 ## The sample data
 
-Examples use corridor crops from two real USGS tiles in `docs/data/`. They need 440 KB instead of
+Examples use corridor crops from two real USGS tiles in `docs/data/`. They need 460 KB instead of
 900 MB. Values in these corridors are identical to source data.
-See [`docs/data/README.md`](https://github.com/NREL/gradeit/blob/main/docs/data/README.md).
+See [`docs/data/README.md`](https://github.com/NatLabRockies/gradeit/blob/main/docs/data/README.md).
 
 Regenerating requires the full source tiles, which are not in the repository:
 
@@ -125,7 +125,7 @@ Adding a new public module means adding a block to that file; it is not automati
 
 ## Deployment
 
-`.github/workflows/deploy-docs.yaml` builds the book for each pull request that changes `docs/`,
+`.github/workflows/deploy-docs.yml` builds the book for each pull request that changes `docs/`,
 `gradeit/`, or `pyproject.toml`. A push to `main` publishes to `gh-pages`. Pull requests build but
 do not publish. This finds broken notebooks before merge.
 

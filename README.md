@@ -3,7 +3,7 @@
 GradeIT is a Python package from the National Laboratory of the Rockies. It adds elevation and road
 grade to a sequence of GPS points.
 
-**📖 [Full documentation](https://nrel.github.io/gradeit/)**
+**📖 [Full documentation](https://natlabrockies.github.io/gradeit/)**
 
 ## Overview
 
@@ -29,7 +29,7 @@ pip install gradeit
 To install from source:
 
 ```bash
-git clone https://github.com/NREL/gradeit.git
+git clone https://github.com/NatLabRockies/gradeit.git
 cd gradeit
 pip install .
 ```
@@ -42,7 +42,7 @@ pip install gradeit[plot]    # interactive folium map of the trace colored by gr
 ```
 
 PyPI wheels install on Linux, macOS, and Windows. You do not need GDAL or a system geospatial stack.
-See [Installation](https://nrel.github.io/gradeit/installation.html).
+See [Installation](https://natlabrockies.github.io/gradeit/installation.html).
 
 ## Getting Started
 
@@ -79,23 +79,23 @@ also pass a sequence of filters.
 
 ## Documentation
 
-The [documentation site](https://nrel.github.io/gradeit/) has runnable examples and the full API
+The [documentation site](https://natlabrockies.github.io/gradeit/) has runnable examples and the full API
 reference:
 
-- [Quickstart](https://nrel.github.io/gradeit/quickstart.html) - input, output, elevation models,
+- [Quickstart](https://natlabrockies.github.io/gradeit/quickstart.html) - input, output, elevation models,
   and filters
-- [Elevation Data](https://nrel.github.io/gradeit/elevation_data.html) - USGS tiles and disk space
-- [Methodology](https://nrel.github.io/gradeit/methodology.html) - the Wood et al. (2014) method
-- [Filters](https://nrel.github.io/gradeit/filters.html) - parameters, defaults, and tuning
-- [API Reference](https://nrel.github.io/gradeit/api_docs.html)
+- [Elevation Data](https://natlabrockies.github.io/gradeit/elevation_data.html) - USGS tiles and disk space
+- [Methodology](https://natlabrockies.github.io/gradeit/methodology.html) - the Wood et al. (2014) method
+- [Filters](https://natlabrockies.github.io/gradeit/filters.html) - parameters, defaults, and tuning
+- [API Reference](https://natlabrockies.github.io/gradeit/api_docs.html)
 
 The example pages use small data crops in the repository. They run in seconds:
 
-- [Your First Grade Profile](https://nrel.github.io/gradeit/examples/01_basic_example.html)
-- [How Filtration Works](https://nrel.github.io/gradeit/examples/02_filtering_example.html)
-- [Bare-Earth Bridges](https://nrel.github.io/gradeit/examples/03_bridges_example.html)
-- [Mapping a Trace](https://nrel.github.io/gradeit/examples/04_plotting_example.html)
-- [Custom Elevation Sources](https://nrel.github.io/gradeit/examples/05_custom_elevation_model_example.html)
+- [Your First Grade Profile](https://natlabrockies.github.io/gradeit/examples/01_basic_example.html)
+- [How Filtration Works](https://natlabrockies.github.io/gradeit/examples/02_filtering_example.html)
+- [Bare-Earth Bridges](https://natlabrockies.github.io/gradeit/examples/03_bridges_example.html)
+- [Mapping a Trace](https://natlabrockies.github.io/gradeit/examples/04_plotting_example.html)
+- [Custom Elevation Sources](https://natlabrockies.github.io/gradeit/examples/05_custom_elevation_model_example.html)
 
 ## Examples on real data
 
@@ -129,22 +129,22 @@ pixi install -e docs
 pixi run -e docs docs_build
 ```
 
-See [Contributing](https://nrel.github.io/gradeit/developers/contributing.html) and
-[Building the Docs](https://nrel.github.io/gradeit/developers/build_the_docs.html).
+See [Contributing](https://natlabrockies.github.io/gradeit/developers/contributing.html) and
+[Building the Docs](https://natlabrockies.github.io/gradeit/developers/build_the_docs.html).
 
 ## Citation
 
 If you use GradeIT in published work, please cite the software:
 
 > National Laboratory of the Rockies. _GradeIT: Road Grade Inference Tool_ (version 0.2.0)
-> [Computer software]. https://github.com/NREL/gradeit
+> [Computer software]. https://github.com/NatLabRockies/gradeit
 
 ```bibtex
 @software{gradeit,
   title    = {{GradeIT}: Road Grade Inference Tool},
   author   = {{National Laboratory of the Rockies}},
   version  = {0.2.0},
-  url      = {https://github.com/NREL/gradeit},
+  url      = {https://github.com/NatLabRockies/gradeit},
   license  = {BSD-3-Clause}
 }
 ```
@@ -154,4 +154,4 @@ shows it as "Cite this repository" in the sidebar.
 
 Wood et al. (2014) describes the filter method. Cite that paper if the method is important to your
 work. See
-[Methodology](https://nrel.github.io/gradeit/methodology.html).
+[Methodology](https://natlabrockies.github.io/gradeit/methodology.html).

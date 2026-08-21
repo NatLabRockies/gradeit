@@ -99,7 +99,7 @@ gradeit(
 ```
 
 GradeIT applies filters in order. Each filter receives the output from the last filter. GradeIT
-calculates grade from the final elevation. If you have large bridge artifacts, put `BridgeFilter` first (see [this example for BridgeFilter](examples/02_filtering_example)).
+calculates grade from the final elevation. If you have large bridge artifacts, put `BridgeFilter` first (see [Bare-Earth Bridges](examples/03_bridges_example)).
 See [Filters](filters) for all parameters. See
 [How Filtration Works](examples/02_filtering_example) for filter behavior.
 

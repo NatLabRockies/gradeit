@@ -9,13 +9,18 @@ import requests
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
+# The bundled tile lists live next to this script, so resolve the default
+# against the script directory rather than the caller's working directory --
+# otherwise `python scripts/get_usgs_tiles.py` from the repo root cannot find it.
+DEFAULT_TILE_DATA = Path(__file__).resolve().parent / "usgs_tiles.txt"
+
 parser = argparse.ArgumentParser(description="Download USGS 1/3 arc-second DEM tiles")
 
 parser.add_argument(
     "--tile-data",
     type=str,
-    default="usgs_tiles.txt",
-    help="File containing list of tiles to download",
+    default=str(DEFAULT_TILE_DATA),
+    help="File containing list of tiles to download (default: scripts/usgs_tiles.txt)",
 )
 
 parser.add_argument(
@@ -74,7 +79,7 @@ def run():
     tile_data_file = Path(args.tile_data)
 
     with tile_data_file.open("r") as f:
-        tiles = [line.strip() for line in f.readlines()]
+        tiles = [line.strip() for line in f if line.strip()]
 
     log.info(f"downloading {len(tiles)} tiles..")
 
