@@ -40,6 +40,7 @@ for ordinary bridges and overpasses, which it removes without any bridge-specifi
 | `max_discard_len_ft`    | `2000.0` | Runs longer than this are treated as real topography, not artifacts.                                                               |
 | `max_discard_fraction`  | `0.25`   | Safety valve so unusually noisy input cannot silently erase a quarter of the trace.                                                |
 | `max_gap_ft`            | `1000.0` | Unobserved stretches longer than this split the trace into independently filtered segments; points inside such a gap return `NaN`. |
+| `min_node_occupancy`    | `0.35`   | Guard on `interval_ft`: warn when fewer than this fraction of grid nodes contain a GPS point. Set to `0.0` to silence.             |
 
 It is a frozen dataclass, so every knob is a constructor argument and instances are safe to share.
 
@@ -113,19 +114,6 @@ Two worked examples cover both directions of that failure:
 
 **Order matters.** If you use `BridgeFilter`, put it first in the sequence: it keys on raw dip
 magnitude, which any smoother attenuates.
-
-## `SavitzkyGolayFilter` — legacy
-
-```python
-SavitzkyGolayFilter(window=17, polyorder=3)
-```
-
-Smooths in the **index** domain — over the ordered sequence of points, not over distance. Because
-GPS traces are sampled in time, a fixed point-count window has a physical width that varies with
-vehicle speed, which is precisely the problem step B of the Wood routine exists to solve.
-
-Superseded by `Wood2014Filter` for essentially all uses; retained for backward compatibility.
-`window=0` selects a default sized from the trace's cumulative distance.
 
 ## Writing your own
 

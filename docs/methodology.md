@@ -46,8 +46,6 @@ onto a fixed distance grid first makes the cutoff a fixed number of feet everywh
 the paper specifies steps C–E on the uniform grid rather than on the original samples.
 
 This is also why every `Wood2014Filter` parameter is declared in feet rather than in samples.
-`SavitzkyGolayFilter`, which smooths in the index domain, is retained for backward compatibility
-but superseded for exactly this reason.
 
 ## Why the residual, not the drop
 

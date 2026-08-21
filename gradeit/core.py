@@ -47,8 +47,8 @@ def gradeit(
         filtering entirely.
 
         :class:`~gradeit.filters.BridgeFilter` (targeted bare-earth bridge
-        correction) and :class:`~gradeit.filters.SavitzkyGolayFilter`
-        (index-domain smoothing) remain available for narrower jobs.
+        correction) remains available for spans the Wood routine declines to
+        touch; put it *first* in the sequence.
     lat_col, lon_col:
         Column/key names for the latitude and longitude, used only for the
         DataFrame and mapping input forms.

@@ -5,7 +5,7 @@ from typing import List
 import numpy as np
 
 from gradeit.coordinate import Coordinate
-from gradeit.exceptions import InvalidInputError
+from gradeit.exceptions import InvalidInputError, SparseGridWarning
 from gradeit.filters import BridgeFilter, ElevationFilter, Wood2014Filter
 from gradeit.filters._util import cumulative_distance_ft
 from gradeit.filters.wood2014 import (
@@ -190,9 +190,73 @@ class DownsampleTest(unittest.TestCase):
         s = cumulative_distance_ft(coords)
         elev = 1000.0 + 0.03 * s
 
-        out = np.asarray(Wood2014Filter().filter(elev.tolist(), coords))
+        # This is exactly what the occupancy guard exists to flag, so it warns.
+        with self.assertWarns(SparseGridWarning):
+            out = np.asarray(Wood2014Filter().filter(elev.tolist(), coords))
         self.assertTrue(np.all(np.isfinite(out)))
         np.testing.assert_allclose(out, elev, rtol=0, atol=1e-6)
+
+
+class NodeOccupancyGuardTest(unittest.TestCase):
+    """interval_ft finer than the points can support must not fail silently."""
+
+    def _trace(self, n=80, ft_step=100.0):
+        coords = _make_coords(n, ft_step=ft_step)
+        s = cumulative_distance_ft(coords)
+        return coords, (1000.0 + 0.03 * s).tolist()
+
+    def test_grid_matched_to_spacing_does_not_warn(self):
+        coords, elev = self._trace(ft_step=100.0)
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", SparseGridWarning)
+            Wood2014Filter(interval_ft=100.0).filter(elev, coords)
+
+    def test_grid_far_finer_than_spacing_warns(self):
+        coords, elev = self._trace(ft_step=100.0)
+        with self.assertWarns(SparseGridWarning) as caught:
+            Wood2014Filter(interval_ft=20.0).filter(elev, coords)
+        message = str(caught.warning)
+        # The message must be actionable: name the knob, the occupancy, and the
+        # spacing to set it from.
+        self.assertIn("interval_ft=20", message)
+        self.assertIn("100 ft", message)
+        self.assertIn("min_node_occupancy=0", message)
+
+    def test_guard_can_be_disabled(self):
+        coords, elev = self._trace(ft_step=100.0)
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", SparseGridWarning)
+            Wood2014Filter(interval_ft=20.0, min_node_occupancy=0.0).filter(elev, coords)
+
+    def test_guard_does_not_change_the_output(self):
+        # It is a warning, not a correction.
+        coords, elev = self._trace(ft_step=100.0)
+        loud = Wood2014Filter(interval_ft=20.0)
+        quiet = Wood2014Filter(interval_ft=20.0, min_node_occupancy=0.0)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", SparseGridWarning)
+            np.testing.assert_array_equal(loud.filter(elev, coords), quiet.filter(elev, coords))
+
+    def test_real_data_gaps_do_not_trigger_the_guard(self):
+        # A long unobserved stretch is already handled by max_gap_ft splitting
+        # the trace, so it must not also be counted against the grid.
+        coords = _make_coords(40, ft_step=100.0) + _make_coords(40, ft_step=100.0)
+        s = cumulative_distance_ft(coords)
+        elev = (1000.0 + 0.01 * s).tolist()
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", SparseGridWarning)
+            Wood2014Filter().filter(elev, coords)
+
+    def test_stopped_vehicle_does_not_skew_the_advice(self):
+        # Duplicate points from a parked vehicle say nothing about how finely
+        # the road was sampled, so they are excluded from the median spacing.
+        coords = _make_coords(60, ft_step=100.0)
+        coords = coords[:30] + [coords[29]] * 40 + coords[30:]
+        s = cumulative_distance_ft(coords)
+        elev = (1000.0 + 0.03 * s).tolist()
+        with self.assertWarns(SparseGridWarning) as caught:
+            Wood2014Filter(interval_ft=20.0).filter(elev, coords)
+        self.assertIn("100 ft", str(caught.warning))
 
 
 class ConstantGradeTest(unittest.TestCase):

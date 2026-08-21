@@ -9,7 +9,7 @@ from gradeit.coordinate import Coordinate
 from gradeit.elevation import ElevationModel, USGSLocal
 from gradeit.exceptions import InvalidInputError
 from gradeit.core import _DEFAULT_FILTER
-from gradeit.filters import BridgeFilter, SavitzkyGolayFilter, Wood2014Filter
+from gradeit.filters import BridgeFilter, Wood2014Filter
 from gradeit.io import GradeResult
 
 # The synthetic fixture DB shipped alongside the elevation tests (see
@@ -73,7 +73,7 @@ class GradeitLocalTest(unittest.TestCase):
         result = gradeit(
             self.coords,
             elevation_model=self.model,
-            elevation_filter=SavitzkyGolayFilter(window=3, polyorder=2),
+            elevation_filter=Wood2014Filter(),
         )
         self.assertIsNotNone(result.elevation_ft_filtered)
         self.assertIsNotNone(result.grade_dec_filtered)
@@ -86,7 +86,7 @@ class GradeitLocalTest(unittest.TestCase):
         result = gradeit(
             self.coords,
             elevation_model=self.model,
-            elevation_filter=[BridgeFilter(), SavitzkyGolayFilter(window=3, polyorder=2)],
+            elevation_filter=[BridgeFilter(), Wood2014Filter()],
         )
         self.assertIsNotNone(result.elevation_ft_filtered)
         self.assertIsNotNone(result.grade_dec_filtered)

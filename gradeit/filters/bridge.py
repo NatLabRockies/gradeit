@@ -12,9 +12,9 @@ grade from the final filtered elevation, so elevation and grade stay
 internally consistent.
 
 Recommended ordering: apply :class:`BridgeFilter` *before*
-:class:`~gradeit.filters.savitzky_golay.SavitzkyGolayFilter`. Smoothing first
-attenuates the dip magnitude this filter keys on; bridge-correct first, then
-smooth the cleaned profile.
+:class:`~gradeit.filters.Wood2014Filter`. Smoothing first attenuates the dip
+magnitude this filter keys on; bridge-correct first, then smooth the cleaned
+profile.
 """
 
 from __future__ import annotations

@@ -121,8 +121,7 @@ grade can never disagree.
 Filters receive the coordinates as well as the elevations because most of them need real
 distances along the ground, not point indices.
 
-Built in: `Wood2014Filter` (the default), `BridgeFilter`, and `SavitzkyGolayFilter`. See
-[Filters](filters).
+Built in: `Wood2014Filter` (the default) and `BridgeFilter`. See [Filters](filters).
 
 ## Exceptions
 
@@ -138,3 +137,14 @@ builtin so existing `except ValueError:` handlers keep working:
 
 Note that a missing raster tile raises `FileNotFoundError` rather than a GradeIT error, and that
 points with no elevation data are `NaN` rather than an exception.
+
+Warnings derive from `GradeitWarning` (a `UserWarning`, not a `GradeitError` — warnings are not
+errors):
+
+| Warning             | Raised when                                                           |
+| ------------------- | --------------------------------------------------------------------- |
+| `GradeitWarning`    | base class for everything below                                       |
+| `SparseGridWarning` | `Wood2014Filter`'s `interval_ft` is finer than the GPS points support |
+
+Escalate a category to an error with `warnings.simplefilter("error", GradeitWarning)`, or silence
+it with `"ignore"`.

@@ -6,13 +6,14 @@ from gradeit.elevation import ElevationModel, USGSApi, USGSLocal
 from gradeit.exceptions import (
     ElevationLookupError,
     GradeitError,
+    GradeitWarning,
     InvalidInputError,
     MissingDependencyError,
+    SparseGridWarning,
 )
 from gradeit.filters import (
     BridgeFilter,
     ElevationFilter,
-    SavitzkyGolayFilter,
     Wood2014Filter,
 )
 from gradeit.io import GradeResult
@@ -27,11 +28,12 @@ __all__ = [
     "USGSLocal",
     "ElevationFilter",
     "Wood2014Filter",
-    "SavitzkyGolayFilter",
     "BridgeFilter",
     "GradeitError",
     "InvalidInputError",
     "MissingDependencyError",
     "ElevationLookupError",
+    "GradeitWarning",
+    "SparseGridWarning",
     "plot_grade_map",
 ]

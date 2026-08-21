@@ -45,7 +45,7 @@ Filters
    :members: BridgeFilter
 
 .. automodule:: gradeit.filters.savitzky_golay
-   :members: SavitzkyGolayFilter, savgol_filter
+   :members: savgol_filter
 
 Plotting
 --------

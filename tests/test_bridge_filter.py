@@ -4,7 +4,7 @@ from typing import List
 import numpy as np
 
 from gradeit.coordinate import Coordinate
-from gradeit.filters import BridgeFilter, ElevationFilter, SavitzkyGolayFilter
+from gradeit.filters import BridgeFilter, ElevationFilter, Wood2014Filter
 
 
 def _make_coords(n: int, ft_step: float = 50.0) -> List[Coordinate]:
@@ -217,32 +217,32 @@ class BridgeFilterPlausibilityGateTest(unittest.TestCase):
 
 
 class BridgeFilterPipelineTest(unittest.TestCase):
-    def test_bridge_then_savgol(self):
-        # Recommended order: bridge correction first cleans the dip, then
-        # Savitzky-Golay smooths the resulting flat profile.
+    def test_bridge_then_wood2014(self):
+        # Recommended order: bridge correction first cleans the dip, then the
+        # Wood routine smooths the resulting flat profile.
         n = 200
         coords = _make_coords(n, ft_step=50.0)
         elev = np.full(n, 1000.0)
         elev[90:111] = 970.0
 
         after_bridge = BridgeFilter(baseline_radius_ft=2000.0).filter(elev.tolist(), coords)
-        after_pipeline = SavitzkyGolayFilter(window=11, polyorder=3).filter(after_bridge, coords)
+        after_pipeline = Wood2014Filter().filter(after_bridge, coords)
 
         out = np.asarray(after_pipeline)
         self.assertEqual(len(out), n)
         self.assertLess(abs(float(np.mean(out[95:106])) - 1000.0), 1.0)
 
-    def test_savgol_then_bridge_does_not_error(self):
-        # Reverse order is permitted; running SavGol first attenuates the dip
-        # so bridge detection may produce less correction, but it must not
-        # error and must return the right shape.
+    def test_wood2014_then_bridge_does_not_error(self):
+        # Reverse order is permitted; smoothing first attenuates the dip so
+        # bridge detection may produce less correction, but it must not error
+        # and must return the right shape.
         n = 200
         coords = _make_coords(n, ft_step=50.0)
         elev = np.full(n, 1000.0)
         elev[90:111] = 970.0
 
-        after_savgol = SavitzkyGolayFilter(window=11, polyorder=3).filter(elev.tolist(), coords)
-        after_pipeline = BridgeFilter(baseline_radius_ft=2000.0).filter(after_savgol, coords)
+        after_smoothing = Wood2014Filter().filter(elev.tolist(), coords)
+        after_pipeline = BridgeFilter(baseline_radius_ft=2000.0).filter(after_smoothing, coords)
         self.assertEqual(len(after_pipeline), n)
         self.assertTrue(all(np.isfinite(v) for v in after_pipeline))
 
