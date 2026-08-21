@@ -31,10 +31,9 @@ def main():
     LABEL_BOX = dict(facecolor="white", edgecolor="none", alpha=0.85, pad=1.0)
 
     """
-    ## Start with no filter at all
+    ## Raw Elevation 
 
-    Pass `elevation_filter=None` to get the raw DEM lookup. Use this as the
-    honest baseline for comparison.
+    To start, we can look at just the raw elevation profile from our example trace in Golden, CO:
     """
 
     raw = gradeit(trace, elevation_model=elevation_model, elevation_filter=None)
@@ -73,7 +72,7 @@ def main():
     ## Bare Earth Artifacts
 
     Next, let's look at a case where the DEM shows a artifact from using a bare-earth model.
-    In this example, we'll zoom in on a section where the road crosses over a river.
+    In this example, we'll zoom in on a section where the road crosses over the Clear Creek river around mile 4.5.
     The elevation that gets reported back to us shows the elevation drop down and then go back up.
     But, in reality, the road was constructed to go over the river and so the real grade is much less.
     """
@@ -117,7 +116,7 @@ def main():
     ax_grade.axhline(0, color="k", lw=0.5)
     ax_grade.set_xlabel("distance (miles)")
     ax_elev.legend(loc="upper right", fontsize=8)
-    ax_elev.set_title("The creek crossing at index 119", fontsize=11)
+    ax_elev.set_title("The Clear Creek Crossing", fontsize=11)
     fig.tight_layout()
     plt.show()
 
@@ -135,7 +134,6 @@ def main():
     over = gradeit(trace, elevation_model=elevation_model, elevation_filter=BridgeFilter())
     delta = np.abs(over.elevation_ft_filtered - raw.elevation_ft_unfiltered)
     touched = np.flatnonzero(delta > 1.0)
-    erased_ft = raw.distances_ft[touched.min() : touched.max() + 1].sum()
 
     lo = max(touched.min() - 25, 0)
     hi = min(touched.max() + 25, len(trace))
@@ -166,23 +164,10 @@ def main():
         xytext=(miles[deepest], over.elevation_ft_filtered[deepest]),
         arrowprops=dict(arrowstyle="<->", color=BRIDGE, lw=1.4),
     )
-    ax.annotate(
-        f"{delta.max():.1f} ft of canyon removed",
-        (
-            miles[deepest],
-            (raw.elevation_ft_unfiltered[deepest] + over.elevation_ft_filtered[deepest]) / 2,
-        ),
-        textcoords="offset points",
-        xytext=(9, 0),
-        va="center",
-        fontsize=9,
-        color=BRIDGE,
-    )
     ax.set_ylabel("elevation (ft)")
     ax.set_xlabel("distance (miles)")
     ax.set_title(
-        f"BridgeFilter moved {touched.size} of {len(trace)} points across "
-        f"{erased_ft:,.0f} ft ({erased_ft / 5280:.2f} miles) ",
+        "BridgeFilter incorrectly added a bridge over a real valley",
         fontsize=10,
     )
     ax.legend(loc="lower left", fontsize=8)
@@ -192,33 +177,11 @@ def main():
 
     """
     Note that the `BridgeFilter` incorrectly added a bridge over a real valley.
-    It's not that `BridgeFilter` is broken. [Bare-Earth Bridges](03_bridges_example) shows
-    a trace where `BridgeFilter` is the only filter that works. The lesson
-    is that you must scale the radius to the spans you want to correct.     """
-
-    fig, ax = plt.subplots(figsize=(10, 5))
-    ax.plot(miles, raw.elevation_ft_unfiltered, lw=1, alpha=0.5, color=RAW, label="raw DEM")
-    ax.plot(
-        miles,
-        filtered.elevation_ft_filtered,
-        lw=1.6,
-        color=FILTERED,
-        label="Wood2014Filter (default)",
-    )
-    ax.plot(
-        miles,
-        over.elevation_ft_filtered,
-        lw=1.4,
-        ls="--",
-        color=BRIDGE,
-        label="BridgeFilter() 1-mile default",
-    )
-    ax.set_xlabel("distance (miles)")
-    ax.set_ylabel("elevation (ft)")
-    ax.set_title("A filter tuned for the wrong scale flattens real terrain")
-    ax.legend()
-    fig.tight_layout()
-    plt.show()
+    It's not that `BridgeFilter` is broken. [Bare-Earth Bridges](03_bridges_example) shows a trace where `BridgeFilter` is the only filter that works. 
+    The lesson here is to make sure you're only using the BridgeFilter on traces where real 
+    large bridges are known to exist and that the `baseline_radius_ft` of the `BridgeFilter` 
+    is tuned to match the expected size of the crossing.
+    """
 
 
 if __name__ == "__main__":

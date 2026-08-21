@@ -14,14 +14,7 @@ GradeIT names show units:
 | Latitude  | decimal degrees, north positive | —      |
 | Longitude | decimal degrees, west negative  | —      |
 
-Grade is a **decimal**, not a percentage: a 6% grade is `0.06`. Multiply by 100 to display.
-
-Filter parameters use **feet**, never sample counts. GPS traces use time sampling. A fixed
-point-count window has a different physical width at different vehicle speeds. Widths in feet keep
-filter behavior consistent. See
-[How Filtration Works](examples/02_filtering_example) for a measurement of how much that matters.
-
-Elevation models, including custom models, return **feet**. GradeIT does not convert units.
+Note that grade is a **decimal**, not a percentage: a 6% grade is `0.06`.
 
 ## `Coordinate`
 
@@ -33,20 +26,16 @@ from gradeit import Coordinate
 point = Coordinate.from_lat_lon(39.7392, -105.0)
 ```
 
-You rarely create these objects. `gradeit()` creates them from your input. They occur in
-`GradeResult.coordinates` and `ElevationModel.get_elevation()`.
+Note that you don't have to use this object directly; `gradeit()` will create `Coordinate` instances from your input as needed.
 
 ## Coordinate input
 
-`gradeit()` accepts these forms in this order:
+`gradeit()` accepts these different types of trace input:
 
 1. a numpy array of shape `(n, 2)` with `(latitude, longitude)` rows
 2. anything with a `.columns` attribute — a pandas DataFrame, duck-typed
 3. a mapping keyed by `lat_col` / `lon_col`
 4. any other iterable of `Coordinate` or `(latitude, longitude)` pairs
-
-`lat_col` and `lon_col` (default `"latitude"` / `"longitude"`) apply only to forms 2 and 3.
-Anything else raises `InvalidInputError`.
 
 Use **latitude first**. GradeIT uses `(lat, lon)`, not `(x, y)`.
 
@@ -79,10 +68,6 @@ class ElevationModel(metaclass=ABCMeta):
     def get_elevation(self, trace: List[Coordinate]) -> List[float]: ...
 ```
 
-Return elevation in **feet**. Return one value for each input coordinate in the **same order**. Use
-**`NaN`** for a point without data. GradeIT includes `USGSApi` and `USGSLocal`. See
-[Elevation Data](elevation_data) and [this example](examples/05_custom_elevation_model_example).
-
 ## `ElevationFilter`
 
 Also one method:
@@ -97,7 +82,7 @@ class ElevationFilter(metaclass=ABCMeta):
 
 A filter takes an elevation profile and returns an elevation profile. It does **not** return grade.
 You can pass a filter sequence. Each filter uses the output from the last filter. GradeIT calculates
-grade from final elevation.
+grade from final filtered elevation.
 
 Built in: `Wood2014Filter` (the default) and `BridgeFilter`. See [Filters](filters).
 

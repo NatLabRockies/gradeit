@@ -41,19 +41,12 @@ overpass artifacts without bridge-specific logic.
 | `max_gap_ft`            | `1000.0` | Unobserved stretches longer than this split the trace into independently filtered segments; points inside such a gap return `NaN`. |
 | `min_node_occupancy`    | `0.35`   | Guard on `interval_ft`: warn when fewer than this fraction of grid nodes contain a GPS point. Set to `0.0` to silence.             |
 
-This frozen dataclass has a constructor argument for each parameter. You can share an instance.
-
 ### Tuning notes
 
 **`savgol_window_ft`** controls smoothness. A wider value reduces grade noise. It also reduces real
-short features. A wide bare-earth artifact can pull the smoothed road toward the artifact.
+short features.
 
-**`residual_threshold_ft`** defines an artifact. A lower value removes more data. A value about
-twice the default can miss real artifacts. [This example](examples/02_filtering_example) shows more details.
-
-**`residual_grow_ratio`** helps with wide artifacts. A wide artifact pulls the smoothed curve down.
-This reduces the residual in the center. Without hysteresis, a per-node test removes only the
-edges.
+**`residual_threshold_ft`** captures the size of a typical artifact. Raising or lowering this values balances between removing real artifacts and preserving genuine road features.
 
 ## `BridgeFilter` — targeted bare-earth correction
 
@@ -75,10 +68,8 @@ It interpolates road elevation across each dip.
 Elevation does not distinguish a valley without a bridge from a valley with a bridge.
 The checks above cannot always separate them.
 
-`baseline_radius_ft` defines the difference. The one-mile default is suitable only for gentle
-terrain. Use hundreds of feet for typical overpasses and creek crossings. Use thousands of feet
-for a major water crossing. A value that is too wide can interpolate a straight line across a real
-valley.
+`baseline_radius_ft` defines the difference. Use hundreds of feet for typical overpasses and creek crossings. Use thousands of feet
+for a major water crossing. But, be aware that a value that is too wide can interpolate a straight line across a real valley.
 ```
 
 These examples show both errors:
@@ -118,5 +109,4 @@ class ClampFilter(ElevationFilter):
 ```
 
 Take an elevation profile. Return an elevation profile of the same length in feet. Do not return
-grade. GradeIT calculates grade from final elevation. The filter receives coordinates so it can use
-real ground distance instead of point indexes.
+grade. GradeIT calculates grade from final filtered elevation.

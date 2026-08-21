@@ -22,7 +22,7 @@ result.elevation_ft_unfiltered  # the raw DEM lookup, always preserved
 
 Vehicle telematics data might collect GPS elevation data but these signals are often noisy and unreliable for calculating accurate road grade.
 
-To compensate for this, we can reference real collected elevation data but it comes with own challenges.
+To compensate for this, we can reference collected elevation data from a digital elevation model, but it comes with own challenges.
 
 Namely, in GradeIT, we use a bare-earth digital elevation model.
 It shows the elevation of the ground, not the road surface, creating artifacts that need to be corrected.

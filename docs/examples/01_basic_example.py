@@ -17,7 +17,6 @@ See [Elevation Data](../elevation_data) for steps to use the real, full-size til
 def main():
     import matplotlib.pyplot as plt
     import numpy as np
-    import pandas as pd
 
     from _data import TILE_DIR, load_coords
     from gradeit import USGSLocal, gradeit
@@ -25,11 +24,9 @@ def main():
     """
     ## Loading a trace
 
-    `gradeit()` accepts many input types. It accepts a pandas `DataFrame`. It
-    accepts a numpy `(n, 2)` array. It accepts a dict in the form
-    `{"latitude": [...], "longitude": [...]}`. It also accepts any iterable of
-    `(latitude, longitude)` pairs. This example uses the last form, so it does
-    not need pandas yet.
+    `gradeit()` accepts many input types like a  pandas `DataFrame`, a numpy array, or a dict in the form `{"latitude": [...], "longitude": [...]}`. 
+    It also accepts any iterable of `(latitude, longitude)` pairs. 
+    This example uses the last form, so it does not need pandas yet.
     """
 
     trace = load_coords("golden_creek")
@@ -41,16 +38,15 @@ def main():
     """
     ## Choosing an elevation model
 
-    Elevation data comes from an `ElevationModel`. gradeit provides two
-    built-in models:
+    Elevation data comes from an `ElevationModel`. GradeIT provides two built-in models:
 
     - `USGSApi()` — the online USGS 3DEP service. It needs no setup and sends
-      points in batches of up to 1,000 per request. This is the default model if you pass none.
+      points in batches to the API endpoint. This is the default model if you pass none.
     - `USGSLocal(path)` — reads raster tiles stored on your local disk. It is
       faster than the API model and does not depend on a public service. You must first
       download the tiles to disk.
 
-    This example uses `USGSLocal` and points it to the committed crop file.
+    This example uses `USGSLocal` and points it to the our small local tile.
     """
 
     elevation_model = USGSLocal(TILE_DIR)
@@ -81,8 +77,7 @@ def main():
     print(f"distances_ft             {result.distances_ft[:4].round(1)} ...")
 
     """
-    Grade is a decimal rise-over-run value. Multiply it by 100 to get a
-    percent value. Distances are in feet. 
+    Grade is a decimal rise-over-run value. Multiply it by 100 to get a percent value.
     """
 
     total_mi = result.distances_ft.sum() / 5280
@@ -132,17 +127,12 @@ def main():
     plt.show()
 
     """
-    The spike near mile 4.5 in the raw grade is not a hill. It marks a creek
-    crossing. At this point, the bare-earth DEM reports the streambed
-    elevation instead of the road deck elevation.
-    [How Filtration Works](02_filtering_example) examines this artifact in
-    detail.
+    Take a look at the grade spike near mile 4.5. 
+    This is a good example of an artifact that the filtering is intended to fix. 
+    The road at this point actually crosses over the [clear creek river](https://www.google.com/maps/place/39%C2%B045'09.9%22N+105%C2%B014'07.5%22W/@39.75275,-105.2354167,17z).
+    At this point, the bare-earth DEM reports the drop down to the river instead of the elevation of the road itself.
+    The [How Filtration Works](02_filtering_example) example examines this artifact in detail.
     """
-
-    print(f"\nraw      max |grade|  {100 * np.abs(result.grade_dec_unfiltered).max():6.2f}%")
-    print(f"filtered max |grade|  {100 * np.abs(result.grade_dec_filtered).max():6.2f}%")
-
-    assert isinstance(df, pd.DataFrame)
 
 
 if __name__ == "__main__":

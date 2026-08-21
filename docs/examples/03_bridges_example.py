@@ -2,9 +2,7 @@
 # Bare-Earth Bridges
 
 While the default filter can capture typical road bridges it struggles with unusually long spans.
-To highlight this, let's look an an example of the bridge on I-80 over the Carquinez Strait.
-
-This example runs offline against the committed DEM crop in `docs/data/`.
+To highlight this, let's look an an example of Alfred Zampa Memorial Bridge on I-80 over the Carquinez Strait.
 """
 
 
@@ -36,9 +34,7 @@ def main():
     """
     ## Characterizing the artifact
 
-    First, look at the raw profile with no filter, so you can measure what
-    is actually wrong. Compare the DEM floor against the road deck implied
-    by the clean points on either side of the crossing.
+    First, look at the raw profile with no filter:
     """
 
     raw = gradeit(trace, elevation_model=elevation_model, elevation_filter=None)
@@ -127,14 +123,11 @@ def main():
     plt.show()
 
     """
-    A 164 ft drop into open water, recovered over a few hundred feet of
-    road, produces this 89% grade.  
+    A 164 ft drop into open water, recovered over a few hundred feet of road, produces 89% grade!  
 
     ## What the default filter does
 
-    `Wood2014Filter` detects artifacts by **filtration residual**. It
-    smooths the profile, then flags points that sit far from their own
-    smoothed value.
+    `Wood2014Filter` detects artifacts by **filtration residual**. It smooths the profile, then flags points that sit far from their own smoothed value.
     """
 
     default = gradeit(trace, elevation_model=elevation_model)
@@ -179,19 +172,12 @@ def main():
     plt.show()
 
     """
-    The default filter traces the artifact instead of removing it.
-
-    This is not a tuning failure. It is a structural limit. A residual
-    detector cannot see any feature wider than its own smoothing kernel. The
-    smoother simply follows a wide feature down, so the residual collapses to
-    nearly zero. The strait is almost a mile across — far wider than any practical
-    kernel size.
+    It's clear that the default filter can't handle this large span since it ends up just following it. 
+    The artifact is simply too wide for the default filter to correct.
 
     ## Widening the window does not help
 
-    If tuning were the problem, a wider `savgol_window_ft` value would fix
-    it. Sweep the value and plot the profile each one produces. The deck
-    never comes out of the water.
+    We can also check to see how the window size effects the results:
     """
 
     windows_ft = (600, 1200, 2400, 4800, 9600)
@@ -238,11 +224,9 @@ def main():
     plt.show()
 
     """
-    Watch the road on either side of the crossing. As the window widens, the
-    filter does not lift the deck out of the water. Stronger smoothing is the wrong tool for this
-    artifact.
+    Clearly, even with a very wide smoothing window, we cannot correct for the large span of the artifact.
 
-    ## The filter that can reach it
+    ## Enter the BridgeFilter 
 
     `BridgeFilter` compares each point against a two-sided **rolling-maximum
     baseline**. This is an absolute comparison against the surrounding high
@@ -298,76 +282,21 @@ def main():
     plt.show()
 
     """
-    There is a clean threshold. Once the radius clears the 5,332 ft span,
-    the correction succeeds. Below this threshold, the baseline window never
-    escapes the artifact, and the filter correctly declines to act.
+    Note that when the `baseline_radius_ft` is smaller than the span of the artifact, the `BridgeFilter` cannot correct it. 
+    Once the radius exceeds the span, the filter successfully identifies and corrects the bridge.
 
     ## The recommended pipeline
 
-    Filters compose. Pass a sequence of filters, and each filter consumes the
-    previous filter's output. Put `BridgeFilter` **first**. It keys on the
-    raw dip magnitude, and any smoother attenuates this value.
-    """
+    Note that we can compose our filters and so for traces where we know we have large bridges, we can apply the `BridgeFilter` 
+    first and then follow it with the default filter to handle smaller artifacts.
 
+    This plot shows the whole trace run through our combined filters. The crossing is the shaded span on the right.
+    """
     combined = gradeit(
         trace,
         elevation_model=elevation_model,
         elevation_filter=[BridgeFilter(baseline_radius_ft=6000.0), Wood2014Filter()],
     )
-
-    configs = (
-        ("raw", RAW, raw),
-        ("default", DEFAULT, default),
-        ("BridgeFilter + default", COMBINED, combined),
-    )
-    errors = [deck_ft - elevation_of(result)[FIRST : LAST + 1].min() for _, _, result in configs]
-    max_grades = [
-        100
-        * np.abs(
-            result.grade_dec_unfiltered
-            if result.grade_dec_filtered is None
-            else result.grade_dec_filtered
-        ).max()
-        for _, _, result in configs
-    ]
-
-    fig, (ax_err, ax_grade) = plt.subplots(1, 2, figsize=(10, 4))
-    labels = [label for label, _, _ in configs]
-    colors = [color for _, color, _ in configs]
-
-    for ax, values, ylabel, title, fmt in (
-        (
-            ax_err,
-            errors,
-            "elevation error at the deck (ft)",
-            "How far the deck still sits below the road",
-            "%.1f",
-        ),
-        (
-            ax_grade,
-            max_grades,
-            "max |grade| over the segment (%)",
-            "The grade spike the artifact produces",
-            "%.1f%%",
-        ),
-    ):
-        bars = ax.bar(labels, values, 0.55, color=colors, edgecolor="white", lw=0.8)
-        ax.bar_label(bars, fmt=fmt, fontsize=9, padding=2, color=DECK)
-        ax.set_ylabel(ylabel)
-        ax.set_title(title, fontsize=10)
-        ax.tick_params(axis="x", labelsize=9)
-        ax.margins(y=0.18)
-        ax.grid(axis="y", alpha=0.25, lw=0.5)
-
-    fig.tight_layout()
-    plt.show()
-
-    """
-    ## Seeing it
-
-    This plot shows the whole segment across three profiles. The crossing is
-    the shaded span on the right.
-    """
 
     fig, (ax_elev, ax_grade) = plt.subplots(2, 1, figsize=(10, 7), sharex=True)
 
@@ -408,14 +337,12 @@ def main():
     plt.show()
 
     """
-    ## When not to reach for `BridgeFilter`
+    ## Caveats for `BridgeFilter`
 
-    A real valley also matches the description "a span that sits below the
-    road on both sides." Nothing in the geometry tells the two cases apart.
-    `baseline_radius_ft` draws the line between them. Its one-mile default
-    value is correct only for gentle terrain.
-    [How Filtration Works](02_filtering_example) shows this same default
-    value erasing 1.5 miles of a real road dip through a valley in the Colorado trace.
+    A real valley also matches the description "a span that sits below the road on both sides." 
+    The parameter `baseline_radius_ft` is what to tune for distinguishing between real valleys and bridge artifacts.
+    [How Filtration Works](02_filtering_example) shows this same default value erasing 1.5 miles of a real road dip through a valley in the Colorado trace.
+    So, there's not a one-size-fits-all value for `baseline_radius_ft`; it must be adjusted based on the terrain and the specific features of the road.
     """
 
 
