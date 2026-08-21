@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     import folium
     import pandas as pd
 
-# Anything ``to_coordinates`` knows how to turn into a list of Coordinates.
+# Input types accepted by ``to_coordinates``.
 CoordinateInput = Union[
     "pd.DataFrame",
     Mapping[str, Sequence[float]],
@@ -28,16 +28,11 @@ def to_coordinates(
     lat_col: str = "latitude",
     lon_col: str = "longitude",
 ) -> List[Coordinate]:
-    """Coerce supported inputs into a list of :class:`Coordinate`.
+    """Convert supported input into a list of :class:`Coordinate` objects.
 
-    Accepts, in order of detection:
-
-    * a numpy array of shape ``(n, 2)`` with ``(latitude, longitude)`` rows;
-    * a pandas DataFrame (duck-typed) with ``lat_col`` / ``lon_col`` columns;
-    * a mapping (e.g. ``dict``) keyed by ``lat_col`` / ``lon_col``;
-    * an iterable of :class:`Coordinate` or ``(latitude, longitude)`` pairs.
-
-    ``lat_col`` / ``lon_col`` apply only to the DataFrame and mapping forms.
+    Accepts a ``(n, 2)`` numpy array, a DataFrame, a mapping with latitude and
+    longitude keys, or an iterable of coordinates or ``(latitude, longitude)``
+    pairs. ``lat_col`` and ``lon_col`` apply to DataFrame and mapping input.
 
     Raises
     ------
@@ -53,7 +48,7 @@ def to_coordinates(
             )
         return [Coordinate.from_lat_lon(lat, lon) for lat, lon in data]
 
-    # DataFrame-like: anything column-indexable that exposes `.columns`.
+    # Treat column-indexable objects with ``.columns`` as DataFrames.
     if hasattr(data, "columns"):
         return _from_columns(data, lat_col, lon_col)
 
@@ -103,14 +98,10 @@ def _from_iterable(data: Iterable) -> List[Coordinate]:
 class GradeResult:
     """The output of :func:`gradeit.gradeit`.
 
-    Holds plain numpy arrays (and the source coordinates) so the core stays
-    independent of pandas. Every elevation and grade field carries an explicit
-    ``_unfiltered`` or ``_filtered`` suffix, so no field's provenance depends on
-    remembering a default. The ``*_filtered`` fields are populated only when
-    filtering ran, making the filtered-or-not contract explicit.
-
-    Use :meth:`to_dict` or :meth:`to_dataframe` to materialize the result in a
-    tabular form.
+    Stores NumPy arrays and source coordinates. Raw elevation and grade fields
+    end in ``_unfiltered``. Filtered fields end in ``_filtered`` and are set
+    only when filtering runs. Use :meth:`to_dict` or :meth:`to_dataframe` for
+    tabular output.
     """
 
     coordinates: List[Coordinate]
@@ -123,10 +114,8 @@ class GradeResult:
     def to_dict(self) -> Dict[str, list]:
         """Return the result as a column-name -> list mapping.
 
-        Every column is named for the attribute it comes from: ``latitude``,
-        ``longitude``, ``elevation_ft_unfiltered``, ``distances_ft``,
-        ``grade_dec_unfiltered``, plus ``elevation_ft_filtered`` /
-        ``grade_dec_filtered`` when present.
+        The keys match the result field names. Filtered fields are included
+        when they are available.
         """
         out: Dict[str, list] = {
             "latitude": [c.latitude for c in self.coordinates],
@@ -161,8 +150,8 @@ class GradeResult:
     def plot_map(self, **kwargs) -> "folium.Map":
         """Render this result on an interactive folium map colored by grade.
 
-        Thin convenience wrapper around :func:`gradeit.plotting.plot_grade_map`;
-        all keyword arguments are forwarded. Requires ``gradeit[plot]``.
+        Passes all keyword arguments to
+        :func:`gradeit.plotting.plot_grade_map`. Requires ``gradeit[plot]``.
         """
         from gradeit.plotting import plot_grade_map
 

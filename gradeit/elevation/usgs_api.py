@@ -1,10 +1,6 @@
 """Online elevation lookup against the USGS 3DEP service.
 
-Points are sampled in batches through the 3DEP ImageServer's ``getSamples``
-operation rather than one request per point. The values are identical to the
-Elevation Point Query Service (EPQS) -- EPQS is a single-point wrapper over
-this same dynamic mosaic -- but a whole trace costs a handful of requests
-instead of one per coordinate.
+Samples points in batches through the 3DEP ImageServer ``getSamples`` service.
 """
 
 import json
@@ -19,10 +15,7 @@ from gradeit.exceptions import ElevationLookupError, MissingDependencyError
 
 URL = "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer/getSamples"
 
-# getSamples silently truncates to its own sample limit -- a request for 2,000
-# points comes back as locationId 0..999 with HTTP 200 and no error -- and that
-# limit is *not* the service's advertised maxRecordCount (2000). Chunking at the
-# real limit is what keeps the truncation from ever happening.
+# The service returns at most 1,000 samples per request.
 MAX_POINTS_PER_REQUEST = 1000
 
 # The service reports elevation in meters; gradeit works in feet.
@@ -47,38 +40,28 @@ def _require_requests():
 
 class USGSApi(ElevationModel):
     """
-    An elevation model to look up elevation by latitude, longitude
-    coordinates. The source for the data is the public USGS 3D Elevation
-    Program (3DEP) bare-earth service, the same dynamic mosaic that backs the
-    Elevation Point Query Service.
+    Look up elevation from the public USGS 3DEP bare-earth service.
 
-    Coordinates are sent in batches of up to :data:`MAX_POINTS_PER_REQUEST`,
-    so a trace costs ``ceil(n / 1000)`` requests rather than ``n``.
-
-    Points outside the service's coverage return ``NaN``, matching
-    :class:`~gradeit.elevation.USGSLocal`.
+    Sends up to :data:`MAX_POINTS_PER_REQUEST` points in each request. Points
+    outside service coverage return ``NaN``.
 
     Parameters
     ----------
     batch_size:
-        Points per request. Capped at :data:`MAX_POINTS_PER_REQUEST`, above
-        which the service truncates the response without reporting an error.
+        Points per request. Values above :data:`MAX_POINTS_PER_REQUEST` are
+        capped.
     sampling:
-        ``"nearest"`` (default) returns the containing cell, which reproduces
-        the Elevation Point Query Service exactly. ``"bilinear"`` asks the
-        service to interpolate the surrounding cells, matching the default of
-        :class:`~gradeit.elevation.USGSLocal`.
+        ``"nearest"`` (default) returns the containing cell. ``"bilinear"``
+        interpolates the surrounding cells.
     timeout:
         Per-request timeout in seconds.
     max_retries:
-        Attempts per batch on timeout, connection error, or a retryable status
-        (429/5xx). Backs off between attempts.
+        Attempts for a timeout, connection error, or retryable HTTP status.
 
     More information is available at https://www.usgs.gov/3d-elevation-program
     """
 
-    # ArcGIS resampling method names for the `interpolation` parameter. Omitting
-    # the parameter also yields nearest-neighbor, but naming it is explicit.
+    # ArcGIS values for the ``interpolation`` request parameter.
     _INTERPOLATION = {
         "nearest": "RSP_NearestNeighbor",
         "bilinear": "RSP_BilinearInterpolation",
@@ -111,8 +94,7 @@ class USGSApi(ElevationModel):
         requests = _require_requests()
         elevation_ft = np.full(len(trace), np.nan, dtype=np.float64)
 
-        # One session for the whole trace so the TLS handshake and connection
-        # are reused across batches.
+        # Reuse one connection for all batches.
         with requests.Session() as session:
             for start in range(0, len(trace), self.batch_size):
                 chunk = trace[start : start + self.batch_size]
@@ -125,14 +107,12 @@ class USGSApi(ElevationModel):
     def _query_batch(self, session, chunk: Sequence[Coordinate]) -> Dict[int, float]:
         """Sample one batch, returned as ``{index within chunk: meters}``.
 
-        Points the service has no data for are absent from the mapping rather
-        than present as ``None``; the caller leaves those as ``NaN``.
+        Points without data are absent from the mapping.
         """
         payload = self._build_payload(chunk)
         result = self._post_with_retry(session, payload, len(chunk))
 
-        # ArcGIS reports failures in a 200 body, so an HTTP-level check is not
-        # enough to know the request succeeded.
+        # The service can report an error in a successful HTTP response.
         if "error" in result:
             error = result["error"]
             message = error.get("message", error) if isinstance(error, dict) else error
@@ -146,9 +126,7 @@ class USGSApi(ElevationModel):
 
         samples: Dict[int, float] = {}
         for sample in raw_samples:
-            # Samples come back unordered and out-of-coverage points are dropped
-            # entirely, so position in the response says nothing about which
-            # input point it belongs to -- only locationId does.
+            # ``locationId`` links each sample to its input point.
             location_id = self._parse_location_id(sample, len(chunk))
             value = self._parse_value(sample)
             if value is not None:
@@ -171,16 +149,14 @@ class USGSApi(ElevationModel):
     def _post_with_retry(self, session, payload: Dict[str, str], n_points: int) -> Dict[str, Any]:
         """POST one batch, retrying transient failures.
 
-        POST rather than GET because a full batch of coordinates overflows
-        practical URL length limits.
+        Uses POST because a batch can exceed a practical URL length.
         """
         requests = _require_requests()
         last_error: Optional[Exception] = None
 
         for attempt in range(self.max_retries):
             if attempt:
-                # Bounded linear backoff; the service is a shared public
-                # resource, so back off rather than hammering it.
+                # Wait longer after each failed request.
                 time.sleep(min(2.0 * attempt, 10.0))
             try:
                 response = session.post(URL, data=payload, timeout=self.timeout)
@@ -242,8 +218,8 @@ class USGSApi(ElevationModel):
     def _parse_value(sample: Dict[str, Any]) -> Optional[float]:
         """Elevation in meters, or ``None`` where the service reports no value.
 
-        ``value`` arrives as a JSON string, and no-data cells come back as
-        ``NaN``/``None``/an empty string depending on the underlying raster.
+        The service sends values as JSON strings. Missing values may be
+        ``NaN``, ``None``, or an empty string.
         """
         raw = sample.get("value")
         if raw is None or raw == "":

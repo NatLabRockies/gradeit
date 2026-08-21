@@ -13,11 +13,8 @@ from gradeit.grade import get_distances
 def cumulative_distance_ft(coordinates: Sequence[Coordinate]) -> np.ndarray:
     """Cumulative along-trace distance in feet, one value per coordinate.
 
-    The first element is always ``0.0``, so the array aligns point-for-point
-    with an elevation profile. Segment distances are non-negative, so the
-    result is monotone non-decreasing -- but it is not strictly increasing:
-    ``haversine`` rounds to 1 cm, so near-coincident points (a stationary
-    vehicle) produce runs of identical values.
+    The first value is ``0.0``, so the result aligns with the elevation
+    profile. Repeated coordinates can produce repeated distances.
     """
     return np.concatenate(([0.0], np.cumsum(get_distances(list(coordinates))))).astype(np.float64)
 

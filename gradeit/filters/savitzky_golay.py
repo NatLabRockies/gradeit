@@ -16,9 +16,7 @@ def savgol_filter(
     Returns:
         The smoothed signal as a float64 array the same length as ``x``.
 
-    The behavior matches ``scipy.signal.savgol_filter`` with default arguments,
-    including the ``mode="interp"`` boundary handling, so the validation rules
-    below mirror scipy's.
+    Uses interpolated values at both ends of the signal.
     """
     x = np.asarray(x, dtype=np.float64)
 
@@ -31,18 +29,15 @@ def savgol_filter(
 
     half = window_length // 2
 
-    # Savitzky-Golay coefficients: least-squares fit of a degree-`polyorder`
-    # polynomial over the window positions, read out at the center (deriv=0).
+    # Build coefficients for the center of each window.
     positions = np.arange(-half, half + 1)
     design = np.vander(positions, polyorder + 1, increasing=True)
     coeffs = np.linalg.pinv(design)[0]
 
-    # Interior points: correlate the (symmetric) coefficients with the signal.
-    # `np.convolve` flips its kernel, so reverse the coefficients to correlate.
+    # Smooth interior points.
     smoothed = np.convolve(x, coeffs[::-1], mode="same")
 
-    # Edges (mode="interp"): fit one polynomial to the first/last `window_length`
-    # samples and evaluate it at the boundary positions the convolution got wrong.
+    # Fit a polynomial at each end.
     local_idx = np.arange(window_length)
     left_fit = np.polynomial.polynomial.polyfit(local_idx, x[:window_length], polyorder)
     smoothed[:half] = np.polynomial.polynomial.polyval(local_idx[:half], left_fit)

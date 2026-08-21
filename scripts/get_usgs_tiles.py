@@ -9,9 +9,7 @@ import requests
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
-# The bundled tile lists live next to this script, so resolve the default
-# against the script directory rather than the caller's working directory --
-# otherwise `python scripts/get_usgs_tiles.py` from the repo root cannot find it.
+# Find the bundled tile list next to this script.
 DEFAULT_TILE_DATA = Path(__file__).resolve().parent / "usgs_tiles.txt"
 
 parser = argparse.ArgumentParser(description="Download USGS 1/3 arc-second DEM tiles")
@@ -62,7 +60,7 @@ def download_file(tile: str, output_dir: Path):
 
         destination.parent.mkdir(parents=True, exist_ok=True)
 
-        # write to file in chunks
+        # Write the download in chunks.
         with destination.open("wb") as f:
             for chunk in r.iter_content(chunk_size=8192):
                 f.write(chunk)

@@ -6,13 +6,9 @@ from gradeit.coordinate import Coordinate
 
 
 class ElevationModel(metaclass=ABCMeta):
-    """
-    Abstract class for elevation lookup models
-    """
+    """Base class for models that look up elevation."""
 
     @abstractmethod
     def get_elevation(self, trace: List[Coordinate]) -> List[float]:
-        """
-        Get elevation (in feet) for a list of points in a trace
-        """
+        """Return elevation in feet for the trace coordinates."""
         pass

@@ -1,20 +1,7 @@
-"""The Wood et al. (2014) elevation filtration routine.
+"""Filter elevation with the Wood et al. (2014) method.
 
-Implements the five-step routine tabulated as Table 1 of Wood, Burton, Duran &
-Gonder, *Appending High-Resolution Elevation Data to GPS Speed Traces for
-Vehicle Energy Modeling and Simulation*, NLR/TP-5400-61109 (2014):
-
-* **A.** Raw elevation versus distance.
-* **B.** Elevation is downsampled onto uniformly spaced distance intervals,
-  each node carrying the **median** of the raw points that fall in it.
-* **C.** The downsampled profile is passed through a combined Savitzky-Golay
-  and binomial filter, and the difference between the pre-filtered and
-  post-filtered values is computed.
-* **D.** Nodes whose filtration difference exceeds a threshold are discarded
-  and backfilled via interpolation.
-* **E.** The backfilled profile is passed through the same combined filter
-  again, then elevation at the original distance values is recovered by
-  interpolation.
+The filter resamples elevation onto a distance grid, smooths it, replaces large
+errors, smooths again, and returns values at the original points.
 """
 
 from __future__ import annotations
@@ -35,17 +22,7 @@ from gradeit.filters.savitzky_golay import savgol_filter
 def binomial_kernel(order: int) -> np.ndarray:
     """The normalized binomial (Pascal's triangle) kernel of a given order.
 
-    Coefficients are ``C(order, k) / 2**order`` for ``k = 0..order``, giving a
-    kernel of length ``order + 1`` that sums to 1. It is the discrete analogue
-    of a Gaussian with ``sigma = sqrt(order) / 2`` samples, and its frequency
-    response ``cos(w/2)**order`` is monotone -- no sidelobes, no ringing.
-
-    ``order`` is forced even so the kernel has odd length and is therefore
-    zero-phase; an odd order would shift the profile by half a sample, which on
-    a distance grid is a systematic position error. The minimum is 2.
-
-    Built by repeated convolution with ``[0.5, 0.5]``. Every coefficient is a
-    dyadic rational, so the result is exact in float64.
+    The result has an odd length, sums to 1, and has an order of at least 2.
     """
     order = max(2, int(order))
     if order % 2:
@@ -59,11 +36,7 @@ def binomial_kernel(order: int) -> np.ndarray:
 def binomial_filter(x: Union[Sequence[float], np.ndarray], order: int) -> np.ndarray:
     """Apply a binomial smoothing filter to a 1-D signal.
 
-    Edges are handled by **odd** reflection (``2*x[0] - x[k]``), which
-    reproduces the local slope exactly and therefore leaves a constant-grade
-    road untouched end to end. Even reflection would mirror the slope at the
-    boundary and bias the terminal elevation; replicate padding would flatten
-    it. On a straight ramp this implementation is exact to float64 precision.
+    Uses odd reflection at both ends to preserve the local slope.
     """
     arr = np.asarray(x, dtype=np.float64)
     coeffs = binomial_kernel(order)
@@ -105,9 +78,8 @@ def _resolve_savgol(
 ) -> Tuple[int, int]:
     """Convert a Savitzky-Golay window in feet to (window_samples, polyorder).
 
-    Returns a window of ``0`` when the node grid is too short to smooth, which
-    :func:`_combined_filter` treats as "skip this stage". The window is always
-    odd; ``polyorder`` is lowered if the window cannot accommodate it.
+    Returns ``0`` when the grid is too short. The window is odd and the
+    polynomial order is reduced when needed.
     """
     half = max(1, int(round(window_ft / (2.0 * delta_ft))))
     window = 2 * half + 1
@@ -121,13 +93,7 @@ def _resolve_savgol(
 def _resolve_binomial(sigma_ft: float, delta_ft: float, n_nodes: int) -> int:
     """Convert a binomial width in feet (as a sigma) to a kernel order.
 
-    The binomial's single integer order sets both its length and its shape,
-    with ``sigma = sqrt(order) / 2`` samples. Parameterizing by sigma rather
-    than by span keeps the physical bandwidth invariant when ``delta_ft``
-    changes: ``order = (2 * sigma / delta)**2``. The order is quantized and
-    floored at 2, so the narrowest achievable sigma is ``delta / sqrt(2)``.
-
-    Returns ``0`` when the node grid is too short, meaning "skip this stage".
+    Returns ``0`` when the grid is too short for this filter.
     """
     order = int(round((2.0 * sigma_ft / delta_ft) ** 2))
     if order % 2:
@@ -144,13 +110,7 @@ def _resolve_binomial(sigma_ft: float, delta_ft: float, n_nodes: int) -> int:
 def _merge_runs(runs: List[Tuple[int, int]], x: np.ndarray, gap_ft: float) -> List[Tuple[int, int]]:
     """Join runs separated by less than ``gap_ft`` of distance.
 
-    An artifact wider than one node makes the smoothed curve pass *through* its
-    own shoulders, so the residual there dips back to ~0 and the run breaks into
-    fragments with clean-looking nodes between them. Backfilling only the
-    fragments then interpolates from those shoulders and leaves most of the
-    artifact in place. Within one kernel support a near-zero residual is
-    evidence of the smoother tracking the artifact, not of clean data, so
-    fragments that close together belong to the same object.
+    Nearby runs can be parts of the same elevation error.
     """
     if not runs:
         return []
@@ -169,10 +129,7 @@ def _supported_segments(
 ) -> List[Tuple[int, int]]:
     """Split the node grid at unobserved gaps wider than ``max_gap_ft``.
 
-    A gap that long carries no elevation information -- most often because the
-    DEM returned no-data, or because the trace left the downloaded tiles. The
-    routine must not fabricate a profile across it, and must not let values on
-    one side leak through the smoother into the other.
+    The filter does not interpolate or smooth across these gaps.
     """
     idx = np.flatnonzero(observed)
     if idx.size == 0:
@@ -191,78 +148,33 @@ def _supported_segments(
 class Wood2014Filter(ElevationFilter):
     """Elevation filtration per Wood et al. (2014), NLR/TP-5400-61109.
 
-    Resamples the elevation profile onto a uniform distance grid (median per
-    node), smooths it with a combined Savitzky-Golay and binomial filter,
-    discards and backfills nodes whose filtration residual is too large to be
-    DEM noise, smooths again, and interpolates back onto the original points.
+    Resamples elevation onto a uniform distance grid, smooths it, replaces
+    large residuals, smooths again, and restores the original point spacing.
 
     Parameters
     ----------
     interval_ft:
-        Target spacing of the uniform distance grid (step B). Default 100 ft,
-        roughly 3x the ~33 ft post spacing of the USGS 1/3 arc-second DEM: below
-        one post, adjacent nodes read the same cell and the downsample removes
-        no noise. The realized spacing is ``total_distance / round(total /
-        interval_ft)``, so the grid lands exactly on both ends of the trace.
+        Target distance between grid nodes. Default: 100 ft. The actual grid
+        includes the first and last trace points.
     savgol_window_ft, savgol_polyorder:
-        Width and polynomial order of the Savitzky-Golay stage, declared in feet
-        so the physical cutoff does not move when ``interval_ft`` changes. At
-        the defaults this resolves to a 7-sample window, whose composite kernel
-        attenuates white DEM noise by 57%.
+        Savitzky-Golay window width and polynomial order. The width is in feet.
     binomial_sigma_ft:
-        Width of the binomial stage, as a Gaussian-equivalent sigma in feet. A
-        sigma rather than a span, because the binomial's order sets both its
-        length and its shape; see :func:`_resolve_binomial`. A vertical curve is
-        biased by ``sigma**2 * curvature / 2``, which at the default is about
-        0.5 ft on a 60 mph crest -- a sixteenth of the DEM's own 8 ft RMSE.
+        Width of the binomial stage in feet.
     residual_threshold_ft:
-        Step D discard threshold on ``|pre - post|``. Default 8 ft, which is the
-        DEM's stated 2.44 m vertical RMSE: a filtration residual larger than the
-        elevation model's own 1-sigma accuracy is not explainable as DEM noise.
-        Note this is a *residual*, not a raw drop -- the smoother is itself
-        dragged toward an artifact, so a ~55 ft bridge drop leaves a residual
-        near 11 ft. Setting this to the "tens of feet" the paper attributes to
-        the raw artifact would catch nothing.
+        Replace a node when its smoothed residual exceeds this value. Default:
+        8 ft.
     residual_grow_ratio:
-        Hysteresis. A run of nodes above ``residual_threshold_ft *
-        residual_grow_ratio`` is discarded whole as long as at least one node in
-        it breaches the full threshold. Without this, a wide artifact drags the
-        smoothed curve down with it, the residual shrinks in the middle, and a
-        per-node test punches out the flanks while leaving the floor. Runs that
-        end up within one kernel support of each other are then merged for the
-        same reason (see :func:`_merge_runs`). Set to 1.0 to disable the
-        hysteresis itself.
+        Include nearby nodes when their residual exceeds this fraction of the
+        threshold. Set to 1.0 to disable this expansion.
     max_discard_len_ft:
-        Reject discard runs longer than this -- a residual sustained over that
-        distance is real topography, not an artifact.
+        Do not replace runs longer than this distance.
     max_discard_fraction:
-        Safety valve, in two parts: the threshold is raised if it would
-        otherwise fire too often, and the surviving runs are then accepted
-        strongest-anomaly-first until this fraction of measured nodes is spent.
-        Inert at the defaults on realistic data; it exists so unusually noisy
-        input cannot silently erase a quarter of the trace.
+        Maximum fraction of measured nodes that may be replaced.
     max_gap_ft:
-        Unobserved stretches longer than this split the trace into independently
-        filtered segments; original points inside such a gap are returned as
-        ``NaN`` rather than interpolated across.
+        Split the trace at missing-elevation gaps longer than this distance.
     min_node_occupancy:
-        Guard on ``interval_ft``. Warn with
-        :class:`~gradeit.exceptions.SparseGridWarning` when the fraction of grid
-        nodes that actually contain a GPS point falls below this.
-
-        A node with no members carries no measurement -- its elevation is
-        interpolated from its neighbours -- so when most nodes are empty the
-        routine is filtering its own interpolation, and step B's median
-        downsample has nothing to take a median *of* and removes no noise. The
-        cause is always the same: ``interval_ft`` set finer than the trace's
-        point spacing. As a rule, keep ``interval_ft`` at least the median
-        spacing of the trace (and at least one ~33 ft DEM post).
-
-        The 0.35 default is calibrated to complain only about genuine
-        misconfiguration: at ``interval_ft=100`` the traces shipped with gradeit
-        sit between 47% and 99% occupancy, while the configurations that
-        measurably damaged output in testing were at 25-30%. Set to ``0.0`` to
-        silence the check.
+        Warn when fewer than this fraction of grid nodes contain a GPS point.
+        Set to ``0.0`` to disable the warning.
     """
 
     interval_ft: float = 100.0
@@ -287,14 +199,14 @@ class Wood2014Filter(ElevationFilter):
             raise InvalidInputError(
                 f"elevation_profile has {n} values but {len(coordinates)} coordinates were given."
             )
-        # Degenerate cases: return the input untouched rather than fabricate.
+        # No usable elevation data to filter.
         if n < 2 or not np.isfinite(elev).any():
             return elev.tolist()
 
         s = cumulative_distance_ft(coordinates)
         total = float(s[-1])
         if not np.isfinite(total) or total < self.interval_ft:
-            # Every point at one location, or a trace shorter than one bin.
+            # The trace is shorter than one grid interval.
             return elev.tolist()
 
         x, delta, node_s, node_elev, observed = self._downsample(elev, s, total)
@@ -324,25 +236,14 @@ class Wood2014Filter(ElevationFilter):
     ) -> Tuple[np.ndarray, float, np.ndarray, np.ndarray, np.ndarray]:
         """Median-downsample onto a uniform distance grid.
 
-        Returns ``(x, delta, node_s, node_elev, observed)``. ``x`` is the node
-        grid; ``node_elev`` is the median elevation of each node's members and
-        ``node_s`` the median of their *distances*.
-
-        Carrying the member distances matters more than it looks. Placing a
-        node's median elevation at the node's nominal position injects an error
-        of up to ``delta/2 * grade``, because the members' distance centroid is
-        not the node centre. That beat between GPS spacing and grid spacing is
-        not white, so the smoother does not remove it -- it survives to the
-        output at up to ~2 ft on an 8% grade. Anchoring the median elevation to
-        the median distance and then resampling makes a constant-grade road
-        exact instead.
+        Returns the grid, its spacing, median member distance, median
+        elevation, and a flag for nodes with valid data.
         """
         n_bins = max(1, int(round(total / self.interval_ft)))
         x = np.linspace(0.0, total, n_bins + 1)
         delta = float(x[1] - x[0])
 
-        # Node k owns the ball of radius delta/2 around x[k]; the grid lands on
-        # 0 and `total` exactly, so step E never has to extrapolate.
+        # Assign each point to its closest grid node.
         node = np.clip(np.rint(s / delta), 0, n_bins).astype(np.int64)
         n_nodes = n_bins + 1
 
@@ -352,8 +253,7 @@ class Wood2014Filter(ElevationFilter):
         starts = np.concatenate(([0], np.cumsum(totals)[:-1]))
         observed = counts > 0
 
-        # Sort by (node, value) with invalid members pushed to the tail of each
-        # group, so the first `counts[k]` entries of group k are its valid ones.
+        # Sort valid values within each grid node to find their median.
         last = elev.size - 1
         lo = np.minimum(starts + np.maximum(counts - 1, 0) // 2, last)
         hi = np.minimum(starts + counts // 2, last)
@@ -377,8 +277,7 @@ class Wood2014Filter(ElevationFilter):
             return np.full(x.size, np.nan, dtype=np.float64)
         if xp.size == 1:
             return np.full(x.size, float(fp[0]), dtype=np.float64)
-        # Two nodes can share a median distance when all their members sit on a
-        # bin boundary; np.interp needs a strictly increasing source axis.
+        # ``np.interp`` needs increasing source distances.
         keep = np.concatenate(([True], np.diff(xp) > 0))
         return _interp_linear_ends(x, xp[keep], fp[keep])
 
@@ -387,9 +286,7 @@ class Wood2014Filter(ElevationFilter):
     ) -> None:
         """Warn when the node grid is finer than the GPS points can support.
 
-        Measured *within* the supported segments, so a genuine data gap -- which
-        :func:`_supported_segments` has already split the trace on -- does not
-        count against the grid.
+        Only counts nodes in segments with elevation data.
         """
         if self.min_node_occupancy <= 0.0:
             return
@@ -401,8 +298,7 @@ class Wood2014Filter(ElevationFilter):
         if occupancy >= self.min_node_occupancy:
             return
 
-        # Ignore zero-length segments: a stationary vehicle logs many points at
-        # one place, which says nothing about how finely the road was sampled.
+        # Ignore repeated locations when measuring point spacing.
         spacing = np.diff(s)
         moving = spacing[spacing > 0]
         advice = (
@@ -421,7 +317,7 @@ class Wood2014Filter(ElevationFilter):
             stacklevel=3,
         )
 
-    # -- Steps C, D, E --------------------------------------------------------
+    # -- Smooth, replace errors, and smooth again --------------------------------
 
     def _filter_segment(
         self, pre: np.ndarray, x: np.ndarray, observed: np.ndarray, delta: float
@@ -435,11 +331,11 @@ class Wood2014Filter(ElevationFilter):
         )
         order = _resolve_binomial(self.binomial_sigma_ft, delta, n_nodes)
 
-        # Step C: filter, then take the pre/post difference.
+        # Smooth the elevation and measure the difference.
         post = _combined_filter(pre, window, polyorder, order)
         residual = pre - post
 
-        # Step D: discard the outliers and backfill them by interpolation.
+        # Replace outliers by interpolation.
         half_support = ((max(window, 1) - 1) // 2 + order // 2) * delta
         discard = self._discard_mask(residual, observed, x, half_support)
         backfilled = pre.copy()
@@ -447,7 +343,7 @@ class Wood2014Filter(ElevationFilter):
         if discard.any() and keep.any():
             backfilled[discard] = np.interp(x[discard], x[keep], pre[keep])
 
-        # Step E: filter the backfilled profile again.
+        # Smooth the corrected profile.
         return _combined_filter(backfilled, window, polyorder, order)
 
     def _discard_mask(
@@ -468,9 +364,7 @@ class Wood2014Filter(ElevationFilter):
         grow_ratio = min(max(self.residual_grow_ratio, 1e-6), 1.0)
         capped = 0.0 < self.max_discard_fraction < 1.0
         if capped:
-            # Raise the threshold only if it would otherwise fire too often.
-            # The ceiling is applied to the *grow* threshold, because that is
-            # what governs how far a run extends.
+            # Raise the threshold to keep replacements within the limit.
             ceiling = float(np.quantile(magnitude[testable], 1.0 - self.max_discard_fraction))
             threshold = max(threshold, ceiling / grow_ratio)
 
@@ -486,17 +380,16 @@ class Wood2014Filter(ElevationFilter):
             if not seed[start : stop + 1].any():
                 continue  # noise-only run, no node actually breached the threshold
             if start == 0 or stop == n - 1:
-                # No clean anchor on one side; interpolation would clamp flat
-                # and silently zero the grade at the trace boundary.
+                # A boundary run has no clean point on both sides.
                 continue
             if float(x[stop] - x[start]) > self.max_discard_len_ft:
-                continue  # sustained over this distance, it is terrain
+                continue
             candidates.append((start, stop, float(magnitude[start : stop + 1].max())))
 
         budget = n
         if capped:
             budget = int(self.max_discard_fraction * int(testable.sum()))
-        # Strongest anomaly first, so a tight budget keeps the worst offenders.
+        # Handle the largest errors first.
         candidates.sort(key=lambda run: -run[2])
         used = 0
         for start, stop, _ in candidates:
@@ -508,8 +401,7 @@ class Wood2014Filter(ElevationFilter):
         return discard
 
 
-# Kept for callers that want to know what a given trace resolves to without
-# running the filter (used in tests and in docs/examples/02_filtering_example.py).
+# Return the resolved filter settings without filtering a trace.
 def resolve_parameters(
     f: Wood2014Filter, total_ft: float, n_nodes: Optional[int] = None
 ) -> Tuple[float, int, int, int]:

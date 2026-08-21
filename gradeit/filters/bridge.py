@@ -1,20 +1,8 @@
 """Bridge correction as an :class:`ElevationFilter`.
 
-The USGS DEM is a *bare-earth* model: bridges and overpasses are not present,
-so where a road spans a valley or river the DEM dips to the terrain below and
-back up. This filter detects those dips directly from elevation by comparing
-each point to a two-sided rolling-max baseline of the surrounding road, then
-linearly interpolates elevation across each accepted dip span so the corrected
-profile carries the road's real slope across the bridge.
-
-Output is a corrected *elevation* profile (not grade). ``gradeit()`` recomputes
-grade from the final filtered elevation, so elevation and grade stay
-internally consistent.
-
-Recommended ordering: apply :class:`BridgeFilter` *before*
-:class:`~gradeit.filters.Wood2014Filter`. Smoothing first attenuates the dip
-magnitude this filter keys on; bridge-correct first, then smooth the cleaned
-profile.
+USGS bare-earth elevation data may show a dip under a bridge or overpass. This
+filter finds short dips and fills them with a straight elevation line. Apply it
+before :class:`~gradeit.filters.Wood2014Filter`.
 """
 
 from __future__ import annotations
@@ -35,64 +23,28 @@ _FT_PER_MILE = 5280.0
 class BridgeFilter(ElevationFilter):
     """Interpolate elevation across bare-earth-DEM bridge artifacts.
 
-    The detector compares each point's elevation against a baseline built from
-    the rolling maximum of elevation in a window on *both* sides of the point.
-    Taking the minimum of the two side-maxima makes the baseline collapse to
-    the point's own elevation on monotone climbs or descents, so steady
-    grade does not trigger false positives — only a real dip (a span whose
-    elevation sits below the road on both sides) does.
-
-    A valley crossing is also "a span whose elevation sits below the road on
-    both sides", and nothing in the geometry separates the two. What separates
-    them is ``baseline_radius_ft``: the filter can only see dips narrower than
-    its baseline window, so that radius is what decides whether a feature is
-    treated as a bridge or left alone. Set it deliberately — see below.
+    Compares each point with the highest elevation on both sides. A point that
+    is much lower than both sides can be part of a bridge artifact.
 
     Parameters
     ----------
     baseline_radius_ft:
-        Half-width, in feet, of the rolling-max window on each side. Defaults
-        to 1 mile.
-
-        **This is the parameter to tune, and the default is only right for
-        traces over gentle terrain.** It is bounded from both directions: wide
-        enough that each side's window reaches real road beyond the bridge, but
-        narrow enough that it does not reach over the surrounding terrain's own
-        relief. Too wide and a genuine descent into a valley and climb back out
-        reads as one enormous "dip", which this filter will happily interpolate
-        a straight line across -- silently flattening real terrain by tens of
-        feet. The acceptance gates below cannot catch that case: a deep valley
-        really is short relative to its depth, so it is not geometrically
-        distinguishable from a tall bridge.
-
-        Scale it to the spans you are correcting -- a few hundred feet for
-        typical overpasses and creek crossings -- not to the default.
-        ``docs/examples/02_filtering_example.py`` walks through a trace where
-        the one-mile default flattens 1.5 miles of real valley by up to 130 ft.
+        Distance, in feet, checked on each side of a point. Default: 1 mile.
+        Set it wider than the bridge, but narrow enough to avoid treating a
+        valley as a bridge.
     min_dip_depth_ft:
         Per-point threshold for inclusion in a candidate dip run. Points where
         ``baseline - elevation`` is at most this value are not dip candidates.
     min_peak_depth_ft:
-        A candidate run is only accepted if at least one of its points reaches
-        this depth. Filters out wide but shallow DEM noise.
+        A run needs at least one point this deep to be accepted.
     min_bridge_len_ft, max_bridge_len_ft:
-        Length bounds, in feet, for accepted runs. Length is measured across
-        the interpolated span -- from the clean anchor before the run to the
-        clean anchor after it -- so a single-point dip still has a non-zero
-        length. Shorter runs are usually noise; longer runs are usually real
-        terrain (valleys, canyons) the filter cannot honestly distinguish from
-        artifacts.
+        Minimum and maximum length in feet for an accepted run. Length includes
+        the clean point on each side used for interpolation.
     max_aspect_ratio:
-        Reject runs whose ``span / peak_depth`` exceeds this. A real bridge
-        artifact is short relative to its depth; a real valley is long
-        relative to its depth.
+        Reject runs whose length divided by peak depth is too large.
     grade_plausibility_tol:
-        After interpolating across a candidate run, compare the recovered
-        grade across the span against the median segment grade in the
-        ``baseline_radius_ft`` neighborhood outside the run. Reject the
-        correction if they differ by more than this. Guards against
-        interpolating elevation in a way that contradicts the surrounding
-        road's real slope.
+        Reject a correction when its grade differs too much from nearby road
+        grade.
     """
 
     baseline_radius_ft: float = _FT_PER_MILE
@@ -136,11 +88,7 @@ class BridgeFilter(ElevationFilter):
     def _baseline(self, elev: np.ndarray, cumulative_ft: np.ndarray) -> np.ndarray:
         """Two-sided rolling-max baseline at each index.
 
-        ``baseline[i] = min(max(left half-window), max(right half-window))``.
-        Each half-window is defined in cumulative-distance space and excludes
-        ``i`` itself, so a single anomalous point cannot be its own baseline.
-        At trace boundaries one side may be empty; we fall back to the
-        non-empty side, or to ``elev[i]`` if both are empty.
+        Uses the lower of the highest values in the left and right windows.
         """
         n = elev.size
         radius = self.baseline_radius_ft
@@ -172,16 +120,11 @@ class BridgeFilter(ElevationFilter):
         cumulative_ft: np.ndarray,
         n: int,
     ) -> bool:
-        # Boundary case: no clean anchor on one side to interpolate from.
+        # A boundary run has no anchor on one side.
         if start == 0 or stop == n - 1:
             return False
 
-        # Measure the run across the span actually interpolated -- anchor to
-        # anchor -- rather than between the first and last dip points. Those
-        # coincide for a single-point dip, giving a length of exactly 0 that
-        # min_bridge_len_ft always rejects; at highway speed (~95 ft between
-        # 1 Hz points) a short overpass *is* a single-point dip, which is the
-        # most common bridge artifact in real traces.
+        # Include both interpolation anchors in the run length.
         span_ft = float(cumulative_ft[stop + 1] - cumulative_ft[start - 1])
         if span_ft <= 0:
             return False
@@ -194,8 +137,7 @@ class BridgeFilter(ElevationFilter):
         if span_ft / peak_depth > self.max_aspect_ratio:
             return False
 
-        # Plausibility gate: the recovered grade across the span should be
-        # consistent with the surrounding road's median segment grade.
+        # Compare the corrected grade with nearby road grade.
         recovered_grade = (elev[stop + 1] - elev[start - 1]) / span_ft
 
         surrounding = self._surrounding_median_grade(start, stop, elev, cumulative_ft)

@@ -8,8 +8,7 @@ from gradeit.filters import ElevationFilter, Wood2014Filter
 from gradeit.grade import get_distances, get_grade
 from gradeit.io import CoordinateInput, GradeResult, to_coordinates
 
-# Applied unless the caller overrides elevation_filter. Wood2014Filter is a
-# frozen (immutable) dataclass, so sharing one instance as the default is safe.
+# Default filter. Its frozen dataclass can be shared safely.
 _DEFAULT_FILTER = Wood2014Filter()
 
 
@@ -31,25 +30,16 @@ def gradeit(
         iterable of :class:`~gradeit.coordinate.Coordinate` or
         ``(latitude, longitude)`` pairs. See :func:`gradeit.io.to_coordinates`.
     elevation_model:
-        The :class:`~gradeit.elevation.ElevationModel` that supplies elevation.
-        Defaults to :class:`~gradeit.elevation.USGSApi` (the online USGS 3DEP
-        service, no setup required; it reproduces the Elevation Point Query
-        Service's values but batches points per request). For bulk traces,
-        pass :class:`~gradeit.elevation.USGSLocal` pointed at downloaded raster
-        tiles, or any custom ``ElevationModel`` instance.
+        Model that provides elevation. Defaults to the online
+        :class:`~gradeit.elevation.USGSApi` service. Use
+        :class:`~gradeit.elevation.USGSLocal` with downloaded tiles, or pass a
+        custom ``ElevationModel``.
     elevation_filter:
-        Clean up the elevation profile before grade is computed. Pass a single
-        :class:`ElevationFilter` instance or a sequence of them (applied in
-        order, each consuming the previous filter's output). Defaults to
-        :class:`~gradeit.filters.Wood2014Filter`, the filtration routine of
-        Wood et al. (2014), NLR/TP-5400-61109: resample onto a uniform
-        distance grid, smooth, reject and backfill anomalous points, smooth
-        again, and interpolate back. Pass ``None`` (or ``[]``) to skip
-        filtering entirely.
-
-        :class:`~gradeit.filters.BridgeFilter` (targeted bare-earth bridge
-        correction) remains available for spans the Wood routine declines to
-        touch; put it *first* in the sequence.
+        Filter elevation before calculating grade. Pass one
+        :class:`ElevationFilter` or a sequence, applied in order. Defaults to
+        :class:`~gradeit.filters.Wood2014Filter`. Pass ``None`` or ``[]`` to
+        skip filtering. Put :class:`~gradeit.filters.BridgeFilter` first when
+        using it with other filters.
     lat_col, lon_col:
         Column/key names for the latitude and longitude, used only for the
         DataFrame and mapping input forms.
@@ -57,10 +47,9 @@ def gradeit(
     Returns
     -------
     GradeResult
-        A container of numpy arrays. Elevation and grade each come in an
-        ``_unfiltered`` form (the raw lookup) and, when filtering ran, a
-        ``_filtered`` form. Use ``.to_dataframe()`` or ``.to_dict()`` to
-        materialize it. The input object is never mutated.
+        Numpy arrays for the input coordinates, elevation, distance, and
+        grade. Raw values use the ``_unfiltered`` suffix. Filtered values use
+        ``_filtered`` when a filter runs. The input is not changed.
     """
     coordinates = to_coordinates(data, lat_col=lat_col, lon_col=lon_col)
     if len(coordinates) < 2:
@@ -71,8 +60,7 @@ def gradeit(
     elevation_list = emodel.get_elevation(coordinates)
     elevation_ft_unfiltered = np.asarray(elevation_list, dtype=np.float64)
 
-    # distances_ft carries a leading 0 so it aligns point-for-point with the
-    # elevation/grade arrays; the per-segment distances are distances_ft[1:].
+    # Start with 0 so distances align with the point arrays.
     segment_distances = get_distances(coordinates)
     distances_ft = np.asarray([0.0] + segment_distances, dtype=np.float64)
 

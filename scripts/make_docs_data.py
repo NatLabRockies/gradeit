@@ -1,23 +1,8 @@
-"""Generate the small, committed elevation data that the documentation examples use.
+"""Create small USGS tile crops for the documentation examples.
 
-The docs are built and executed on CI, so they cannot download the USGS raster
-tiles that ``examples/`` relies on -- those run 220-490 MB *each*. This script
-crops the real tiles down to a narrow corridor around two short demo traces,
-producing tiles small enough to commit (a few hundred KB) that are still real
-terrain, with the real bare-earth artifacts the docs are about.
-
-The crop stays a drop-in for :class:`gradeit.USGSLocal` because
-``gradeit/elevation/tiff_reader.py`` derives its geotransform from the
-``ModelPixelScale`` / ``ModelTiepoint`` tags rather than assuming a tile spans a
-full 1x1 degree cell. Points outside the crop simply read back as ``NaN``.
-
-Everything outside ``CORRIDOR_FT`` of the trace is set to the no-data sentinel.
-Constant regions cost almost nothing under LZW, and that -- not the bounding box
--- is what keeps the files small.
-
-This is a maintainer tool: it needs the full source tiles, which are not in the
-repository. Run it only when the demo traces or the crop parameters change, then
-commit the regenerated ``docs/data/``.
+The script keeps a corridor around each demo trace and marks all other pixels
+as no-data. It needs the full source tiles and writes the output to
+``docs/data/``.
 
 Usage::
 
@@ -51,34 +36,23 @@ from gradeit.elevation.tiff_reader import (  # noqa: E402
 )
 from gradeit.elevation.usgs_local import get_raster_elev_profile  # noqa: E402
 
-# No-data sentinel, matching what USGS itself writes and what the reader expects.
+# No-data value used by the tile reader.
 NODATA = -999999.0
 
-# GeoKeyDirectory (34735) indexes into GeoDoubleParams (34736) and GeoAsciiParams
-# (34737), so the three travel together or not at all. gradeit's reader tolerates
-# their absence, but a tile without them has no declared CRS and opens badly in
-# QGIS/GDAL, so the crop carries them through verbatim.
+# Keep these three coordinate-system tags together.
 _TAG_GEO_DOUBLE_PARAMS = 34736
 _TAG_GEO_ASCII_PARAMS = 34737
 
-# Half-width of the retained corridor around each trace. This is the size knob:
-# shrink it if a crop lands too large, but keep it far above the ~33 ft DEM post
-# spacing. At 1/3 arc-second, 500 ft is roughly 15 pixels, which keeps every demo
-# point clear of both the new raster edge (where bilinear sampling falls back to
-# nearest) and the no-data boundary (where bilinear renormalizes over the valid
-# neighbors). verify() proves that margin rather than assuming it.
+# Half-width of the retained corridor around each trace.
 CORRIDOR_FT = 500.0
 
-# Extra pixels of raster kept beyond the corridor bounding box, so no point's
-# bilinear 2x2 footprint can reach the crop edge.
+# Extra pixels around the corridor for bilinear sampling.
 PAD_PX = 8
 
-# Internal tile size of the written GeoTIFF. Smaller than the USGS originals
-# because these rasters are small; keeps the windowed-read path exercised.
+# Internal tile size for the generated GeoTIFF.
 TILE = 128
 
-# Accepted disagreement between the crop and the full tile, in feet. Far below
-# anything physical; see verify() for why it is not exactly zero.
+# Maximum allowed difference between the crop and source tile, in feet.
 TOLERANCE_FT = 1e-6
 
 FT_PER_DEG_LAT = 364000.0
@@ -96,14 +70,7 @@ class Demo:
     note: str
 
 
-# The slice bounds are the reproducible record of what the docs demonstrate.
-#
-# Both slices are deliberately wider than the artifact they showcase: BridgeFilter
-# rejects any candidate run that touches a trace boundary, and needs
-# baseline_radius_ft of real road beyond each end of a dip before it will act.
-# Golden gives ~23,500 / ~16,900 ft around the creek (clearing the 5,280 ft
-# default); Carquinez gives ~11,200 / ~10,800 ft around the strait (clearing the
-# 6,000 ft radius its 5,159 ft span requires).
+# Trace slices used by the documentation examples.
 DEMOS: List[Demo] = [
     Demo(
         name="golden_creek",
@@ -143,11 +110,7 @@ def read_trace(csv_path: Path, start: int, stop: int) -> Tuple[List[Dict[str, st
 
 
 def write_trace(rows: Sequence[Dict[str, str]], fieldnames: Sequence[str], dest: Path) -> None:
-    """Write the slice with latitude/longitude first, other columns unchanged.
-
-    The two source files disagree on column order and naming, so normalizing the
-    lead columns lets every docs example read them the same way.
-    """
+    """Write a trace slice with latitude and longitude as the first columns."""
     rest = [f for f in fieldnames if f not in ("latitude", "longitude")]
     out_fields = ["latitude", "longitude", *rest]
     dest.parent.mkdir(parents=True, exist_ok=True)
@@ -161,9 +124,7 @@ def write_trace(rows: Sequence[Dict[str, str]], fieldnames: Sequence[str], dest:
 def densify(cols: np.ndarray, rows: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     """Interpolate a pixel-space polyline down to sub-pixel steps.
 
-    GPS traces are sampled in time, so consecutive points can be a dozen pixels
-    apart on a fast stretch of road. Stamping only the sample points would leave
-    scalloped gaps between them; walking the segments closes the corridor.
+    Adds points between trace samples so the corridor has no gaps.
     """
     out_c: List[np.ndarray] = []
     out_r: List[np.ndarray] = []
@@ -187,9 +148,7 @@ def corridor_mask(
 ) -> np.ndarray:
     """Boolean mask of pixels within an elliptical radius of the trace.
 
-    A degree of longitude is shorter than a degree of latitude, so a circular
-    corridor on the ground is an ellipse in pixel space; the two radii keep the
-    retained band the same physical width in both directions.
+    Uses separate horizontal and vertical radii to match ground distance.
     """
     cols, rows = densify(cols, rows)
 
@@ -203,7 +162,7 @@ def corridor_mask(
         c, r = int(round(col)), int(round(row))
         r0, r1 = r - radius_px_y, r + radius_px_y + 1
         c0, c1 = c - radius_px_x, c + radius_px_x + 1
-        # Clip the stamp against the raster bounds.
+        # Keep the stamp inside the raster.
         sr0, sr1 = max(0, r0), min(height, r1)
         sc0, sc1 = max(0, c0), min(width, c1)
         if sr1 <= sr0 or sc1 <= sc0:
@@ -215,9 +174,7 @@ def corridor_mask(
 def copy_geo_tags(tile: UsgsTile) -> List[tuple]:
     """Carry the source tile's CRS declaration into the crop, if it has one.
 
-    The three tags are a unit: GeoKeyDirectory entries reference offsets into
-    GeoDoubleParams and GeoAsciiParams, so copying one without the others would
-    produce a file that names parameters it does not contain.
+    Returns no tags unless all coordinate-system tags are available.
     """
     page = tile._page
     assert page is not None
@@ -243,14 +200,7 @@ def copy_geo_tags(tile: UsgsTile) -> List[tuple]:
 
 
 def check_footprints(keep: np.ndarray, cols: np.ndarray, rows: np.ndarray) -> None:
-    """Fail if any point's bilinear 2x2 footprint leaves the kept region.
-
-    ``UsgsTile.sample`` shifts by half a pixel for bilinear, so a point at
-    fractional column ``c`` reads columns ``floor(c - 0.5)`` and that plus one.
-    If either lands outside the raster, sampling silently drops to nearest
-    neighbor; if either is masked, the bilinear weights renormalize. Both would
-    make the crop disagree with the source, so catch it before writing.
-    """
+    """Fail when a bilinear sample would leave the kept region."""
     height, width = keep.shape
     base_c = np.floor(cols - 0.5).astype(int)
     base_r = np.floor(rows - 0.5).astype(int)
@@ -330,19 +280,7 @@ def crop_tile(source_tile: Path, dest_tile: Path, lats: np.ndarray, lons: np.nda
 
 
 def verify(source_root: Path, docs_tiles: Path, coords: List[Coordinate], label: str) -> None:
-    """Assert the crop reproduces the full tile at every demo point.
-
-    Cropping introduces raster edges that did not exist before, and masking
-    introduces no-data neighbors -- both change how ``sample()`` behaves near
-    them. This is the check that the corridor padding is actually sufficient.
-
-    The tolerance is not zero because the crop carries a different tiepoint
-    origin, so ``(lon - x_origin) / pixel_width`` rounds differently in the last
-    bit or two and the bilinear weights shift by ~1e-16. That is float noise,
-    around a trillionth of a foot. A genuinely insufficient corridor does not
-    fail subtly -- it returns NaN, or reads a neighboring cell and misses by
-    feet -- so anything above TOLERANCE_FT is a real defect.
-    """
+    """Check that the crop matches the source tile at every demo point."""
     for sampling in ("bilinear", "nearest"):
         full = np.asarray(get_raster_elev_profile(coords, source_root, sampling=sampling))
         crop = np.asarray(get_raster_elev_profile(coords, docs_tiles, sampling=sampling))

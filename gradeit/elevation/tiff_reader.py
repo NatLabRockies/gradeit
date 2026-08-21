@@ -7,31 +7,23 @@ from typing import Any, Tuple, Union
 import numpy as np
 import tifffile
 
-# GeoTIFF tag numbers. We read tags by number (not by tifffile's parsed
-# ``geotiff_metadata``) so behavior is stable across tifffile versions.
+# GeoTIFF tag numbers used by this reader.
 _TAG_MODEL_PIXEL_SCALE = 33550
 _TAG_MODEL_TIEPOINT = 33922
 _TAG_MODEL_TRANSFORMATION = 34264
 _TAG_GDAL_NODATA = 42113
 _TAG_GEO_KEY_DIRECTORY = 34735
 
-# GTModelTypeGeoKey (key 1024) records the coordinate-system family. This reader
-# samples points by longitude/latitude in degrees, so only a geographic CRS is
-# valid; projected (1) and geocentric (3) rasters would be sampled at the wrong
-# location.
+# This reader accepts only geographic longitude/latitude coordinates.
 _GTMODELTYPE_KEY = 1024
 _MODEL_TYPE_GEOGRAPHIC = 2
 
-# A ModelTransformation's off-diagonal (rotation/skew) terms are rejected if
-# they exceed this fraction of the pixel scale; the raster must be north-up and
-# axis-aligned (the ModelPixelScale/Tiepoint form cannot encode rotation, so
-# only the matrix form needs checking).
+# Maximum rotation or skew relative to pixel size.
 _ROTATION_REL_TOL = 1e-6
 
-# USGS uses a large-magnitude negative sentinel for voids/no-data.
+# Default value for missing elevation.
 _DEFAULT_NODATA = -999999.0
-# Anything at or below this is treated as no-data regardless of the tag, to
-# guard against undocumented void values.
+# Values at or below this are also missing elevation.
 _NODATA_FLOOR = -1.0e5
 
 VALID_SAMPLING = frozenset({"nearest", "bilinear"})
@@ -47,8 +39,7 @@ def validate_sampling(sampling: str) -> str:
 class GeoTransform:
     """Affine mapping between lon/lat (degrees) and fractional pixel coords.
 
-    Assumes a north-up, axis-aligned raster (the USGS 1/3 arc-second case);
-    pixel (0, 0) is the top-left corner.
+    The raster is north-up and pixel ``(0, 0)`` is its top-left corner.
     """
 
     x_origin: float  # longitude of the top-left corner of pixel (0, 0)
@@ -71,21 +62,20 @@ class UsgsTile:
     def __init__(self, path: Union[str, Path]):
         self.path = Path(path)
         self._tif: tifffile.TiffFile | None = None
-        self._page: Any = None  # tifffile TiffPage; Any avoids TiffPage/TiffFrame union noise
+        self._page: Any = None  # ``tifffile`` page object.
         self.transform: GeoTransform | None = None
         self.nodata: float = _DEFAULT_NODATA
 
     def open(self) -> "UsgsTile":
         self._tif = tifffile.TiffFile(self.path)
         try:
-            # pages[0] is the full-resolution image; later pages are COG overviews.
+            # The first page contains the full-resolution image.
             self._page = self._tif.pages[0]
             self._validate_page(self._page)
             self.transform = self._transform_from_tags(self._page)
             self.nodata = self._nodata_from_tags(self._page)
         except Exception:
-            # Don't leak the open handle if validation/parsing fails; on Windows
-            # an open handle locks the file and blocks any later deletion.
+            # Close the file when reading its metadata fails.
             self.close()
             raise
         return self
@@ -146,13 +136,7 @@ class UsgsTile:
 
     @staticmethod
     def _validate_page(page) -> None:
-        """Reject rasters that violate this reader's assumptions.
-
-        Sampling is single-band and indexed by lon/lat in degrees, so a
-        multi-band or projected raster would silently return wrong values. We
-        fail loudly instead. (Rotation is checked in ``_transform_from_tags``;
-        a CRS that is absent from the file cannot be verified and is allowed.)
-        """
+        """Check that the raster has one band and uses longitude and latitude."""
         name = page.parent.filehandle.name
         spp = int(getattr(page, "samplesperpixel", 1) or 1)
         if spp != 1:
@@ -170,15 +154,7 @@ class UsgsTile:
 
     @staticmethod
     def _model_type_from_tags(page) -> int | None:
-        """Return GTModelTypeGeoKey from the GeoKeyDirectory, or ``None`` if the
-        directory or key is absent (the CRS then cannot be verified).
-
-        The directory is a flat array of SHORTs: a 4-value header
-        (version, key_revision, minor_revision, num_keys) followed by ``num_keys``
-        4-value entries (key_id, tag_location, count, value_or_offset). A
-        ``tag_location`` of 0 means ``value_or_offset`` holds the value inline,
-        which is always the case for GTModelTypeGeoKey.
-        """
+        """Return the raster model type, or ``None`` when it is not recorded."""
         tag = page.tags.get(_TAG_GEO_KEY_DIRECTORY)
         if tag is None or tag.value is None:
             return None
@@ -211,12 +187,7 @@ class UsgsTile:
     def read_window(
         self, col0: int, row0: int, ncols: int, nrows: int
     ) -> Tuple[np.ndarray, int, int]:
-        """Read a pixel window as float64, decoding only the tiles it overlaps.
-
-        Returns ``(window, c0, r0)`` where ``window[y, x]`` is the elevation at
-        pixel ``(r0 + y, c0 + x)``. The requested window is clamped to the
-        raster bounds; an empty array is returned if it lies fully outside.
-        """
+        """Read a pixel window and return it with its top-left pixel position."""
         assert self.transform is not None and self._page is not None
         page = self._page
         w, h = self.transform.width, self.transform.height
@@ -229,7 +200,7 @@ class UsgsTile:
             return np.empty((0, 0), dtype=np.float64), c0, r0
 
         if not page.is_tiled:
-            # USGS tiles are internally tiled; this is a defensive fallback.
+            # Read the full image when the raster has no internal tiles.
             full = np.asarray(page.asarray(), dtype=np.float64)
             return full[r0:r1, c0:c1], c0, r0
 
@@ -247,7 +218,7 @@ class UsgsTile:
                 raw = fh.read(page.databytecounts[idx])
                 seg, _, _ = page.decode(raw, idx, _fullsize=True)
                 tile = np.asarray(seg).reshape(th, tw)
-                # intersection of this tile with the requested window
+                # Copy this tile's overlap with the requested window.
                 sr0, sr1 = max(r0, ty0), min(r1, ty0 + th)
                 sc0, sc1 = max(c0, tx0), min(c1, tx0 + tw)
                 out[sr0 - r0 : sr1 - r0, sc0 - c0 : sc1 - c0] = tile[
@@ -260,11 +231,9 @@ class UsgsTile:
     ) -> np.ndarray:
         """Sample elevation (in **meters**) for a batch of points in this tile.
 
-        Out-of-bounds points and no-data cells yield ``np.nan``. For bilinear
-        sampling, a point whose 2x2 neighborhood would cross the tile boundary
-        falls back to nearest-neighbor (a half-pixel seam around the tile
-        edge); no-data among the four neighbors is handled by renormalizing
-        over the valid ones.
+        Points outside the tile and no-data cells return ``np.nan``. Bilinear
+        sampling uses nearest sampling at a tile edge and ignores missing
+        values in its four-cell window.
         """
         validate_sampling(sampling)
         assert self.transform is not None
@@ -291,7 +260,7 @@ class UsgsTile:
         r_hi = min(h, int(np.floor(rows_ok.max())) + 1 + pad)
         window, wc0, wr0 = self.read_window(c_lo, r_lo, c_hi - c_lo, r_hi - r_lo)
 
-        # Mask no-data so it never contaminates a sample.
+        # Replace missing elevation with NaN.
         invalid = (window == self.nodata) | (window <= _NODATA_FLOOR) | ~np.isfinite(window)
         if invalid.any():
             window = np.where(invalid, np.nan, window)
@@ -300,17 +269,12 @@ class UsgsTile:
             result[nearest_ok] = window[ir[nearest_ok] - wr0, ic[nearest_ok] - wc0]
             return result
 
-        # `col`/`row` are corner-referenced (col == 0.0 is the *left edge* of
-        # pixel 0), which is what `nearest` wants. Bilinear interpolates between
-        # pixel *centers*, so shift by half a pixel first: cc == 0.0 is then the
-        # center of pixel 0. Without this the interpolated surface is displaced
-        # half a pixel (~5 m at 1/3 arc-second) south-east.
+        # Shift from pixel corners to pixel centers for bilinear sampling.
         cc, cr = col - 0.5, row - 0.5
         bc = np.floor(cc).astype(np.int64)
         br = np.floor(cr).astype(np.int64)
 
-        # Bilinear where the full 2x2 footprint is inside the tile; otherwise
-        # fall back to nearest in the half-pixel band around the tile edge.
+        # Use nearest sampling when the full 2x2 window crosses a tile edge.
         bilinear_ok = (bc >= 0) & (bc + 1 < w) & (br >= 0) & (br + 1 < h)
         edge = nearest_ok & ~bilinear_ok
         if edge.any():

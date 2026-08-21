@@ -7,8 +7,7 @@ from dataclasses import dataclass
 class Coordinate:
     """A WGS84-style latitude/longitude point.
 
-    A plain value object: the rest of the package only ever reads
-    ``latitude`` / ``longitude``, so there is no need for a geometry library.
+    Stores latitude and longitude as floats.
     """
 
     latitude: float

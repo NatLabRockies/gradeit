@@ -1,9 +1,6 @@
 """Interactive map plotting for a :class:`~gradeit.io.GradeResult`.
 
-Provides :func:`plot_grade_map`, which renders the GPS trace on a folium map
-with each segment colored by its grade. Useful for spot-checking bridges and
-overpasses, which show up as sharp negative grade spikes on the raw profile
-where the bare-earth DEM dips into the valley underneath.
+Provides :func:`plot_grade_map`, which colors each GPS segment by road grade.
 
 folium is an optional dependency; install via ``pip install gradeit[plot]``.
 """
@@ -20,10 +17,7 @@ from gradeit.io import GradeResult
 if TYPE_CHECKING:
     import folium
 
-# Diverging red→yellow→green palette: steep negative grade → red, flat → yellow,
-# steep positive grade → green. Reads naturally as "going down" vs "going up"
-# without being so saturated that mid-range segments disappear into the tiles.
-# Paired with the muted default basemap so the palette carries the signal.
+# Red shows downhill, yellow shows flat, and green shows uphill.
 _DEFAULT_COLORS = ["#d7191c", "#fdae61", "#ffffbf", "#a6d96a", "#1a9641"]
 
 GradeChoice = Literal["auto", "raw", "filtered", "both"]
@@ -41,12 +35,8 @@ def plot_grade_map(
 ) -> "folium.Map":
     """Render the trace on an interactive folium map, colored by grade.
 
-    Each segment between consecutive coordinates is drawn as a short polyline
-    colored by the grade of that segment. Hovering reveals the segment's
-    array index (e.g. ``result.grade_dec_unfiltered[i]``), grade, elevation, and segment
-    length, so it is easy to find bridge/overpass artifacts where the
-    bare-earth DEM dips into the valley underneath -- and to jump straight to
-    the corresponding row in the underlying data.
+    Each segment is colored by its grade. Hovering shows its index, grade,
+    elevation, and length.
 
     Parameters
     ----------
@@ -64,22 +54,16 @@ def plot_grade_map(
           that ``gradeit()`` was called with a filter).
     grade_range_pct:
         ``(vmin, vmax)`` percent-grade limits for the color scale. Grades
-        beyond this range clamp to the extreme colors. If ``None``, the range
-        is set symmetrically around 0 using the trace's largest absolute
-        grade, so the midpoint color always means "flat".
+        beyond this range use the end colors. If ``None``, the range is centered
+        on zero using the largest absolute grade.
     weight:
         Stroke width of each polyline segment, in pixels.
     opacity:
         Stroke opacity in ``[0, 1]``.
     tiles:
         Base map tile source passed through to ``folium.Map``. Defaults to
-        ``"CartoDB positron"``, a muted grey basemap: it keeps the grade colors
-        legible (OpenStreetMap's own greens and yellows compete with the
-        palette), and its CDN does not rate-limit embedded use the way
-        openstreetmap.org's tile server does -- OSM's tile usage policy blocks
-        heavy or automated clients, which surfaces as 403s on the rendered map.
-        Other useful values: ``"CartoDB Voyager"`` (more road labeling),
-        ``"CartoDB dark_matter"``, or ``"OpenStreetMap"``.
+        ``"CartoDB positron"``. Other options include ``"CartoDB Voyager"``,
+        ``"CartoDB dark_matter"``, and ``"OpenStreetMap"``.
     show_endpoints:
         If true, add Start/End markers at the first and last coordinates.
 
@@ -138,8 +122,7 @@ def plot_grade_map(
 
     multi_layer = len(layers) > 1
     for label, grade_arr in layers:
-        # Each layer becomes a FeatureGroup when there is more than one, so the
-        # LayerControl can toggle them. Otherwise we add directly to the map.
+        # Add a toggleable group when more than one layer is shown.
         container = folium.FeatureGroup(name=label, show=True) if multi_layer else m
         _add_segments(
             container,
@@ -191,16 +174,12 @@ def _select_layers(grade: GradeChoice, result: GradeResult) -> List[Tuple[str, n
     if grade == "raw":
         return [("Raw grade", result.grade_dec_unfiltered)]
     if grade == "filtered":
-        # mypy: narrowed by the has_filtered check above
+        # ``has_filtered`` ensures this value is available.
         assert result.grade_dec_filtered is not None
         return [("Filtered grade", result.grade_dec_filtered)]
     if grade == "both":
         assert result.grade_dec_filtered is not None
-        # Order here is *draw* order: Leaflet renders later-added layers on top,
-        # and both layers start visible. The two traces share identical
-        # coordinates, so whichever is added last is the only one you actually
-        # see until you toggle it off -- put filtered last so the default view
-        # is the corrected profile, not the artifacts it just removed.
+        # Add filtered grade last so it is visible first.
         return [
             ("Raw grade", result.grade_dec_unfiltered),
             ("Filtered grade", result.grade_dec_filtered),
@@ -226,8 +205,7 @@ def _resolve_value_range(
     finite = all_grades[np.isfinite(all_grades)]
     if finite.size == 0:
         return -10.0, 10.0
-    # Symmetric around 0 so the midpoint color reliably reads as "flat",
-    # regardless of whether the trace is mostly uphill or downhill.
+    # Center the color range on zero.
     absmax_pct = max(1.0, float(np.max(np.abs(finite))) * 100.0)
     return -absmax_pct, absmax_pct
 
@@ -264,8 +242,7 @@ def _add_segments(
         elev_text = f"{float(elevation_arr[i]):.1f} ft" if np.isfinite(elevation_arr[i]) else "n/a"
         seg_len_text = f"{float(distances_ft[i]):.1f} ft"
 
-        # `i` indexes result.grade_dec_unfiltered / .elevation_ft_unfiltered / .coordinates
-        # for the end of this segment, so the tooltip doubles as a lookup key.
+        # ``i`` is the index of this segment's ending point.
         tooltip = folium.Tooltip(
             f"<b>{label}</b><br>"
             f"index: {i} (segment {i - 1}→{i})<br>"
