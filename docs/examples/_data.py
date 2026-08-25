@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import csv
 from pathlib import Path
-from typing import List, Tuple
 
 # Resolve relative to this file so the examples work from any working directory
 # (CI runs them from the repo root; jupyter-book executes them from docs/).
@@ -21,7 +20,7 @@ DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 TILE_DIR = DATA_DIR / "tiles"
 
 
-def load_trace(name: str) -> Tuple[List[float], List[float]]:
+def load_trace(name: str) -> tuple[list[float], list[float]]:
     """Return ``(latitudes, longitudes)`` for a committed demo trace."""
     path = DATA_DIR / "traces" / f"{name}.csv"
     with path.open(newline="") as fh:
@@ -32,7 +31,7 @@ def load_trace(name: str) -> Tuple[List[float], List[float]]:
     )
 
 
-def load_coords(name: str) -> List[Tuple[float, float]]:
+def load_coords(name: str) -> list[tuple[float, float]]:
     """Return a demo trace as a list of ``(latitude, longitude)`` pairs.
 
     That is one of the input forms ``gradeit()`` accepts directly, so the

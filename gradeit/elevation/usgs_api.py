@@ -5,7 +5,8 @@ Samples points in batches through the 3DEP ImageServer ``getSamples`` service.
 
 import json
 import time
-from typing import Any, Dict, List, Optional, Sequence
+from collections.abc import Sequence
+from typing import Any, ClassVar
 
 import numpy as np
 
@@ -62,7 +63,7 @@ class USGSApi(ElevationModel):
     """
 
     # ArcGIS values for the ``interpolation`` request parameter.
-    _INTERPOLATION = {
+    _INTERPOLATION: ClassVar[dict[str, str]] = {
         "nearest": "RSP_NearestNeighbor",
         "bilinear": "RSP_BilinearInterpolation",
     }
@@ -87,7 +88,7 @@ class USGSApi(ElevationModel):
         self.timeout = timeout
         self.max_retries = max_retries
 
-    def get_elevation(self, trace: List[Coordinate]) -> List[float]:
+    def get_elevation(self, trace: list[Coordinate]) -> list[float]:
         if not trace:
             return []
 
@@ -104,7 +105,7 @@ class USGSApi(ElevationModel):
 
         return elevation_ft.tolist()
 
-    def _query_batch(self, session, chunk: Sequence[Coordinate]) -> Dict[int, float]:
+    def _query_batch(self, session, chunk: Sequence[Coordinate]) -> dict[int, float]:
         """Sample one batch, returned as ``{index within chunk: meters}``.
 
         Points without data are absent from the mapping.
@@ -124,7 +125,7 @@ class USGSApi(ElevationModel):
                 "Error when querying USGS 3DEP service: no samples present in result"
             )
 
-        samples: Dict[int, float] = {}
+        samples: dict[int, float] = {}
         for sample in raw_samples:
             # ``locationId`` links each sample to its input point.
             location_id = self._parse_location_id(sample, len(chunk))
@@ -133,7 +134,7 @@ class USGSApi(ElevationModel):
                 samples[location_id] = value
         return samples
 
-    def _build_payload(self, chunk: Sequence[Coordinate]) -> Dict[str, str]:
+    def _build_payload(self, chunk: Sequence[Coordinate]) -> dict[str, str]:
         geometry = {
             "points": [[coord.longitude, coord.latitude] for coord in chunk],
             "spatialReference": {"wkid": 4326},
@@ -146,13 +147,13 @@ class USGSApi(ElevationModel):
             "f": "json",
         }
 
-    def _post_with_retry(self, session, payload: Dict[str, str], n_points: int) -> Dict[str, Any]:
+    def _post_with_retry(self, session, payload: dict[str, str], n_points: int) -> dict[str, Any]:
         """POST one batch, retrying transient failures.
 
         Uses POST because a batch can exceed a practical URL length.
         """
         requests = _require_requests()
-        last_error: Optional[Exception] = None
+        last_error: Exception | None = None
 
         for attempt in range(self.max_retries):
             if attempt:
@@ -215,7 +216,7 @@ class USGSApi(ElevationModel):
         return location_id
 
     @staticmethod
-    def _parse_value(sample: Dict[str, Any]) -> Optional[float]:
+    def _parse_value(sample: dict[str, Any]) -> float | None:
         """Elevation in meters, or ``None`` where the service reports no value.
 
         The service sends values as JSON strings. Missing values may be

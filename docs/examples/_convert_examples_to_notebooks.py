@@ -36,7 +36,6 @@ from __future__ import annotations
 import ast
 import textwrap
 from pathlib import Path
-from typing import List
 
 import nbformat
 
@@ -58,7 +57,7 @@ def script_to_notebook(script_path: Path, notebook_path: Path) -> None:
     lines = source.splitlines()
     module = ast.parse(source)
 
-    cells: List[nbformat.NotebookNode] = []
+    cells: list[nbformat.NotebookNode] = []
 
     docstring = ast.get_docstring(module, clean=False)
     if docstring:

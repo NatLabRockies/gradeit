@@ -8,7 +8,6 @@ before :class:`~gradeit.filters.Wood2014Filter`.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List, Optional
 
 import numpy as np
 
@@ -57,9 +56,9 @@ class BridgeFilter(ElevationFilter):
 
     def filter(
         self,
-        elevation_profile: List[float],
-        coordinates: List[Coordinate],
-    ) -> List[float]:
+        elevation_profile: list[float],
+        coordinates: list[Coordinate],
+    ) -> list[float]:
         elev = np.asarray(elevation_profile, dtype=np.float64)
         n = elev.size
         if n < 3:
@@ -141,12 +140,9 @@ class BridgeFilter(ElevationFilter):
         recovered_grade = (elev[stop + 1] - elev[start - 1]) / span_ft
 
         surrounding = self._surrounding_median_grade(start, stop, elev, cumulative_ft)
-        if (
-            surrounding is not None
-            and abs(recovered_grade - surrounding) > self.grade_plausibility_tol
-        ):
-            return False
-        return True
+        return (
+            surrounding is None or abs(recovered_grade - surrounding) <= self.grade_plausibility_tol
+        )
 
     def _surrounding_median_grade(
         self,
@@ -154,13 +150,13 @@ class BridgeFilter(ElevationFilter):
         stop: int,
         elev: np.ndarray,
         cumulative_ft: np.ndarray,
-    ) -> Optional[float]:
+    ) -> float | None:
         """Median segment grade in the ``baseline_radius_ft`` windows outside the run."""
         radius = self.baseline_radius_ft
         left_lo = int(np.searchsorted(cumulative_ft, cumulative_ft[start] - radius, side="left"))
         right_hi = int(np.searchsorted(cumulative_ft, cumulative_ft[stop] + radius, side="right"))
 
-        seg_grades: List[float] = []
+        seg_grades: list[float] = []
         if start - left_lo >= 2:
             seg_grades.extend(
                 self._segment_grades(elev[left_lo:start], cumulative_ft[left_lo:start])
@@ -174,7 +170,7 @@ class BridgeFilter(ElevationFilter):
         return float(np.median(seg_grades))
 
     @staticmethod
-    def _segment_grades(elev: np.ndarray, cumulative_ft: np.ndarray) -> List[float]:
+    def _segment_grades(elev: np.ndarray, cumulative_ft: np.ndarray) -> list[float]:
         d_elev = np.diff(elev)
         d_dist = np.diff(cumulative_ft)
         usable = d_dist > 0

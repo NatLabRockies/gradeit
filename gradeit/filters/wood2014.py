@@ -7,8 +7,9 @@ errors, smooths again, and returns values at the original points.
 from __future__ import annotations
 
 import warnings
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import List, Optional, Sequence, Tuple, Union
+from itertools import pairwise
 
 import numpy as np
 
@@ -33,7 +34,7 @@ def binomial_kernel(order: int) -> np.ndarray:
     return coeffs
 
 
-def binomial_filter(x: Union[Sequence[float], np.ndarray], order: int) -> np.ndarray:
+def binomial_filter(x: Sequence[float] | np.ndarray, order: int) -> np.ndarray:
     """Apply a binomial smoothing filter to a 1-D signal.
 
     Uses odd reflection at both ends to preserve the local slope.
@@ -75,13 +76,13 @@ def _interp_linear_ends(x: np.ndarray, xp: np.ndarray, fp: np.ndarray) -> np.nda
 
 def _resolve_savgol(
     window_ft: float, delta_ft: float, n_nodes: int, polyorder: int
-) -> Tuple[int, int]:
+) -> tuple[int, int]:
     """Convert a Savitzky-Golay window in feet to (window_samples, polyorder).
 
     Returns ``0`` when the grid is too short. The window is odd and the
     polynomial order is reduced when needed.
     """
-    half = max(1, int(round(window_ft / (2.0 * delta_ft))))
+    half = max(1, round(window_ft / (2.0 * delta_ft)))
     window = 2 * half + 1
     largest = n_nodes if n_nodes % 2 == 1 else n_nodes - 1
     window = min(window, largest)
@@ -95,7 +96,7 @@ def _resolve_binomial(sigma_ft: float, delta_ft: float, n_nodes: int) -> int:
 
     Returns ``0`` when the grid is too short for this filter.
     """
-    order = int(round((2.0 * sigma_ft / delta_ft) ** 2))
+    order = round((2.0 * sigma_ft / delta_ft) ** 2)
     if order % 2:
         order += 1
     order = max(2, order)
@@ -107,7 +108,7 @@ def _resolve_binomial(sigma_ft: float, delta_ft: float, n_nodes: int) -> int:
     return min(order, largest)
 
 
-def _merge_runs(runs: List[Tuple[int, int]], x: np.ndarray, gap_ft: float) -> List[Tuple[int, int]]:
+def _merge_runs(runs: list[tuple[int, int]], x: np.ndarray, gap_ft: float) -> list[tuple[int, int]]:
     """Join runs separated by less than ``gap_ft`` of distance.
 
     Nearby runs can be parts of the same elevation error.
@@ -126,7 +127,7 @@ def _merge_runs(runs: List[Tuple[int, int]], x: np.ndarray, gap_ft: float) -> Li
 
 def _supported_segments(
     observed: np.ndarray, x: np.ndarray, max_gap_ft: float
-) -> List[Tuple[int, int]]:
+) -> list[tuple[int, int]]:
     """Split the node grid at unobserved gaps wider than ``max_gap_ft``.
 
     The filter does not interpolate or smooth across these gaps.
@@ -134,9 +135,9 @@ def _supported_segments(
     idx = np.flatnonzero(observed)
     if idx.size == 0:
         return []
-    segments: List[Tuple[int, int]] = []
+    segments: list[tuple[int, int]] = []
     start = int(idx[0])
-    for a, b in zip(idx[:-1], idx[1:]):
+    for a, b in pairwise(idx):
         if float(x[b] - x[a]) > max_gap_ft:
             segments.append((start, int(a)))
             start = int(b)
@@ -190,9 +191,9 @@ class Wood2014Filter(ElevationFilter):
 
     def filter(
         self,
-        elevation_profile: List[float],
-        coordinates: List[Coordinate],
-    ) -> List[float]:
+        elevation_profile: list[float],
+        coordinates: list[Coordinate],
+    ) -> list[float]:
         elev = np.asarray(elevation_profile, dtype=np.float64)
         n = elev.size
         if n != len(coordinates):
@@ -233,13 +234,13 @@ class Wood2014Filter(ElevationFilter):
 
     def _downsample(
         self, elev: np.ndarray, s: np.ndarray, total: float
-    ) -> Tuple[np.ndarray, float, np.ndarray, np.ndarray, np.ndarray]:
+    ) -> tuple[np.ndarray, float, np.ndarray, np.ndarray, np.ndarray]:
         """Median-downsample onto a uniform distance grid.
 
         Returns the grid, its spacing, median member distance, median
         elevation, and a flag for nodes with valid data.
         """
-        n_bins = max(1, int(round(total / self.interval_ft)))
+        n_bins = max(1, round(total / self.interval_ft))
         x = np.linspace(0.0, total, n_bins + 1)
         delta = float(x[1] - x[0])
 
@@ -282,7 +283,7 @@ class Wood2014Filter(ElevationFilter):
         return _interp_linear_ends(x, xp[keep], fp[keep])
 
     def _check_occupancy(
-        self, observed: np.ndarray, segments: List[Tuple[int, int]], s: np.ndarray
+        self, observed: np.ndarray, segments: list[tuple[int, int]], s: np.ndarray
     ) -> None:
         """Warn when the node grid is finer than the GPS points can support.
 
@@ -375,7 +376,7 @@ class Wood2014Filter(ElevationFilter):
 
         runs = _merge_runs(consecutive_runs(np.flatnonzero(grow)), x, half_support_ft)
 
-        candidates: List[Tuple[int, int, float]] = []
+        candidates: list[tuple[int, int, float]] = []
         for start, stop in runs:
             if not seed[start : stop + 1].any():
                 continue  # noise-only run, no node actually breached the threshold
@@ -403,10 +404,10 @@ class Wood2014Filter(ElevationFilter):
 
 # Return the resolved filter settings without filtering a trace.
 def resolve_parameters(
-    f: Wood2014Filter, total_ft: float, n_nodes: Optional[int] = None
-) -> Tuple[float, int, int, int]:
+    f: Wood2014Filter, total_ft: float, n_nodes: int | None = None
+) -> tuple[float, int, int, int]:
     """Return ``(delta_ft, savgol_window, savgol_polyorder, binomial_order)``."""
-    n_bins = max(1, int(round(total_ft / f.interval_ft)))
+    n_bins = max(1, round(total_ft / f.interval_ft))
     delta = total_ft / n_bins
     nodes = n_bins + 1 if n_nodes is None else n_nodes
     window, polyorder = _resolve_savgol(f.savgol_window_ft, delta, nodes, f.savgol_polyorder)

@@ -34,7 +34,6 @@ Then run with ``GRADEIT_TILES=sf_tiles python examples/bridge_filter_long_spans.
 import csv
 import os
 from pathlib import Path
-from typing import Dict, Tuple
 
 import numpy as np
 
@@ -45,7 +44,7 @@ HERE = Path(__file__).resolve().parent
 REPO_ROOT = HERE.parent
 
 # The two artifacts, as (first, last) index of the bad run. Verified below.
-BRIDGES: Dict[str, Tuple[int, int]] = {
+BRIDGES: dict[str, tuple[int, int]] = {
     "short crossing": (4113, 4119),
     "Carquinez Strait": (4312, 4376),
 }
@@ -249,7 +248,7 @@ When to reach for BridgeFilter
 
 # %%
 # --- 7. Look at it ----------------------------------------------------------
-import matplotlib.pyplot as plt  # noqa: E402
+import matplotlib.pyplot as plt
 
 window = slice(s - 120, t + 120)
 miles = cum_ft / 5280.0

@@ -17,8 +17,8 @@ See [Elevation Data](../elevation_data) for steps to use the real, full-size til
 def main():
     import matplotlib.pyplot as plt
     import numpy as np
-
     from _data import TILE_DIR, load_coords
+
     from gradeit import USGSLocal, gradeit
 
     """

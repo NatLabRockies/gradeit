@@ -1,8 +1,7 @@
-from pathlib import Path
-from multiprocessing import Pool
-
 import argparse
 import logging
+from multiprocessing import Pool
+from pathlib import Path
 
 import requests
 
@@ -48,7 +47,7 @@ def download_file(tile: str, output_dir: Path):
     url = build_link(tile)
     destination = output_dir / f"{tile}" / f"USGS_13_{tile}.tif"
     if destination.is_file():
-        log.info(f"{str(destination)} already exists, skipping")
+        log.info(f"{destination!s} already exists, skipping")
         return
 
     with requests.get(url, stream=True) as r:
@@ -65,7 +64,7 @@ def download_file(tile: str, output_dir: Path):
             for chunk in r.iter_content(chunk_size=8192):
                 f.write(chunk)
 
-    log.info(f"downloaded {url} to {str(destination)}")
+    log.info(f"downloaded {url} to {destination!s}")
 
 
 def run():

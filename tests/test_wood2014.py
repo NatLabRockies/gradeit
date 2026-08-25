@@ -1,6 +1,6 @@
 import unittest
 import warnings
-from typing import List
+from dataclasses import FrozenInstanceError
 
 import numpy as np
 
@@ -19,7 +19,7 @@ from gradeit.filters.wood2014 import (
 )
 
 
-def _make_coords(n: int, ft_step: float = 50.0) -> List[Coordinate]:
+def _make_coords(n: int, ft_step: float = 50.0) -> list[Coordinate]:
     """n coordinates spaced approximately ft_step apart along a meridian."""
     deg_per_ft = 1.0 / 364800.0  # ~ft per degree of latitude at 40 deg
     return [Coordinate.from_lat_lon(40.0 + i * ft_step * deg_per_ft, -105.0) for i in range(n)]
@@ -493,7 +493,7 @@ class Wood2014FilterApiTest(unittest.TestCase):
 
     def test_is_frozen(self):
         f = Wood2014Filter()
-        with self.assertRaises(Exception):
+        with self.assertRaises(FrozenInstanceError):
             f.interval_ft = 50.0  # type: ignore[misc]
 
     def test_composes_with_bridge_filter(self):

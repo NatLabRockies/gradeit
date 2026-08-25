@@ -16,9 +16,9 @@ from __future__ import annotations
 import argparse
 import csv
 import sys
+from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Sequence, Tuple
 
 import numpy as np
 import tifffile
@@ -26,15 +26,15 @@ import tifffile
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
-from gradeit.coordinate import Coordinate  # noqa: E402
-from gradeit.elevation.tiff_reader import (  # noqa: E402
+from gradeit.coordinate import Coordinate
+from gradeit.elevation.tiff_reader import (
     _TAG_GDAL_NODATA,
     _TAG_GEO_KEY_DIRECTORY,
     _TAG_MODEL_PIXEL_SCALE,
     _TAG_MODEL_TIEPOINT,
     UsgsTile,
 )
-from gradeit.elevation.usgs_local import get_raster_elev_profile  # noqa: E402
+from gradeit.elevation.usgs_local import get_raster_elev_profile
 
 # No-data value used by the tile reader.
 NODATA = -999999.0
@@ -71,7 +71,7 @@ class Demo:
 
 
 # Trace slices used by the documentation examples.
-DEMOS: List[Demo] = [
+DEMOS: list[Demo] = [
     Demo(
         name="golden_creek",
         source_csv="examples/data/sample_trip_1.csv",
@@ -96,7 +96,7 @@ DEMOS: List[Demo] = [
 ]
 
 
-def read_trace(csv_path: Path, start: int, stop: int) -> Tuple[List[Dict[str, str]], List[str]]:
+def read_trace(csv_path: Path, start: int, stop: int) -> tuple[list[dict[str, str]], list[str]]:
     """Read a slice of a trace CSV, returning rows and the source field order."""
     with csv_path.open(newline="") as fh:
         reader = csv.DictReader(fh)
@@ -109,7 +109,7 @@ def read_trace(csv_path: Path, start: int, stop: int) -> Tuple[List[Dict[str, st
     return rows[start:stop], fieldnames
 
 
-def write_trace(rows: Sequence[Dict[str, str]], fieldnames: Sequence[str], dest: Path) -> None:
+def write_trace(rows: Sequence[dict[str, str]], fieldnames: Sequence[str], dest: Path) -> None:
     """Write a trace slice with latitude and longitude as the first columns."""
     rest = [f for f in fieldnames if f not in ("latitude", "longitude")]
     out_fields = ["latitude", "longitude", *rest]
@@ -121,13 +121,13 @@ def write_trace(rows: Sequence[Dict[str, str]], fieldnames: Sequence[str], dest:
             writer.writerow({f: row[f] for f in out_fields})
 
 
-def densify(cols: np.ndarray, rows: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+def densify(cols: np.ndarray, rows: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     """Interpolate a pixel-space polyline down to sub-pixel steps.
 
     Adds points between trace samples so the corridor has no gaps.
     """
-    out_c: List[np.ndarray] = []
-    out_r: List[np.ndarray] = []
+    out_c: list[np.ndarray] = []
+    out_r: list[np.ndarray] = []
     for i in range(len(cols) - 1):
         steps = max(
             2, int(np.ceil(2 * max(abs(cols[i + 1] - cols[i]), abs(rows[i + 1] - rows[i]))))
@@ -140,7 +140,7 @@ def densify(cols: np.ndarray, rows: np.ndarray) -> Tuple[np.ndarray, np.ndarray]
 
 
 def corridor_mask(
-    shape: Tuple[int, int],
+    shape: tuple[int, int],
     cols: np.ndarray,
     rows: np.ndarray,
     radius_px_x: int,
@@ -159,7 +159,7 @@ def corridor_mask(
 
     height, width = shape
     for col, row in zip(cols, rows):
-        c, r = int(round(col)), int(round(row))
+        c, r = round(col), round(row)
         r0, r1 = r - radius_px_y, r + radius_px_y + 1
         c0, c1 = c - radius_px_x, c + radius_px_x + 1
         # Keep the stamp inside the raster.
@@ -171,7 +171,7 @@ def corridor_mask(
     return mask
 
 
-def copy_geo_tags(tile: UsgsTile) -> List[tuple]:
+def copy_geo_tags(tile: UsgsTile) -> list[tuple]:
     """Carry the source tile's CRS declaration into the crop, if it has one.
 
     Returns no tags unless all coordinate-system tags are available.
@@ -183,7 +183,7 @@ def copy_geo_tags(tile: UsgsTile) -> List[tuple]:
         (_TAG_GEO_DOUBLE_PARAMS, 12),  # DOUBLE
         (_TAG_GEO_ASCII_PARAMS, 2),  # ASCII
     ]
-    out: List[tuple] = []
+    out: list[tuple] = []
     for code, dtype in specs:
         tag = page.tags.get(code)
         if tag is None or tag.value is None:
@@ -246,8 +246,8 @@ def crop_tile(source_tile: Path, dest_tile: Path, lats: np.ndarray, lons: np.nda
 
         # Trace pixel coordinates, relative to the cropped window.
         pcols, prows = transform.lonlat_to_pixel(lons, lats)
-        radius_px_y = max(1, int(round(pad_lat / abs(transform.pixel_height))))
-        radius_px_x = max(1, int(round(pad_lon / transform.pixel_width)))
+        radius_px_y = max(1, round(pad_lat / abs(transform.pixel_height)))
+        radius_px_x = max(1, round(pad_lon / transform.pixel_width))
         keep = corridor_mask(window.shape, pcols - c0, prows - r0, radius_px_x, radius_px_y)
 
         check_footprints(keep, pcols - c0, prows - r0)
@@ -279,7 +279,7 @@ def crop_tile(source_tile: Path, dest_tile: Path, lats: np.ndarray, lons: np.nda
     )
 
 
-def verify(source_root: Path, docs_tiles: Path, coords: List[Coordinate], label: str) -> None:
+def verify(source_root: Path, docs_tiles: Path, coords: list[Coordinate], label: str) -> None:
     """Check that the crop matches the source tile at every demo point."""
     for sampling in ("bilinear", "nearest"):
         full = np.asarray(get_raster_elev_profile(coords, source_root, sampling=sampling))

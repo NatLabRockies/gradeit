@@ -1,14 +1,13 @@
 import unittest
 from pathlib import Path
-from typing import List
 
 import numpy as np
 
 from gradeit import gradeit
 from gradeit.coordinate import Coordinate
+from gradeit.core import _DEFAULT_FILTER
 from gradeit.elevation import ElevationModel, USGSLocal
 from gradeit.exceptions import InvalidInputError
-from gradeit.core import _DEFAULT_FILTER
 from gradeit.filters import BridgeFilter, Wood2014Filter
 from gradeit.io import GradeResult
 
@@ -26,7 +25,7 @@ def _center(col: int, row: int):
 class StubModel(ElevationModel):
     """A custom elevation model that returns a fixed ramp, for injection tests."""
 
-    def get_elevation(self, trace: List[Coordinate]) -> List[float]:
+    def get_elevation(self, trace: list[Coordinate]) -> list[float]:
         return [1000.0 + 10.0 * i for i in range(len(trace))]
 
 

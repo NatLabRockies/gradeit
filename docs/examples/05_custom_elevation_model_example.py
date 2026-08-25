@@ -9,7 +9,6 @@ vendor API, or synthetic terrain in a test.
 
 def main():
     import math
-    from typing import List
 
     from gradeit import Coordinate, ElevationModel
 
@@ -53,7 +52,7 @@ def main():
             self.peak_ft = peak_ft
             self.width_deg = width_deg
 
-        def get_elevation(self, trace: List[Coordinate]) -> List[float]:
+        def get_elevation(self, trace: list[Coordinate]) -> list[float]:
             out = []
             for coord in trace:
                 d_lat = coord.latitude - self.center.latitude

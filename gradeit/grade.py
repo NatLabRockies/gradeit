@@ -1,5 +1,4 @@
 from math import asin, cos, radians, sin, sqrt
-from typing import List
 
 import numpy as np
 
@@ -7,10 +6,10 @@ from gradeit.coordinate import Coordinate
 
 
 def get_grade(
-    elevation_profile: List[float],
-    distances: List[float],
+    elevation_profile: list[float],
+    distances: list[float],
     min_distance_ft: float = 1.0,
-) -> List[float]:
+) -> list[float]:
     """Compute decimal road grade (rise/run) for an elevation profile.
 
     Grade is ``elevation change / distance`` between points. Segments shorter
@@ -48,7 +47,7 @@ def get_grade(
     return list(grade)
 
 
-def get_distances(coordinates: List[Coordinate]) -> List[float]:
+def get_distances(coordinates: list[Coordinate]) -> list[float]:
     """Return the distance in feet between each pair of nearby coordinates."""
     FT_PER_KM = 3280.84
     distances = []

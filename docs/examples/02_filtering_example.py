@@ -12,8 +12,8 @@ See [Methodology](../methodology) for more detail on the methodology.
 def main():
     import matplotlib.pyplot as plt
     import numpy as np
-
     from _data import TILE_DIR, load_coords
+
     from gradeit import BridgeFilter, USGSLocal, gradeit
 
     trace = load_coords("golden_creek")
@@ -28,7 +28,7 @@ def main():
     ARTIFACT = "#b3282d"
 
     # Value labels sit on a scrap of the surface so a line never runs through them.
-    LABEL_BOX = dict(facecolor="white", edgecolor="none", alpha=0.85, pad=1.0)
+    LABEL_BOX = {"facecolor": "white", "edgecolor": "none", "alpha": 0.85, "pad": 1.0}
 
     """
     ## Raw Elevation 
@@ -162,7 +162,7 @@ def main():
         "",
         xy=(miles[deepest], raw.elevation_ft_unfiltered[deepest]),
         xytext=(miles[deepest], over.elevation_ft_filtered[deepest]),
-        arrowprops=dict(arrowstyle="<->", color=BRIDGE, lw=1.4),
+        arrowprops={"arrowstyle": "<->", "color": BRIDGE, "lw": 1.4},
     )
     ax.set_ylabel("elevation (ft)")
     ax.set_xlabel("distance (miles)")

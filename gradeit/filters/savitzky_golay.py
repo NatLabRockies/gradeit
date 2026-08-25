@@ -1,10 +1,10 @@
-from typing import Sequence, Union
+from collections.abc import Sequence
 
 import numpy as np
 
 
 def savgol_filter(
-    x: Union[Sequence[float], np.ndarray], window_length: int, polyorder: int = 3
+    x: Sequence[float] | np.ndarray, window_length: int, polyorder: int = 3
 ) -> np.ndarray:
     """Apply a Savitzky-Golay filter to a 1-D signal.
 

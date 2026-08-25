@@ -215,9 +215,11 @@ class UsgsApiBatchTest(unittest.TestCase):
 
     def test_retries_exhausted_raises(self):
         responses = [FakeResponse(status_code=503)] * 3
-        with mock.patch.object(usgs_api.time, "sleep"):
-            with self.assertRaisesRegex(ElevationLookupError, "after 3 attempts"):
-                self._run(self._coords(1), responses)
+        with (
+            mock.patch.object(usgs_api.time, "sleep"),
+            self.assertRaisesRegex(ElevationLookupError, "after 3 attempts"),
+        ):
+            self._run(self._coords(1), responses)
 
     def test_client_error_is_not_retried(self):
         responses = [FakeResponse(status_code=404)]

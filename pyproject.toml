@@ -22,28 +22,27 @@ classifiers = [
     "Topic :: Scientific/Engineering",
 ]
 keywords = ["gps", "elevation", "road grade"]
-dependencies = [
-    "numpy",
-    "tifffile",
-    "imagecodecs",
-    "requests",
-]
+dependencies = ["numpy", "tifffile", "imagecodecs", "requests"]
 
 requires-python = ">=3.10"
 
 [project.optional-dependencies]
 pandas = ["pandas"]
-plot = ["folium"]
-dev = ["ruff==0.16.3", "mypy>=1,<2", "pytest>=8", "scipy", "types-requests", "pre-commit", "ipykernel", "matplotlib", "folium", "pandas"]
-# Everything needed to build the documentation site, including what the
-# executable examples under docs/examples/ import.
+plot = ["folium", "matplotlib"]
+dev = [
+    "gradeit[pandas,plot]",
+    "ruff==0.16.4",
+    "mypy>=2,<3",
+    "pytest>=9,<10",
+    "types-requests",
+    "pre-commit",
+    "ipykernel",
+]
 docs = [
+    "gradeit[pandas,plot]",
     "jupyter-book>=1.0,<2.0",
     "sphinx-book-theme>=1.0.0,<2.0",
     "nbformat",
-    "matplotlib",
-    "pandas",
-    "folium",
 ]
 
 [project.urls]
@@ -54,8 +53,6 @@ line-length = 100
 exclude = ["build/*", "dist/*"]
 
 [tool.ruff.lint]
-# Enable Pyflakes (`F`) and a subset of the pycodestyle (`E`) codes by default.
-select = ["E4", "E7", "E9", "F"]
 ignore = []
 fixable = ["ALL"]
 unfixable = []

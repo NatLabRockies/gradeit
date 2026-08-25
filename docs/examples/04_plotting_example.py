@@ -13,8 +13,8 @@ pip install gradeit[plot]
 
 def main():
     import numpy as np
-
     from _data import TILE_DIR, load_coords
+
     from gradeit import USGSLocal, gradeit
 
     trace = load_coords("golden_creek")
@@ -39,8 +39,7 @@ def main():
     to the matching row in your data.
     """
 
-    m = result.plot_map(grade_range_pct=(-8, 8))
-    m
+    result.plot_map(grade_range_pct=(-8, 8))
 
     """
     ## Options worth knowing
@@ -63,6 +62,7 @@ def main():
     To save a map instead of displaying it:
 
     ```python
+    m = result.plot_map(grade_range_pct=(-8, 8))
     m.save("trace.html")
     ```
     """

@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Dict, List, Optional, Sequence, Tuple, Union
+from typing import TYPE_CHECKING, Union
 
 import numpy as np
 
@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 CoordinateInput = Union[
     "pd.DataFrame",
     Mapping[str, Sequence[float]],
-    Sequence[Tuple[float, float]],
+    Sequence[tuple[float, float]],
     Sequence[Coordinate],
     np.ndarray,
 ]
@@ -27,7 +27,7 @@ def to_coordinates(
     data: CoordinateInput,
     lat_col: str = "latitude",
     lon_col: str = "longitude",
-) -> List[Coordinate]:
+) -> list[Coordinate]:
     """Convert supported input into a list of :class:`Coordinate` objects.
 
     Accepts a ``(n, 2)`` numpy array, a DataFrame, a mapping with latitude and
@@ -65,7 +65,7 @@ def to_coordinates(
     )
 
 
-def _from_columns(data, lat_col: str, lon_col: str) -> List[Coordinate]:
+def _from_columns(data, lat_col: str, lon_col: str) -> list[Coordinate]:
     try:
         lat_values = data[lat_col]
         lon_values = data[lon_col]
@@ -78,8 +78,8 @@ def _from_columns(data, lat_col: str, lon_col: str) -> List[Coordinate]:
     return [Coordinate.from_lat_lon(lat, lon) for lat, lon in zip(lats, lons)]
 
 
-def _from_iterable(data: Iterable) -> List[Coordinate]:
-    coordinates: List[Coordinate] = []
+def _from_iterable(data: Iterable) -> list[Coordinate]:
+    coordinates: list[Coordinate] = []
     for item in data:
         if isinstance(item, Coordinate):
             coordinates.append(item)
@@ -104,20 +104,20 @@ class GradeResult:
     tabular output.
     """
 
-    coordinates: List[Coordinate]
+    coordinates: list[Coordinate]
     elevation_ft_unfiltered: np.ndarray
     distances_ft: np.ndarray
     grade_dec_unfiltered: np.ndarray
-    elevation_ft_filtered: Optional[np.ndarray] = None
-    grade_dec_filtered: Optional[np.ndarray] = None
+    elevation_ft_filtered: np.ndarray | None = None
+    grade_dec_filtered: np.ndarray | None = None
 
-    def to_dict(self) -> Dict[str, list]:
+    def to_dict(self) -> dict[str, list]:
         """Return the result as a column-name -> list mapping.
 
         The keys match the result field names. Filtered fields are included
         when they are available.
         """
-        out: Dict[str, list] = {
+        out: dict[str, list] = {
             "latitude": [c.latitude for c in self.coordinates],
             "longitude": [c.longitude for c in self.coordinates],
             "elevation_ft_unfiltered": self.elevation_ft_unfiltered.tolist(),
@@ -130,7 +130,7 @@ class GradeResult:
             out["grade_dec_filtered"] = self.grade_dec_filtered.tolist()
         return out
 
-    def to_dataframe(self) -> "pd.DataFrame":
+    def to_dataframe(self) -> pd.DataFrame:
         """Return the result as a new pandas DataFrame.
 
         Raises
@@ -147,7 +147,7 @@ class GradeResult:
             ) from e
         return pd.DataFrame(self.to_dict())
 
-    def plot_map(self, **kwargs) -> "folium.Map":
+    def plot_map(self, **kwargs) -> folium.Map:
         """Render this result on an interactive folium map colored by grade.
 
         Passes all keyword arguments to

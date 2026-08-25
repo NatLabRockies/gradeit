@@ -9,8 +9,8 @@ To highlight this, let's look an an example of Alfred Zampa Memorial Bridge on I
 def main():
     import matplotlib.pyplot as plt
     import numpy as np
-
     from _data import TILE_DIR, load_coords
+
     from gradeit import BridgeFilter, USGSLocal, Wood2014Filter, gradeit
 
     trace = load_coords("carquinez")
@@ -29,7 +29,7 @@ def main():
     DECK = "#3d3d3d"
 
     # Value labels sit on a scrap of the surface so a line never runs through them.
-    LABEL_BOX = dict(facecolor="white", edgecolor="none", alpha=0.85, pad=1.0)
+    LABEL_BOX = {"facecolor": "white", "edgecolor": "none", "alpha": 0.85, "pad": 1.0}
 
     """
     ## Characterizing the artifact
@@ -77,7 +77,7 @@ def main():
         "",
         xy=(miles[floor_i], floor),
         xytext=(miles[floor_i], deck_ft),
-        arrowprops=dict(arrowstyle="<->", color=ARTIFACT, lw=1.4),
+        arrowprops={"arrowstyle": "<->", "color": ARTIFACT, "lw": 1.4},
     )
     ax_elev.text(
         miles[floor_i],
@@ -153,7 +153,7 @@ def main():
         "",
         xy=(miles[low_i], default.elevation_ft_filtered[low_i]),
         xytext=(miles[low_i], deck_ft),
-        arrowprops=dict(arrowstyle="<->", color=ARTIFACT, lw=1.4),
+        arrowprops={"arrowstyle": "<->", "color": ARTIFACT, "lw": 1.4},
     )
     ax.annotate(
         f"{after:.1f} ft left",

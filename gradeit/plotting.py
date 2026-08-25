@@ -7,7 +7,7 @@ folium is an optional dependency; install via ``pip install gradeit[plot]``.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, Literal, Optional, Tuple
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 
@@ -27,12 +27,12 @@ def plot_grade_map(
     result: GradeResult,
     *,
     grade: GradeChoice = "auto",
-    grade_range_pct: Optional[Tuple[float, float]] = None,
+    grade_range_pct: tuple[float, float] | None = None,
     weight: int = 5,
     opacity: float = 0.85,
     tiles: str = "CartoDB positron",
     show_endpoints: bool = True,
-) -> "folium.Map":
+) -> folium.Map:
     """Render the trace on an interactive folium map, colored by grade.
 
     Each segment is colored by its grade. Hovering shows its index, grade,
@@ -160,7 +160,7 @@ def plot_grade_map(
     return m
 
 
-def _select_layers(grade: GradeChoice, result: GradeResult) -> List[Tuple[str, np.ndarray]]:
+def _select_layers(grade: GradeChoice, result: GradeResult) -> list[tuple[str, np.ndarray]]:
     has_filtered = result.grade_dec_filtered is not None
     if grade == "auto":
         grade = "both" if has_filtered else "raw"
@@ -190,9 +190,9 @@ def _select_layers(grade: GradeChoice, result: GradeResult) -> List[Tuple[str, n
 
 
 def _resolve_value_range(
-    grade_range_pct: Optional[Tuple[float, float]],
-    layers: List[Tuple[str, np.ndarray]],
-) -> Tuple[float, float]:
+    grade_range_pct: tuple[float, float] | None,
+    layers: list[tuple[str, np.ndarray]],
+) -> tuple[float, float]:
     if grade_range_pct is not None:
         vmin, vmax = grade_range_pct
         if vmin >= vmax:

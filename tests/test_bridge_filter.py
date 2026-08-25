@@ -1,5 +1,4 @@
 import unittest
-from typing import List
 
 import numpy as np
 
@@ -7,7 +6,7 @@ from gradeit.coordinate import Coordinate
 from gradeit.filters import BridgeFilter, ElevationFilter, Wood2014Filter
 
 
-def _make_coords(n: int, ft_step: float = 50.0) -> List[Coordinate]:
+def _make_coords(n: int, ft_step: float = 50.0) -> list[Coordinate]:
     """n coordinates spaced approximately ft_step apart along a meridian."""
     deg_per_ft = 1.0 / 364800.0  # ~ft per degree of latitude at 40 deg
     return [Coordinate.from_lat_lon(40.0 + i * ft_step * deg_per_ft, -105.0) for i in range(n)]
@@ -251,7 +250,7 @@ class BridgeFilterApiTest(unittest.TestCase):
     def test_does_not_mutate_input(self):
         n = 200
         coords = _make_coords(n, ft_step=50.0)
-        elev_list: List[float] = [1000.0] * n
+        elev_list: list[float] = [1000.0] * n
         for i in range(95, 106):
             elev_list[i] = 970.0
         original = list(elev_list)
@@ -262,7 +261,7 @@ class BridgeFilterApiTest(unittest.TestCase):
     def test_accepts_python_lists(self):
         n = 200
         coords = _make_coords(n, ft_step=50.0)
-        elev: List[float] = [1000.0] * n
+        elev: list[float] = [1000.0] * n
         for i in range(95, 106):
             elev[i] = 970.0
 

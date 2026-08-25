@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import List, Union
 
 import numpy as np
 
@@ -29,17 +28,17 @@ class USGSLocal(ElevationModel):
 
     usgs_db_path: Path
 
-    def __init__(self, usgs_db_path: Union[Path, str], sampling: str = "bilinear"):
+    def __init__(self, usgs_db_path: Path | str, sampling: str = "bilinear"):
         self.usgs_db_path = Path(usgs_db_path)
         self.sampling = validate_sampling(sampling)
 
-    def get_elevation(self, trace: List[Coordinate]) -> List[float]:
+    def get_elevation(self, trace: list[Coordinate]) -> list[float]:
         return get_raster_elev_profile(trace, self.usgs_db_path, sampling=self.sampling)
 
 
 def get_raster_elev_profile(
-    coordinates: List[Coordinate], usgs_db_path: Union[Path, str], sampling: str = "bilinear"
-) -> List[float]:
+    coordinates: list[Coordinate], usgs_db_path: Path | str, sampling: str = "bilinear"
+) -> list[float]:
     """
     Look up an elevation profile (in feet) for a list of coordinates from a
     local USGS 1/3 arc-second raster database.

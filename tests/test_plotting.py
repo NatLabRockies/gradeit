@@ -7,7 +7,7 @@ from gradeit.exceptions import InvalidInputError
 from gradeit.io import GradeResult
 
 try:
-    import folium  # noqa: F401
+    import folium
 
     HAS_FOLIUM = True
 except ImportError:

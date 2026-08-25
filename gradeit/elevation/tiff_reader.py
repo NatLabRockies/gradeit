@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Tuple, Union
+from typing import Any, final
 
 import numpy as np
 import tifffile
@@ -49,24 +49,25 @@ class GeoTransform:
     width: int  # raster width in pixels
     height: int  # raster height in pixels
 
-    def lonlat_to_pixel(self, lon: np.ndarray, lat: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def lonlat_to_pixel(self, lon: np.ndarray, lat: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         """Return fractional (column, row) for arrays of lon/lat."""
         col = (np.asarray(lon, dtype=np.float64) - self.x_origin) / self.pixel_width
         row = (np.asarray(lat, dtype=np.float64) - self.y_origin) / self.pixel_height
         return col, row
 
 
+@final
 class UsgsTile:
     """A single USGS 1/3 arc-second GeoTIFF, opened lazily for windowed reads."""
 
-    def __init__(self, path: Union[str, Path]):
+    def __init__(self, path: str | Path):
         self.path = Path(path)
         self._tif: tifffile.TiffFile | None = None
         self._page: Any = None  # ``tifffile`` page object.
         self.transform: GeoTransform | None = None
         self.nodata: float = _DEFAULT_NODATA
 
-    def open(self) -> "UsgsTile":
+    def open(self) -> UsgsTile:
         self._tif = tifffile.TiffFile(self.path)
         try:
             # The first page contains the full-resolution image.
@@ -86,7 +87,7 @@ class UsgsTile:
         self._tif = None
         self._page = None
 
-    def __enter__(self) -> "UsgsTile":
+    def __enter__(self) -> UsgsTile:
         if self._tif is None:
             self.open()
         return self
@@ -186,7 +187,7 @@ class UsgsTile:
 
     def read_window(
         self, col0: int, row0: int, ncols: int, nrows: int
-    ) -> Tuple[np.ndarray, int, int]:
+    ) -> tuple[np.ndarray, int, int]:
         """Read a pixel window and return it with its top-left pixel position."""
         assert self.transform is not None and self._page is not None
         page = self._page

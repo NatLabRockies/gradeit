@@ -1,4 +1,4 @@
-from typing import List, Optional, Sequence, Union
+from collections.abc import Sequence
 
 import numpy as np
 
@@ -15,8 +15,8 @@ _DEFAULT_FILTER = Wood2014Filter()
 def gradeit(
     data: CoordinateInput,
     *,
-    elevation_model: Optional[ElevationModel] = None,
-    elevation_filter: Union[ElevationFilter, Sequence[ElevationFilter], None] = _DEFAULT_FILTER,
+    elevation_model: ElevationModel | None = None,
+    elevation_filter: ElevationFilter | Sequence[ElevationFilter] | None = _DEFAULT_FILTER,
     lat_col: str = "latitude",
     lon_col: str = "longitude",
 ) -> GradeResult:
@@ -68,8 +68,8 @@ def gradeit(
         get_grade(elevation_list, distances=segment_distances), dtype=np.float64
     )
 
-    elevation_ft_filtered: Optional[np.ndarray] = None
-    grade_dec_filtered: Optional[np.ndarray] = None
+    elevation_ft_filtered: np.ndarray | None = None
+    grade_dec_filtered: np.ndarray | None = None
     filters = _resolve_filters(elevation_filter)
     if filters:
         filtered_list = elevation_list
@@ -91,8 +91,8 @@ def gradeit(
 
 
 def _resolve_filters(
-    elevation_filter: Union[ElevationFilter, Sequence[ElevationFilter], None],
-) -> List[ElevationFilter]:
+    elevation_filter: ElevationFilter | Sequence[ElevationFilter] | None,
+) -> list[ElevationFilter]:
     """Normalize the ``elevation_filter`` argument to a list of filters."""
     if elevation_filter is None:
         return []

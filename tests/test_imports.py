@@ -32,7 +32,9 @@ class ImportSurfaceTest(unittest.TestCase):
             "assert 'pandas' not in sys.modules, 'pandas imported eagerly'; "
             "assert 'requests' not in sys.modules, 'requests imported eagerly'"
         )
-        result = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True)
+        result = subprocess.run(
+            [sys.executable, "-c", code], capture_output=True, text=True, check=False
+        )
         self.assertEqual(result.returncode, 0, msg=result.stderr)
 
 
