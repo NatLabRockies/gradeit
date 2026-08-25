@@ -59,10 +59,6 @@ jobs:
       - name: Check markdown formatting
         uses: dprint/check@v2.3
 
-  # The documentation examples are runnable scripts against the small committed
-  # DEM crops in docs/data/, so running them here is a fast gate on the examples
-  # staying correct -- a break fails the test run rather than the docs deploy.
-  # One Python version is enough; there is no value in running them 4x.
   docs-examples:
     runs-on: ubuntu-latest
     steps:
