@@ -56,7 +56,7 @@ print(result.elevation_ft_unfiltered)
 ## Development setup
 
 The project uses [pixi](https://pixi.sh) for environments and tasks. After you
-[installing pixi](https://pixi.sh/latest/#installation):
+[install pixi](https://pixi.sh/latest/#installation):
 
 ```bash
 pixi install -e dev

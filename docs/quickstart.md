@@ -75,7 +75,7 @@ result.coordinates  # the parsed input coordinates
 Grade is a **decimal** rise over run. Multiply it by 100 to get a percentage. `distances_ft` starts
 with `0.0`.
 
-To get a table:
+To return the result as a Pandas dataframe or Python dictionary:
 
 ```python
 from gradeit import gradeit
