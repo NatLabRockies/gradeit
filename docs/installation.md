@@ -53,6 +53,14 @@ result = gradeit([(39.7392, -105.0), (39.7398, -105.0)])
 print(result.elevation_ft_unfiltered)
 ```
 
+Example output:
+
+```text
+[5282. 5284.]
+```
+
+Elevation values can vary slightly as the USGS elevation service is updated.
+
 ## Development setup
 
 The project uses [pixi](https://pixi.sh) for environments and tasks. After you
