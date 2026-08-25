@@ -8,6 +8,11 @@ This uses all of the defaults and should work well out of the box.
 ```python
 from gradeit import gradeit
 
+trace = [
+    (39.7392, -104.9903),
+    (39.7402, -104.9903),
+    (39.7412, -104.9903),
+]
 result = gradeit(trace)
 ```
 
@@ -21,16 +26,29 @@ import pandas as pd
 
 from gradeit import Coordinate, gradeit
 
+lats = [39.7392, 39.7402, 39.7412]
+lons = [-104.9903, -104.9903, -104.9903]
+
 gradeit(pd.DataFrame({"latitude": lats, "longitude": lons}))  # DataFrame
-gradeit(np.array([[39.74, -105.0], [39.75, -105.0]]))  # (n, 2) array, (lat, lon) rows
+gradeit(np.column_stack((lats, lons)))  # (n, 2) array, (lat, lon) rows
 gradeit({"latitude": lats, "longitude": lons})  # mapping
-gradeit([(39.74, -105.0), (39.75, -105.0)])  # (lat, lon) pairs
-gradeit([Coordinate.from_lat_lon(39.74, -105.0), ...])  # Coordinate objects
+gradeit(list(zip(lats, lons)))  # (lat, lon) pairs
+gradeit([Coordinate.from_lat_lon(lat, lon) for lat, lon in zip(lats, lons)])  # Coordinate objects
 ```
 
 Set the column names if your DataFrame uses different names:
 
 ```python
+import pandas as pd
+
+from gradeit import gradeit
+
+df = pd.DataFrame(
+    {
+        "lat": [39.7392, 39.7402, 39.7412],
+        "lon": [-104.9903, -104.9903, -104.9903],
+    }
+)
 gradeit(df, lat_col="lat", lon_col="lon")
 ```
 
@@ -42,6 +60,10 @@ provide at least two points. GradeIT does not change your input.
 `gradeit()` returns a `GradeResult`. This frozen container has NumPy arrays:
 
 ```python
+from gradeit import gradeit
+
+result = gradeit([(39.7392, -104.9903), (39.7402, -104.9903), (39.7412, -104.9903)])
+
 result.elevation_ft_unfiltered  # raw DEM lookup, feet
 result.grade_dec_unfiltered  # grade from the raw lookup, decimal rise/run
 result.elevation_ft_filtered  # cleaned elevation, feet
@@ -56,6 +78,10 @@ with `0.0`.
 To get a table:
 
 ```python
+from gradeit import gradeit
+
+result = gradeit([(39.7392, -104.9903), (39.7402, -104.9903), (39.7412, -104.9903)])
+
 df = result.to_dataframe()  # needs gradeit[pandas]
 d = result.to_dict()  # same columns, plain lists
 ```
@@ -69,6 +95,7 @@ For better performance, download raster tiles and use `USGSLocal`:
 ```python
 from gradeit import USGSLocal, gradeit
 
+trace = [(39.7392, -104.9903), (39.7402, -104.9903), (39.7412, -104.9903)]
 result = gradeit(trace, elevation_model=USGSLocal("path/to/tiles"))
 ```
 
@@ -81,19 +108,23 @@ See [Custom Elevation Sources](examples/05_custom_elevation_model_example) to de
 If you do not pass a filter, GradeIT uses `Wood2014Filter`. This is suitable for most traces:
 
 ```python
-result = gradeit(trace, elevation_model=model)  # Wood2014Filter applied
+from gradeit import gradeit
+
+trace = [(39.7392, -104.9903), (39.7402, -104.9903), (39.7412, -104.9903)]
+result = gradeit(trace)  # Wood2014Filter applied
 ```
 
 To disable filtering or use more than one filter:
 
 ```python
-from gradeit import BridgeFilter, Wood2014Filter
+from gradeit import BridgeFilter, Wood2014Filter, gradeit
 
-gradeit(trace, elevation_model=model, elevation_filter=None)  # raw only
-gradeit(trace, elevation_model=model, elevation_filter=Wood2014Filter(savgol_window_ft=1200))
+trace = [(39.7392, -104.9903), (39.7402, -104.9903), (39.7412, -104.9903)]
+
+gradeit(trace, elevation_filter=None)  # raw only
+gradeit(trace, elevation_filter=Wood2014Filter(savgol_window_ft=1200))
 gradeit(
     trace,
-    elevation_model=model,
     elevation_filter=[BridgeFilter(baseline_radius_ft=6000), Wood2014Filter()],
 )
 ```
