@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import List, Union
 
 import numpy as np
 
@@ -22,24 +21,24 @@ class USGSLocal(ElevationModel):
         Directory holding the downloaded tiles, laid out as
         ``{grid_ref}/USGS_13_{grid_ref}.tif`` (see ``scripts/get_usgs_tiles.py``).
     sampling:
-        ``"bilinear"`` (default) interpolates the four surrounding cells;
-        ``"nearest"`` returns the containing cell (matching the historical
-        behavior). Out-of-bounds points and no-data cells return ``NaN``.
+        ``"bilinear"`` (default) interpolates the four surrounding cells.
+        ``"nearest"`` returns the containing cell. Points outside a tile and
+        no-data cells return ``NaN``.
     """
 
     usgs_db_path: Path
 
-    def __init__(self, usgs_db_path: Union[Path, str], sampling: str = "bilinear"):
+    def __init__(self, usgs_db_path: Path | str, sampling: str = "bilinear"):
         self.usgs_db_path = Path(usgs_db_path)
         self.sampling = validate_sampling(sampling)
 
-    def get_elevation(self, trace: List[Coordinate]) -> List[float]:
+    def get_elevation(self, trace: list[Coordinate]) -> list[float]:
         return get_raster_elev_profile(trace, self.usgs_db_path, sampling=self.sampling)
 
 
 def get_raster_elev_profile(
-    coordinates: List[Coordinate], usgs_db_path: Union[Path, str], sampling: str = "bilinear"
-) -> List[float]:
+    coordinates: list[Coordinate], usgs_db_path: Path | str, sampling: str = "bilinear"
+) -> list[float]:
     """
     Look up an elevation profile (in feet) for a list of coordinates from a
     local USGS 1/3 arc-second raster database.
@@ -58,7 +57,7 @@ def get_raster_elev_profile(
     grid_refs = build_grid_refs(lats, lons)
     for grid_ref in set(grid_refs):
         if grid_ref == "0":
-            # Outside the supported (northern/western) hemisphere coverage.
+            # This point is outside the supported tile area.
             continue
         mask = grid_refs == grid_ref
         raster_path = db_path / grid_ref / f"USGS_13_{grid_ref}.tif"

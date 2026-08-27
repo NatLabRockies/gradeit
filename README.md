@@ -1,105 +1,157 @@
 # GradeIT
 
-Road Grade Inference Tool (GradeIT) - a python package, developed by the National Renewable Energy Laboratory,
-to append elevation and road grade to a sequence of GPS points.
+GradeIT is a Python package from the National Laboratory of the Rockies. It adds elevation and road
+grade to a sequence of GPS points.
+
+**📖 [Full documentation](https://natlabrockies.github.io/gradeit/)**
 
 ## Overview
 
-GradeIT looks up and filters elevation and derives road grade from the
-[USGS Digital Elevation Model](https://www.usgs.gov/core-science-systems/ngp/3dep) to append to GPS points, typically
-for vehicles traveling on paved roads. The python package offers options to use either the the freely accessible USGS
-[Elevation Point Query Service](https://nationalmap.gov/epqs/) or a locally available raster database of the elevation
-model, which provides much faster results.
+GradeIT gets elevation from the [USGS Digital Elevation Model](https://www.usgs.gov/core-science-systems/ngp/3dep). It filters the elevation and calculates
+road grade. GradeIT is for GPS points from vehicles on paved roads.
+
+You can use the online USGS [3DEP](https://www.usgs.gov/3d-elevation-program) service or local
+raster tiles. The online service is easy to use and batches its requests. Local tiles are faster
+still.
+
+The USGS model is **bare-earth**. It shows the ground, not the road. A bridge over water or a valley
+returns the elevation below the bridge. This data creates large grade spikes. GradeIT removes these
+spikes and preserves nearby terrain.
 
 ## Setup
 
-gradeit requires python 3.10 or newer. To use the library, install it from source:
-
-```bash
-git clone https://github.com/NREL/gradeit.git
-pip install .
-```
-
-or install the published package directly:
+GradeIT requires Python 3.10 or newer.
 
 ```bash
 pip install gradeit
 ```
 
+To install from source:
+
+```bash
+git clone https://github.com/NatLabRockies/gradeit.git
+cd gradeit
+pip install .
+```
+
+GradeIT does not require pandas. Install these optional extras as needed:
+
+```bash
+pip install gradeit[pandas]  # DataFrame input + GradeResult.to_dataframe()
+pip install gradeit[plot]    # interactive folium map of the trace colored by grade
+```
+
+PyPI wheels install on Linux, macOS, and Windows. You do not need GDAL or a system geospatial stack.
+See [Installation](https://natlabrockies.github.io/gradeit/installation.html).
+
+## Getting Started
+
+```python
+from gradeit import gradeit
+
+# `data` can be a pandas DataFrame, a numpy (n, 2) array, a dict of
+# {"latitude": [...], "longitude": [...]}, or an iterable of (lat, lon) pairs.
+result = gradeit(data)
+
+result.elevation_ft_filtered  # numpy array of filtered elevation (feet)
+result.grade_dec_filtered  # numpy array of decimal road grade (rise/run)
+result.elevation_ft_unfiltered  # the raw DEM lookup, always preserved
+result.grade_dec_unfiltered  # grade from the raw lookup
+result.to_dataframe()  # tabular view (requires gradeit[pandas])
+```
+
+Use the `_filtered` arrays. `gradeit()` returns a `GradeResult` that contains NumPy arrays. It does
+not change its input.
+
+The `elevation_model` argument selects an `ElevationModel`. By default, GradeIT uses `USGSApi()`.
+This online service needs no setup and batches up to 1,000 points per request. Use `USGSLocal` with
+local raster tiles to avoid depending on a public service:
+
+```python
+from gradeit import USGSLocal, gradeit
+
+result = gradeit(data, elevation_model=USGSLocal("path/to/tiles/"))
+```
+
+By default, `gradeit()` uses `Wood2014Filter` on the elevation profile. This filter uses the
+five-step method from Wood et al. (2014). Set `elevation_filter=None` to disable filtering. You can
+also pass a sequence of filters.
+
+## Documentation
+
+The [documentation site](https://natlabrockies.github.io/gradeit/) has runnable examples and the full API
+reference:
+
+- [Quickstart](https://natlabrockies.github.io/gradeit/quickstart.html) - input, output, elevation models,
+  and filters
+- [Elevation Data](https://natlabrockies.github.io/gradeit/elevation_data.html) - USGS tiles and disk space
+- [Methodology](https://natlabrockies.github.io/gradeit/methodology.html) - the Wood et al. (2014) method
+- [Filters](https://natlabrockies.github.io/gradeit/filters.html) - parameters, defaults, and tuning
+- [API Reference](https://natlabrockies.github.io/gradeit/api_docs.html)
+
+The example pages use small data crops in the repository. They run in seconds:
+
+- [Your First Grade Profile](https://natlabrockies.github.io/gradeit/examples/01_basic_example.html)
+- [How Filtration Works](https://natlabrockies.github.io/gradeit/examples/02_filtering_example.html)
+- [Bare-Earth Bridges](https://natlabrockies.github.io/gradeit/examples/03_bridges_example.html)
+- [Mapping a Trace](https://natlabrockies.github.io/gradeit/examples/04_plotting_example.html)
+- [Custom Elevation Sources](https://natlabrockies.github.io/gradeit/examples/05_custom_elevation_model_example.html)
+
+## Examples on real data
+
+`examples/` contains full examples. Unlike the documentation examples, they use complete traces and
+need real USGS tiles. The tiles need hundreds of MB to about 14 GB. Run these examples by hand, not
+in CI:
+
+- `examples/basic.py` - a 45-mile Colorado trip end to end, including the interactive map. Needs
+  the Colorado tiles.
+- `examples/bridge_filter_long_spans.py` - 65 miles on the east side of San Francisco Bay. It needs
+  `n38w123` and `n39w123` (about 705 MB).
+
+Download tiles with `scripts/get_usgs_tiles.py`; see `scripts/README.md`.
+
 ## Development
 
-This project uses [pixi](https://pixi.sh) to manage development environments and tasks.
-After [installing pixi](https://pixi.sh/latest/#installation), set up the dev environment:
+This project uses [pixi](https://pixi.sh) for development environments and tasks. After you
+[installing pixi](https://pixi.sh/latest/#installation):
 
 ```bash
 pixi install -e dev
-```
-
-Common tasks are defined in `pyproject.toml` under `[tool.pixi.feature.dev.tasks]`:
-
-```bash
 pixi run -e dev check   # ruff format + lint, dprint (markdown), mypy, and tests
 pixi run -e dev test    # run the test suite
 ```
 
-Formatting and linting use [ruff](https://docs.astral.sh/ruff/), and markdown files are
-formatted with [dprint](https://dprint.dev/).
-
-## Getting Started
-
-In this repository, `examples/basic.py` will demonstrate basic application of the gradeit package.
-
-## USGS Elevation Data
-
-The United States Geological Survey offers a variety of products as a part of the [National Map](https://www.usgs.gov/core-science-systems/national-geospatial-program/national-map) project, including bare-earth elevation datasets. The 1/3 arc-second elevation dataset is continuous for the coterminous United States and is therefore used in GradeIT. Appending elevation and grade to 1000+ points benefits significantly from having a local or network copy of the required USGS elevation data.
-
-NREL has the 1/3 arc-second raster data downloaded to on-site compute resources for large scale needs. Individual users can access the same raster data [here](https://prd-tnm.s3.amazonaws.com/index.html?prefix=StagedProducts/Elevation/13/TIFF/current/).
-
-### Download Script
-
-This repository comes with a script you can use to download USGS tiles yourself. You can use the script like this:
+Formatting and linting use [ruff](https://docs.astral.sh/ruff/). Markdown files use
+[dprint](https://dprint.dev/). To build the documentation site:
 
 ```bash
-python scripts/get_usgs_tiles.py --output-dir path/to/output/
+pixi install -e docs
+pixi run -e docs docs_build
 ```
 
-The script will then proceed to download all tiles into `path/to/output/` which can be used when running gradeit:
+See [Contributing](https://natlabrockies.github.io/gradeit/developers/contributing.html) and
+[Building the Docs](https://natlabrockies.github.io/gradeit/developers/build_the_docs.html).
 
-```python
-results = gradeit(
-    df=df,
-    source="usgs-local",
-    usgs_db_path="path/to/output/",
-    sampling="bilinear",  # "bilinear" (default) or "nearest"
-)
+## Citation
+
+If you use GradeIT in published work, please cite the software:
+
+> National Laboratory of the Rockies. _GradeIT: Road Grade Inference Tool_ (version 0.2.0)
+> [Computer software]. https://github.com/NatLabRockies/gradeit
+
+```bibtex
+@software{gradeit,
+  title    = {{GradeIT}: Road Grade Inference Tool},
+  author   = {{National Laboratory of the Rockies}},
+  version  = {0.2.0},
+  url      = {https://github.com/NatLabRockies/gradeit},
+  license  = {BSD-3-Clause}
+}
 ```
 
-Elevation is sampled from the DEM with bilinear interpolation by default, which is smoother and
-more accurate than the legacy nearest-neighbor lookup (still available via `sampling="nearest"`).
-Points outside the available tiles, or over DEM no-data cells, are returned as `NaN`.
+`CITATION.cff` in the repository root has the same metadata in a machine-readable form. GitHub
+shows it as "Cite this repository" in the sidebar.
 
-You can also use the script to just download a subset of tiles.
-
-This example would use the `scripts/colorado_tiles.txt` file to just download raster tiles that cover the state of colorado:
-
-```console
-python get_usgs_tiles.py --output-dir colorado_tiles/ --tile-data colorado_tiles.txt --nprocs 8
-```
-
-## Filters
-
-Given the spatial noise that can be present in GPS data and the 1/3 arc-second resolution of the digital elevation
-model being employed, outliers and unrealistic topographical features can be present in the raw elevation profiles.
-Therefore, a series of filtering procedures can be applied to the elevation data, if desired by the user. The primary
-filter procedure is summarized in the figure below from Wood et al in 2014.
-
-<img src="docs/imgs/grade_filters.png">
-
-<sub>Wood, Eric, E. Burton, A. Duran, and J. Gonder. Appending High-Resolution Elevation Data to GPS Speed Traces for
-Vehicle Energy Modeling and Simulation. No. NREL/TP-5400-61109. National Renewable Energy Lab.(NREL), Golden, CO
-(United States), 2014.<sub>
-
-Additionally, since the USGS Digital Elevation Model is a "bare earth" model, road infrastructure features (i.e.
-bridges and overpasses) are often not represented in the data. Rather, the "bare earth" model represents the valley or
-body of water that is being spanned. GradeIT has optional filtering routines to explicitly handle this by
-"building" a bridge to span the river, valley, etc where necessary.
+Wood et al. (2014) describes the filter method. Cite that paper if the method is important to your
+work. See
+[Methodology](https://natlabrockies.github.io/gradeit/methodology.html).

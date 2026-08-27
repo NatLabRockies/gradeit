@@ -7,8 +7,8 @@ name = "gradeit"
 version = "0.2.0"
 description = "Road Grade Inference Tool (GradeIT) appends elevation and road grade to a sequence of GPS points."
 readme = "README.md"
-authors = [{ name = "National Renewable Energy Laboratory" }]
-license = { text = "BSD 3-Clause License Copyright (c) 2020, Alliance for Sustainable Energy, LLC" }
+authors = [{ name = "National Laboratory of the Rockies" }]
+license = { text = "BSD 3-Clause License Copyright (c) 2020, Alliance for Energy Innovation, LLC" }
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",
@@ -22,32 +22,37 @@ classifiers = [
     "Topic :: Scientific/Engineering",
 ]
 keywords = ["gps", "elevation", "road grade"]
-dependencies = [
-    "numpy",
-    "pandas",
-    "requests",
-    "scipy",
-    "tqdm",
-    "tifffile",
-    "imagecodecs",
-]
+dependencies = ["numpy", "tifffile", "imagecodecs", "requests"]
 
 requires-python = ">=3.10"
 
 [project.optional-dependencies]
-plot = ["matplotlib"]
-dev = ["ruff>=0.14,<1", "mypy>=1,<2", "pytest>=8", "types-requests", "pre-commit"]
+pandas = ["pandas"]
+plot = ["folium", "matplotlib"]
+dev = [
+    "gradeit[pandas,plot]",
+    "ruff==0.16.4",
+    "mypy>=2,<3",
+    "pytest>=9,<10",
+    "types-requests",
+    "pre-commit",
+    "ipykernel",
+]
+docs = [
+    "gradeit[pandas,plot]",
+    "jupyter-book>=1.0,<2.0",
+    "sphinx-book-theme>=1.0.0,<2.0",
+    "nbformat",
+]
 
 [project.urls]
-Homepage = "https://github.com/NREL/gradeit"
+Homepage = "https://github.com/NatLabRockies/gradeit"
 
 [tool.ruff]
 line-length = 100
 exclude = ["build/*", "dist/*"]
 
 [tool.ruff.lint]
-# Enable Pyflakes (`F`) and a subset of the pycodestyle (`E`) codes by default.
-select = ["E4", "E7", "E9", "F"]
 ignore = []
 fixable = ["ALL"]
 unfixable = []
@@ -56,7 +61,7 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
 [tool.mypy]
 ignore_missing_imports = true
-exclude = ["docs/", "build/", "dist/"]
+exclude = ["docs/", "build/", "dist/", "scripts.local/"]
 
 [tool.setuptools.package-data]
 "*" = ["py.typed"]
@@ -73,7 +78,8 @@ gradeit = { path = ".", editable = true }
 
 [tool.pixi.environments]
 default = { solve-group = "default" }
-dev = { features = ["dev", "plot"], solve-group = "default" }
+dev = { features = ["dev", "pandas", "plot"], solve-group = "default" }
+docs = { features = ["docs", "dev", "pandas", "plot"], solve-group = "default" }
 
 [tool.pixi.feature.dev.dependencies]
 dprint = "*"
@@ -85,3 +91,8 @@ fmt_md = "dprint fmt"
 typing = "mypy ."
 test = "pytest tests/"
 check = { depends-on = ["fmt_fix", "lint_fix", "fmt_md", "typing", "test"] }
+
+[tool.pixi.feature.docs.tasks]
+docs_convert = "python docs/examples/_convert_examples_to_notebooks.py"
+docs_build = { cmd = "jupyter-book build docs/", depends-on = ["docs_convert"] }
+docs_clean = "jupyter-book clean docs/"

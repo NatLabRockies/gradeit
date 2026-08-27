@@ -1,21 +1,23 @@
-from pathlib import Path
-from multiprocessing import Pool
-
 import argparse
 import logging
+from multiprocessing import Pool
+from pathlib import Path
 
 import requests
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
+# Find the bundled tile list next to this script.
+DEFAULT_TILE_DATA = Path(__file__).resolve().parent / "usgs_tiles.txt"
+
 parser = argparse.ArgumentParser(description="Download USGS 1/3 arc-second DEM tiles")
 
 parser.add_argument(
     "--tile-data",
     type=str,
-    default="usgs_tiles.txt",
-    help="File containing list of tiles to download",
+    default=str(DEFAULT_TILE_DATA),
+    help="File containing list of tiles to download (default: scripts/usgs_tiles.txt)",
 )
 
 parser.add_argument(
@@ -45,7 +47,7 @@ def download_file(tile: str, output_dir: Path):
     url = build_link(tile)
     destination = output_dir / f"{tile}" / f"USGS_13_{tile}.tif"
     if destination.is_file():
-        log.info(f"{str(destination)} already exists, skipping")
+        log.info(f"{destination!s} already exists, skipping")
         return
 
     with requests.get(url, stream=True) as r:
@@ -57,12 +59,12 @@ def download_file(tile: str, output_dir: Path):
 
         destination.parent.mkdir(parents=True, exist_ok=True)
 
-        # write to file in chunks
+        # Write the download in chunks.
         with destination.open("wb") as f:
             for chunk in r.iter_content(chunk_size=8192):
                 f.write(chunk)
 
-    log.info(f"downloaded {url} to {str(destination)}")
+    log.info(f"downloaded {url} to {destination!s}")
 
 
 def run():
@@ -74,7 +76,7 @@ def run():
     tile_data_file = Path(args.tile_data)
 
     with tile_data_file.open("r") as f:
-        tiles = [line.strip() for line in f.readlines()]
+        tiles = [line.strip() for line in f if line.strip()]
 
     log.info(f"downloading {len(tiles)} tiles..")
 

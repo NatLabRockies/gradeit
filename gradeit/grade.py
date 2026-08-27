@@ -1,5 +1,4 @@
 from math import asin, cos, radians, sin, sqrt
-from typing import List
 
 import numpy as np
 
@@ -7,16 +6,14 @@ from gradeit.coordinate import Coordinate
 
 
 def get_grade(
-    elevation_profile: List[float],
-    distances: List[float],
+    elevation_profile: list[float],
+    distances: list[float],
     min_distance_ft: float = 1.0,
-) -> List[float]:
+) -> list[float]:
     """Compute decimal road grade (rise/run) for an elevation profile.
 
-    Grade is the point-to-point ratio ``Δelevation / distance``. Segments shorter than
-    ``min_distance_ft`` are treated as undefined -- near-coincident coordinates
-    otherwise divide a small elevation change by a near-zero distance and yield physically impossible grades.
-    Undefined segments carry the previous valid grade forward.
+    Grade is ``elevation change / distance`` between points. Segments shorter
+    than ``min_distance_ft`` use the previous valid grade.
 
     Parameters
     ----------
@@ -25,10 +22,9 @@ def get_grade(
     distances : List[float]
         Horizontal distance of each segment, length len(elevation_profile) - 1.
     min_distance_ft : float, optional
-        Segments shorter than this are undefined and carry the previous grade,
-        by default 1.0. Raise it to also suppress noise-driven spikes at crawl speed.
+        Segments shorter than this use the previous grade. Default: 1.0.
     """
-    # check that n > 1
+    # Grade needs at least two points.
     if len(elevation_profile) < 2:
         raise ValueError(
             "Determining grade requires at least 2 coordinates\n\t\ti.e. Input size of n > 1"
@@ -37,8 +33,7 @@ def get_grade(
     d_elev = np.diff(np.asarray(elevation_profile, dtype=float))
     dist_arr = np.asarray(distances, dtype=float)
 
-    # only divide where the segment is long enough to define a grade; sub-threshold
-    # segments stay NaN and are carried-forward below (no divide-by-zero warning)
+    # Divide only segments that are long enough to measure.
     grade = np.full(d_elev.shape, np.nan)
     measurable = dist_arr >= min_distance_ft
     grade[measurable] = d_elev[measurable] / dist_arr[measurable]
@@ -52,12 +47,9 @@ def get_grade(
     return list(grade)
 
 
-def get_distances(coordinates: List[Coordinate]) -> List[float]:
-    """
-    Compute the distance between each coordinate pair
-    """
+def get_distances(coordinates: list[Coordinate]) -> list[float]:
+    """Return the distance in feet between each pair of nearby coordinates."""
     FT_PER_KM = 3280.84
-    # place a zero up front
     distances = []
     i = 1
     while i < len(coordinates):
@@ -69,32 +61,21 @@ def get_distances(coordinates: List[Coordinate]) -> List[float]:
 
 
 def haversine(coord1: Coordinate, coord2: Coordinate, get_bearing: bool = False) -> float:
-    """
-    Calculates the great circle distance and bearing (if requested)
-    between two points on the earth's surface
-
-    Parameters:
-        coord1: a Coordinate object
-        coord2: a Coordinate object
-
-    Returns:
-        distance: the great circle distance in km
-
-    """
-    # convert decimal to radians
+    """Return the great-circle distance in kilometers between two coordinates."""
+    # Convert degrees to radians.
     lat1 = radians(coord1.latitude)
     lon1 = radians(coord1.longitude)
     lat2 = radians(coord2.latitude)
     lon2 = radians(coord2.longitude)
 
-    # compute haversine result
+    # Calculate the great-circle distance.
     dlat = lat2 - lat1
     dlon = lon2 - lon1
-    a = sin(dlat / 2) ** 2 + cos(lat1) * sin(dlon / 2) ** 2
+    a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
     c = 2 * asin(sqrt(a))
-    R = 6371  # radius of earth in km
+    R = 6371  # Earth radius in kilometers.
     distance = c * R
-    # round to centimeter precision
+    # Round to centimeter precision.
     distance = round(distance, 5)
 
     return distance

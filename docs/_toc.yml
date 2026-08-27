@@ -1,0 +1,34 @@
+# Table of contents
+# Learn more at https://jupyterbook.org/customize/toc.html
+
+format: jb-book
+root: intro
+parts:
+  - caption: Getting Started
+    chapters:
+      - file: installation
+      - file: quickstart
+      - file: elevation_data
+
+  - caption: Examples
+    chapters:
+      - file: examples/01_basic_example
+      - file: examples/02_filtering_example
+      - file: examples/03_bridges_example
+      - file: examples/04_plotting_example
+      - file: examples/05_custom_elevation_model_example
+
+  - caption: User Guide
+    chapters:
+      - file: concepts
+      - file: methodology
+      - file: filters
+
+  - caption: Reference
+    chapters:
+      - file: api_docs
+
+  - caption: Developers
+    chapters:
+      - file: developers/contributing
+      - file: developers/build_the_docs
