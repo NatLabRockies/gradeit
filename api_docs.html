@@ -1,0 +1,1362 @@
+
+<!DOCTYPE html>
+
+
+<html lang="python" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>API Reference &#8212; GradeIT</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=3c74b3bc" />
+    <link rel="stylesheet" type="text/css" href="_static/togglebutton.css?v=9c3e77be" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-thebe.css?v=4fa983c6" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="_static/scripts/fontawesome.js?digest=55c26ed414f5f8a31ebb"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
+
+    <script src="_static/documentation_options.js?v=30a733bc"></script>
+    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="_static/togglebutton.js?v=b8b12719"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="_static/design-tabs.js?v=f930bc37"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script async="async" src="_static/sphinx-thebe.js?v=c100c467"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api_docs';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Contributing" href="developers/contributing.html" />
+    <link rel="prev" title="Filters" href="filters.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="python"/>
+  <meta name="docsearch:version" content="" />
+  
+    
+    <script src="_static/searchtools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script src="searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search this book..."
+         aria-label="Search this book..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="intro.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">GradeIT</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="intro.html">
+                    GradeIT
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="elevation_data.html">Elevation Data</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="examples/01_basic_example.html">Your First Grade Profile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/02_filtering_example.html">How Filtration Works</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/03_bridges_example.html">Bare-Earth Bridges</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/04_plotting_example.html">Mapping a Trace</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/05_custom_elevation_model_example.html">Bringing Your Own Elevation Source</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="methodology.html">Methodology</a></li>
+<li class="toctree-l1"><a class="reference internal" href="filters.html">Filters</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">API Reference</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Developers</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="developers/contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developers/build_the_docs.html">Building the Docs</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/NatLabRockies/gradeit" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/NatLabRockies/gradeit/issues/new?title=Issue%20on%20page%20%2Fapi_docs.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/api_docs.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button pst-navbar-icon"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+<button class="sidebar-toggle secondary-toggle btn btn-sm pst-navbar-icon" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>API Reference</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-gradeit.core">Core</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.core.gradeit"><code class="docutils literal notranslate"><span class="pre">gradeit()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.io.to_coordinates"><code class="docutils literal notranslate"><span class="pre">to_coordinates()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.io.GradeResult"><code class="docutils literal notranslate"><span class="pre">GradeResult</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.io.GradeResult.to_dict"><code class="docutils literal notranslate"><span class="pre">GradeResult.to_dict()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.io.GradeResult.to_dataframe"><code class="docutils literal notranslate"><span class="pre">GradeResult.to_dataframe()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.io.GradeResult.plot_map"><code class="docutils literal notranslate"><span class="pre">GradeResult.plot_map()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.coordinate.Coordinate"><code class="docutils literal notranslate"><span class="pre">Coordinate</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.coordinate.Coordinate.from_lat_lon"><code class="docutils literal notranslate"><span class="pre">Coordinate.from_lat_lon()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.grade.get_grade"><code class="docutils literal notranslate"><span class="pre">get_grade()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.grade.get_distances"><code class="docutils literal notranslate"><span class="pre">get_distances()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.grade.haversine"><code class="docutils literal notranslate"><span class="pre">haversine()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-gradeit.elevation.elevation_model">Elevation models</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.elevation.elevation_model.ElevationModel"><code class="docutils literal notranslate"><span class="pre">ElevationModel</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.elevation.elevation_model.ElevationModel.get_elevation"><code class="docutils literal notranslate"><span class="pre">ElevationModel.get_elevation()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.elevation.usgs_api.USGSApi"><code class="docutils literal notranslate"><span class="pre">USGSApi</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.elevation.usgs_api.USGSApi.get_elevation"><code class="docutils literal notranslate"><span class="pre">USGSApi.get_elevation()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.elevation.usgs_local.USGSLocal"><code class="docutils literal notranslate"><span class="pre">USGSLocal</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.elevation.usgs_local.USGSLocal.get_elevation"><code class="docutils literal notranslate"><span class="pre">USGSLocal.get_elevation()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.elevation.usgs_local.get_raster_elev_profile"><code class="docutils literal notranslate"><span class="pre">get_raster_elev_profile()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.elevation.usgs_local.build_grid_refs"><code class="docutils literal notranslate"><span class="pre">build_grid_refs()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-gradeit.filters.elevation_filter">Filters</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.filters.elevation_filter.ElevationFilter"><code class="docutils literal notranslate"><span class="pre">ElevationFilter</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.filters.elevation_filter.ElevationFilter.filter"><code class="docutils literal notranslate"><span class="pre">ElevationFilter.filter()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.filters.wood2014.binomial_kernel"><code class="docutils literal notranslate"><span class="pre">binomial_kernel()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.filters.wood2014.binomial_filter"><code class="docutils literal notranslate"><span class="pre">binomial_filter()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.filters.wood2014.Wood2014Filter"><code class="docutils literal notranslate"><span class="pre">Wood2014Filter</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.filters.wood2014.Wood2014Filter.filter"><code class="docutils literal notranslate"><span class="pre">Wood2014Filter.filter()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.filters.wood2014.resolve_parameters"><code class="docutils literal notranslate"><span class="pre">resolve_parameters()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.filters.bridge.BridgeFilter"><code class="docutils literal notranslate"><span class="pre">BridgeFilter</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.filters.bridge.BridgeFilter.filter"><code class="docutils literal notranslate"><span class="pre">BridgeFilter.filter()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.filters.savitzky_golay.savgol_filter"><code class="docutils literal notranslate"><span class="pre">savgol_filter()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-gradeit.plotting">Plotting</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.plotting.plot_grade_map"><code class="docutils literal notranslate"><span class="pre">plot_grade_map()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-gradeit.exceptions">Exceptions</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.exceptions.GradeitError"><code class="docutils literal notranslate"><span class="pre">GradeitError</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.exceptions.InvalidInputError"><code class="docutils literal notranslate"><span class="pre">InvalidInputError</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.exceptions.MissingDependencyError"><code class="docutils literal notranslate"><span class="pre">MissingDependencyError</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.exceptions.ElevationLookupError"><code class="docutils literal notranslate"><span class="pre">ElevationLookupError</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.exceptions.GradeitWarning"><code class="docutils literal notranslate"><span class="pre">GradeitWarning</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.exceptions.SparseGridWarning"><code class="docutils literal notranslate"><span class="pre">SparseGridWarning</span></code></a></li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="api-reference">
+<h1>API Reference<a class="headerlink" href="#api-reference" title="Link to this heading">#</a></h1>
+<p>Everything below is re-exported from the top-level <code class="docutils literal notranslate"><span class="pre">gradeit</span></code> package, so
+<code class="docutils literal notranslate"><span class="pre">from</span> <span class="pre">gradeit</span> <span class="pre">import</span> <span class="pre">gradeit,</span> <span class="pre">USGSLocal,</span> <span class="pre">Wood2014Filter</span></code> is the expected import
+style. The submodules are documented directly to keep each entry in one place.</p>
+<section id="module-gradeit.core">
+<span id="core"></span><h2>Core<a class="headerlink" href="#module-gradeit.core" title="Link to this heading">#</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="gradeit.core.gradeit">
+<span class="sig-name descname"><span class="pre">gradeit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elevation_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elevation_filter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">Wood2014Filter(interval_ft=100.0,</span> <span class="pre">savgol_window_ft=600.0,</span> <span class="pre">savgol_polyorder=3,</span> <span class="pre">binomial_sigma_ft=100.0,</span> <span class="pre">residual_threshold_ft=8.0,</span> <span class="pre">residual_grow_ratio=0.5,</span> <span class="pre">max_discard_len_ft=2000.0,</span> <span class="pre">max_discard_fraction=0.25,</span> <span class="pre">max_gap_ft=1000.0,</span> <span class="pre">min_node_occupancy=0.35)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat_col</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'latitude'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lon_col</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'longitude'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gradeit/core.html#gradeit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gradeit.core.gradeit" title="Link to this definition">#</a></dt>
+<dd><p>Append elevation and road grade to a sequence of GPS points.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>pd.DataFrame</em><em> | </em><em>Mapping</em><em>[</em><em>str</em><em>, </em><em>Sequence</em><em>[</em><em>float</em><em>]</em><em>] </em><em>| </em><em>Sequence</em><em>[</em><em>tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>] </em><em>| </em><em>Sequence</em><em>[</em><a class="reference internal" href="#gradeit.coordinate.Coordinate" title="gradeit.coordinate.Coordinate"><em>Coordinate</em></a><em>] </em><em>| </em><em>ndarray</em>) -- The coordinates to grade. Accepts a pandas DataFrame, a mapping keyed by
+<code class="docutils literal notranslate"><span class="pre">lat_col</span></code> / <code class="docutils literal notranslate"><span class="pre">lon_col</span></code>, a numpy array of shape <code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">2)</span></code>, or an
+iterable of <a class="reference internal" href="#gradeit.coordinate.Coordinate" title="gradeit.coordinate.Coordinate"><code class="xref py py-class docutils literal notranslate"><span class="pre">Coordinate</span></code></a> or
+<code class="docutils literal notranslate"><span class="pre">(latitude,</span> <span class="pre">longitude)</span></code> pairs. See <a class="reference internal" href="#gradeit.io.to_coordinates" title="gradeit.io.to_coordinates"><code class="xref py py-func docutils literal notranslate"><span class="pre">gradeit.io.to_coordinates()</span></code></a>.</p></li>
+<li><p><strong>elevation_model</strong> (<a class="reference internal" href="#gradeit.elevation.elevation_model.ElevationModel" title="gradeit.elevation.elevation_model.ElevationModel"><em>ElevationModel</em></a><em> | </em><em>None</em>) -- Model that provides elevation. Defaults to the online
+<code class="xref py py-class docutils literal notranslate"><span class="pre">USGSApi</span></code> service. Use
+<code class="xref py py-class docutils literal notranslate"><span class="pre">USGSLocal</span></code> with downloaded tiles, or pass a
+custom <code class="docutils literal notranslate"><span class="pre">ElevationModel</span></code>.</p></li>
+<li><p><strong>elevation_filter</strong> (<a class="reference internal" href="#gradeit.filters.elevation_filter.ElevationFilter" title="gradeit.filters.elevation_filter.ElevationFilter"><em>ElevationFilter</em></a><em> | </em><em>Sequence</em><em>[</em><a class="reference internal" href="#gradeit.filters.elevation_filter.ElevationFilter" title="gradeit.filters.elevation_filter.ElevationFilter"><em>ElevationFilter</em></a><em>] </em><em>| </em><em>None</em>) -- Filter elevation before calculating grade. Pass one
+<code class="xref py py-class docutils literal notranslate"><span class="pre">ElevationFilter</span></code> or a sequence, applied in order. Defaults to
+<code class="xref py py-class docutils literal notranslate"><span class="pre">Wood2014Filter</span></code>. Pass <code class="docutils literal notranslate"><span class="pre">None</span></code> or <code class="docutils literal notranslate"><span class="pre">[]</span></code> to
+skip filtering. Put <code class="xref py py-class docutils literal notranslate"><span class="pre">BridgeFilter</span></code> first when
+using it with other filters.</p></li>
+<li><p><strong>lat_col</strong> (<em>str</em>) -- Column/key names for the latitude and longitude, used only for the
+DataFrame and mapping input forms.</p></li>
+<li><p><strong>lon_col</strong> (<em>str</em>) -- Column/key names for the latitude and longitude, used only for the
+DataFrame and mapping input forms.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Numpy arrays for the input coordinates, elevation, distance, and
+grade. Raw values use the <code class="docutils literal notranslate"><span class="pre">_unfiltered</span></code> suffix. Filtered values use
+<code class="docutils literal notranslate"><span class="pre">_filtered</span></code> when a filter runs. The input is not changed.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#gradeit.io.GradeResult" title="gradeit.io.GradeResult">GradeResult</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function" id="module-gradeit.io">
+<dt class="sig sig-object py" id="gradeit.io.to_coordinates">
+<span class="sig-name descname"><span class="pre">to_coordinates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat_col</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'latitude'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lon_col</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'longitude'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gradeit/io.html#to_coordinates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gradeit.io.to_coordinates" title="Link to this definition">#</a></dt>
+<dd><p>Convert supported input into a list of <code class="xref py py-class docutils literal notranslate"><span class="pre">Coordinate</span></code> objects.</p>
+<p>Accepts a <code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">2)</span></code> numpy array, a DataFrame, a mapping with latitude and
+longitude keys, or an iterable of coordinates or <code class="docutils literal notranslate"><span class="pre">(latitude,</span> <span class="pre">longitude)</span></code>
+pairs. <code class="docutils literal notranslate"><span class="pre">lat_col</span></code> and <code class="docutils literal notranslate"><span class="pre">lon_col</span></code> apply to DataFrame and mapping input.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#gradeit.exceptions.InvalidInputError" title="gradeit.exceptions.InvalidInputError"><strong>InvalidInputError</strong></a> -- If <code class="docutils literal notranslate"><span class="pre">data</span></code> is not one of the supported forms (or has the wrong shape /
+    missing columns).</p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>data</strong> (<em>CoordinateInput</em>)</p></li>
+<li><p><strong>lat_col</strong> (<em>str</em>)</p></li>
+<li><p><strong>lon_col</strong> (<em>str</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[<a class="reference internal" href="#gradeit.coordinate.Coordinate" title="gradeit.coordinate.Coordinate">Coordinate</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gradeit.io.GradeResult">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GradeResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coordinates</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elevation_ft_unfiltered</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distances_ft</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grade_dec_unfiltered</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elevation_ft_filtered</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grade_dec_filtered</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gradeit/io.html#GradeResult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gradeit.io.GradeResult" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>The output of <code class="xref py py-func docutils literal notranslate"><span class="pre">gradeit.gradeit()</span></code>.</p>
+<p>Stores NumPy arrays and source coordinates. Raw elevation and grade fields
+end in <code class="docutils literal notranslate"><span class="pre">_unfiltered</span></code>. Filtered fields end in <code class="docutils literal notranslate"><span class="pre">_filtered</span></code> and are set
+only when filtering runs. Use <a class="reference internal" href="#gradeit.io.GradeResult.to_dict" title="gradeit.io.GradeResult.to_dict"><code class="xref py py-meth docutils literal notranslate"><span class="pre">to_dict()</span></code></a> or <a class="reference internal" href="#gradeit.io.GradeResult.to_dataframe" title="gradeit.io.GradeResult.to_dataframe"><code class="xref py py-meth docutils literal notranslate"><span class="pre">to_dataframe()</span></code></a> for
+tabular output.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>coordinates</strong> (<em>list</em><em>[</em><a class="reference internal" href="#gradeit.coordinate.Coordinate" title="gradeit.coordinate.Coordinate"><em>Coordinate</em></a><em>]</em>)</p></li>
+<li><p><strong>elevation_ft_unfiltered</strong> (<em>ndarray</em>)</p></li>
+<li><p><strong>distances_ft</strong> (<em>ndarray</em>)</p></li>
+<li><p><strong>grade_dec_unfiltered</strong> (<em>ndarray</em>)</p></li>
+<li><p><strong>elevation_ft_filtered</strong> (<em>ndarray</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>grade_dec_filtered</strong> (<em>ndarray</em><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gradeit.io.GradeResult.to_dict">
+<span class="sig-name descname"><span class="pre">to_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gradeit/io.html#GradeResult.to_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gradeit.io.GradeResult.to_dict" title="Link to this definition">#</a></dt>
+<dd><p>Return the result as a column-name -&gt; list mapping.</p>
+<p>The keys match the result field names. Filtered fields are included
+when they are available.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict[str, list]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gradeit.io.GradeResult.to_dataframe">
+<span class="sig-name descname"><span class="pre">to_dataframe</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gradeit/io.html#GradeResult.to_dataframe"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gradeit.io.GradeResult.to_dataframe" title="Link to this definition">#</a></dt>
+<dd><p>Return the result as a new pandas DataFrame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#gradeit.exceptions.MissingDependencyError" title="gradeit.exceptions.MissingDependencyError"><strong>MissingDependencyError</strong></a> -- If pandas is not installed (<code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">gradeit[pandas]</span></code>).</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>pd.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gradeit.io.GradeResult.plot_map">
+<span class="sig-name descname"><span class="pre">plot_map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gradeit/io.html#GradeResult.plot_map"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gradeit.io.GradeResult.plot_map" title="Link to this definition">#</a></dt>
+<dd><p>Render this result on an interactive folium map colored by grade.</p>
+<p>Passes all keyword arguments to
+<a class="reference internal" href="#gradeit.plotting.plot_grade_map" title="gradeit.plotting.plot_grade_map"><code class="xref py py-func docutils literal notranslate"><span class="pre">gradeit.plotting.plot_grade_map()</span></code></a>. Requires <code class="docutils literal notranslate"><span class="pre">gradeit[plot]</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>folium.Map</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class" id="module-gradeit.coordinate">
+<dt class="sig sig-object py" id="gradeit.coordinate.Coordinate">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Coordinate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">latitude</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">longitude</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gradeit/coordinate.html#Coordinate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gradeit.coordinate.Coordinate" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A WGS84-style latitude/longitude point.</p>
+<p>Stores latitude and longitude as floats.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>latitude</strong> (<em>float</em>)</p></li>
+<li><p><strong>longitude</strong> (<em>float</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gradeit.coordinate.Coordinate.from_lat_lon">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_lat_lon</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">latitude</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">longitude</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gradeit/coordinate.html#Coordinate.from_lat_lon"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gradeit.coordinate.Coordinate.from_lat_lon" title="Link to this definition">#</a></dt>
+<dd><p>Create a Coordinate from a latitude and longitude.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>latitude</strong> (<em>float</em>)</p></li>
+<li><p><strong>longitude</strong> (<em>float</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#gradeit.coordinate.Coordinate" title="gradeit.coordinate.Coordinate"><em>Coordinate</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function" id="module-gradeit.grade">
+<dt class="sig sig-object py" id="gradeit.grade.get_grade">
+<span class="sig-name descname"><span class="pre">get_grade</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">elevation_profile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distances</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_distance_ft</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gradeit/grade.html#get_grade"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gradeit.grade.get_grade" title="Link to this definition">#</a></dt>
+<dd><p>Compute decimal road grade (rise/run) for an elevation profile.</p>
+<p>Grade is <code class="docutils literal notranslate"><span class="pre">elevation</span> <span class="pre">change</span> <span class="pre">/</span> <span class="pre">distance</span></code> between points. Segments shorter
+than <code class="docutils literal notranslate"><span class="pre">min_distance_ft</span></code> use the previous valid grade.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>elevation_profile</strong> (<em>List</em><em>[</em><em>float</em><em>]</em>) -- Elevation at each point (n &gt; 1).</p></li>
+<li><p><strong>distances</strong> (<em>List</em><em>[</em><em>float</em><em>]</em>) -- Horizontal distance of each segment, length len(elevation_profile) - 1.</p></li>
+<li><p><strong>min_distance_ft</strong> (<em>float</em><em>, </em><em>optional</em>) -- Segments shorter than this use the previous grade. Default: 1.0.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list[float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="gradeit.grade.get_distances">
+<span class="sig-name descname"><span class="pre">get_distances</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coordinates</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gradeit/grade.html#get_distances"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gradeit.grade.get_distances" title="Link to this definition">#</a></dt>
+<dd><p>Return the distance in feet between each pair of nearby coordinates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>coordinates</strong> (<em>list</em><em>[</em><a class="reference internal" href="#gradeit.coordinate.Coordinate" title="gradeit.coordinate.Coordinate"><em>Coordinate</em></a><em>]</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list[float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="gradeit.grade.haversine">
+<span class="sig-name descname"><span class="pre">haversine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coord1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coord2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">get_bearing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gradeit/grade.html#haversine"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gradeit.grade.haversine" title="Link to this definition">#</a></dt>
+<dd><p>Return the great-circle distance in kilometers between two coordinates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>coord1</strong> (<a class="reference internal" href="#gradeit.coordinate.Coordinate" title="gradeit.coordinate.Coordinate"><em>Coordinate</em></a>)</p></li>
+<li><p><strong>coord2</strong> (<a class="reference internal" href="#gradeit.coordinate.Coordinate" title="gradeit.coordinate.Coordinate"><em>Coordinate</em></a>)</p></li>
+<li><p><strong>get_bearing</strong> (<em>bool</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-gradeit.elevation.elevation_model">
+<span id="elevation-models"></span><h2>Elevation models<a class="headerlink" href="#module-gradeit.elevation.elevation_model" title="Link to this heading">#</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="gradeit.elevation.elevation_model.ElevationModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ElevationModel</span></span><a class="reference internal" href="_modules/gradeit/elevation/elevation_model.html#ElevationModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gradeit.elevation.elevation_model.ElevationModel" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Base class for models that look up elevation.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="gradeit.elevation.elevation_model.ElevationModel.get_elevation">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_elevation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">trace</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gradeit/elevation/elevation_model.html#ElevationModel.get_elevation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gradeit.elevation.elevation_model.ElevationModel.get_elevation" title="Link to this definition">#</a></dt>
+<dd><p>Return elevation in feet for the trace coordinates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>trace</strong> (<em>list</em><em>[</em><a class="reference internal" href="#gradeit.coordinate.Coordinate" title="gradeit.coordinate.Coordinate"><em>Coordinate</em></a><em>]</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list[float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<p id="module-gradeit.elevation.usgs_api">Online elevation lookup against the USGS 3DEP service.</p>
+<p>Samples points in batches through the 3DEP ImageServer <code class="docutils literal notranslate"><span class="pre">getSamples</span></code> service.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="gradeit.elevation.usgs_api.USGSApi">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">USGSApi</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'nearest'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">60.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_retries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gradeit/elevation/usgs_api.html#USGSApi"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gradeit.elevation.usgs_api.USGSApi" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gradeit.elevation.elevation_model.ElevationModel" title="gradeit.elevation.elevation_model.ElevationModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">ElevationModel</span></code></a></p>
+<p>Look up elevation from the public USGS 3DEP bare-earth service.</p>
+<p>Sends up to <code class="xref py py-data docutils literal notranslate"><span class="pre">MAX_POINTS_PER_REQUEST</span></code> points in each request. Points
+outside service coverage return <code class="docutils literal notranslate"><span class="pre">NaN</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>batch_size</strong> (<em>int</em>) -- Points per request. Values above <code class="xref py py-data docutils literal notranslate"><span class="pre">MAX_POINTS_PER_REQUEST</span></code> are
+capped.</p></li>
+<li><p><strong>sampling</strong> (<em>str</em>) -- <code class="docutils literal notranslate"><span class="pre">&quot;nearest&quot;</span></code> (default) returns the containing cell. <code class="docutils literal notranslate"><span class="pre">&quot;bilinear&quot;</span></code>
+interpolates the surrounding cells.</p></li>
+<li><p><strong>timeout</strong> (<em>float</em>) -- Per-request timeout in seconds.</p></li>
+<li><p><strong>max_retries</strong> (<em>int</em>) -- Attempts for a timeout, connection error, or retryable HTTP status.</p></li>
+<li><p><strong>https</strong> (<em>More information is available at</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gradeit.elevation.usgs_api.USGSApi.get_elevation">
+<span class="sig-name descname"><span class="pre">get_elevation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">trace</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gradeit/elevation/usgs_api.html#USGSApi.get_elevation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gradeit.elevation.usgs_api.USGSApi.get_elevation" title="Link to this definition">#</a></dt>
+<dd><p>Return elevation in feet for the trace coordinates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>trace</strong> (<em>list</em><em>[</em><a class="reference internal" href="#gradeit.coordinate.Coordinate" title="gradeit.coordinate.Coordinate"><em>Coordinate</em></a><em>]</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list[float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class" id="module-gradeit.elevation.usgs_local">
+<dt class="sig sig-object py" id="gradeit.elevation.usgs_local.USGSLocal">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">USGSLocal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">usgs_db_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'bilinear'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gradeit/elevation/usgs_local.html#USGSLocal"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gradeit.elevation.usgs_local.USGSLocal" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gradeit.elevation.elevation_model.ElevationModel" title="gradeit.elevation.elevation_model.ElevationModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">ElevationModel</span></code></a></p>
+<p>An elevation model to look up elevation by latitude, longitude
+coordinates. The source data is a locally downloaded raster database
+containing the USGS 1/3 arc-second Digital Elevation Model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>usgs_db_path</strong> (<em>pathlib.Path</em>) -- Directory holding the downloaded tiles, laid out as
+<code class="docutils literal notranslate"><span class="pre">{grid_ref}/USGS_13_{grid_ref}.tif</span></code> (see <code class="docutils literal notranslate"><span class="pre">scripts/get_usgs_tiles.py</span></code>).</p></li>
+<li><p><strong>sampling</strong> (<em>str</em>) -- <code class="docutils literal notranslate"><span class="pre">&quot;bilinear&quot;</span></code> (default) interpolates the four surrounding cells.
+<code class="docutils literal notranslate"><span class="pre">&quot;nearest&quot;</span></code> returns the containing cell. Points outside a tile and
+no-data cells return <code class="docutils literal notranslate"><span class="pre">NaN</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gradeit.elevation.usgs_local.USGSLocal.get_elevation">
+<span class="sig-name descname"><span class="pre">get_elevation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">trace</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gradeit/elevation/usgs_local.html#USGSLocal.get_elevation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gradeit.elevation.usgs_local.USGSLocal.get_elevation" title="Link to this definition">#</a></dt>
+<dd><p>Return elevation in feet for the trace coordinates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>trace</strong> (<em>list</em><em>[</em><a class="reference internal" href="#gradeit.coordinate.Coordinate" title="gradeit.coordinate.Coordinate"><em>Coordinate</em></a><em>]</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list[float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="gradeit.elevation.usgs_local.get_raster_elev_profile">
+<span class="sig-name descname"><span class="pre">get_raster_elev_profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coordinates</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">usgs_db_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'bilinear'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gradeit/elevation/usgs_local.html#get_raster_elev_profile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gradeit.elevation.usgs_local.get_raster_elev_profile" title="Link to this definition">#</a></dt>
+<dd><p>Look up an elevation profile (in feet) for a list of coordinates from a
+local USGS 1/3 arc-second raster database.</p>
+<p>Points are grouped by the 1-degree tile that contains them so each tile is
+opened once; results are returned in the original coordinate order, with
+<code class="docutils literal notranslate"><span class="pre">NaN</span></code> for points outside the available tiles or over no-data cells.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>coordinates</strong> (<em>list</em><em>[</em><a class="reference internal" href="#gradeit.coordinate.Coordinate" title="gradeit.coordinate.Coordinate"><em>Coordinate</em></a><em>]</em>)</p></li>
+<li><p><strong>usgs_db_path</strong> (<em>Path</em><em> | </em><em>str</em>)</p></li>
+<li><p><strong>sampling</strong> (<em>str</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list[float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="gradeit.elevation.usgs_local.build_grid_refs">
+<span class="sig-name descname"><span class="pre">build_grid_refs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lats</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lons</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gradeit/elevation/usgs_local.html#build_grid_refs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gradeit.elevation.usgs_local.build_grid_refs" title="Link to this definition">#</a></dt>
+<dd><p>Map latitude/longitude values to USGS tile grid-reference IDs (e.g.
+<code class="docutils literal notranslate"><span class="pre">&quot;n40w105&quot;</span></code>). Tiles are named for their north-west corner with the
+longitude zero-padded to three digits. Coverage is the northern/western
+hemisphere (the USGS product extent); points elsewhere map to <code class="docutils literal notranslate"><span class="pre">&quot;0&quot;</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>longitudes.</strong> (<em>Two iterables</em><em> of </em><em>float latitudes and</em>)</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A numpy array of grid-reference ID strings, one per input point.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-gradeit.filters.elevation_filter">
+<span id="filters"></span><h2>Filters<a class="headerlink" href="#module-gradeit.filters.elevation_filter" title="Link to this heading">#</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="gradeit.filters.elevation_filter.ElevationFilter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ElevationFilter</span></span><a class="reference internal" href="_modules/gradeit/filters/elevation_filter.html#ElevationFilter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gradeit.filters.elevation_filter.ElevationFilter" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Base class for elevation-profile filters.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="gradeit.filters.elevation_filter.ElevationFilter.filter">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">elevation_profile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coordinates</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gradeit/filters/elevation_filter.html#ElevationFilter.filter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gradeit.filters.elevation_filter.ElevationFilter.filter" title="Link to this definition">#</a></dt>
+<dd><p>Return a filtered elevation profile in feet.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>elevation_profile</strong> (<em>list</em><em>[</em><em>float</em><em>]</em>)</p></li>
+<li><p><strong>coordinates</strong> (<em>list</em><em>[</em><a class="reference internal" href="#gradeit.coordinate.Coordinate" title="gradeit.coordinate.Coordinate"><em>Coordinate</em></a><em>]</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list[float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<p id="module-gradeit.filters.wood2014">Filter elevation with the Wood et al. (2014) method.</p>
+<p>The filter resamples elevation onto a distance grid, smooths it, replaces large
+errors, smooths again, and returns values at the original points.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="gradeit.filters.wood2014.binomial_kernel">
+<span class="sig-name descname"><span class="pre">binomial_kernel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">order</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gradeit/filters/wood2014.html#binomial_kernel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gradeit.filters.wood2014.binomial_kernel" title="Link to this definition">#</a></dt>
+<dd><p>The normalized binomial (Pascal's triangle) kernel of a given order.</p>
+<p>The result has an odd length, sums to 1, and has an order of at least 2.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>order</strong> (<em>int</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="gradeit.filters.wood2014.binomial_filter">
+<span class="sig-name descname"><span class="pre">binomial_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gradeit/filters/wood2014.html#binomial_filter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gradeit.filters.wood2014.binomial_filter" title="Link to this definition">#</a></dt>
+<dd><p>Apply a binomial smoothing filter to a 1-D signal.</p>
+<p>Uses odd reflection at both ends to preserve the local slope.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>Sequence</em><em>[</em><em>float</em><em>] </em><em>| </em><em>ndarray</em>)</p></li>
+<li><p><strong>order</strong> (<em>int</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gradeit.filters.wood2014.Wood2014Filter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Wood2014Filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">interval_ft</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">savgol_window_ft</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">600.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">savgol_polyorder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">binomial_sigma_ft</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">residual_threshold_ft</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">residual_grow_ratio</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_discard_len_ft</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_discard_fraction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.25</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_gap_ft</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_node_occupancy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.35</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gradeit/filters/wood2014.html#Wood2014Filter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gradeit.filters.wood2014.Wood2014Filter" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gradeit.filters.elevation_filter.ElevationFilter" title="gradeit.filters.elevation_filter.ElevationFilter"><code class="xref py py-class docutils literal notranslate"><span class="pre">ElevationFilter</span></code></a></p>
+<p>Elevation filtration per Wood et al. (2014), NLR/TP-5400-61109.</p>
+<p>Resamples elevation onto a uniform distance grid, smooths it, replaces
+large residuals, smooths again, and restores the original point spacing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>interval_ft</strong> (<em>float</em>) -- Target distance between grid nodes. Default: 100 ft. The actual grid
+includes the first and last trace points.</p></li>
+<li><p><strong>savgol_window_ft</strong> (<em>float</em>) -- Savitzky-Golay window width and polynomial order. The width is in feet.</p></li>
+<li><p><strong>savgol_polyorder</strong> (<em>int</em>) -- Savitzky-Golay window width and polynomial order. The width is in feet.</p></li>
+<li><p><strong>binomial_sigma_ft</strong> (<em>float</em>) -- Width of the binomial stage in feet.</p></li>
+<li><p><strong>residual_threshold_ft</strong> (<em>float</em>) -- Replace a node when its smoothed residual exceeds this value. Default:
+8 ft.</p></li>
+<li><p><strong>residual_grow_ratio</strong> (<em>float</em>) -- Include nearby nodes when their residual exceeds this fraction of the
+threshold. Set to 1.0 to disable this expansion.</p></li>
+<li><p><strong>max_discard_len_ft</strong> (<em>float</em>) -- Do not replace runs longer than this distance.</p></li>
+<li><p><strong>max_discard_fraction</strong> (<em>float</em>) -- Maximum fraction of measured nodes that may be replaced.</p></li>
+<li><p><strong>max_gap_ft</strong> (<em>float</em>) -- Split the trace at missing-elevation gaps longer than this distance.</p></li>
+<li><p><strong>min_node_occupancy</strong> (<em>float</em>) -- Warn when fewer than this fraction of grid nodes contain a GPS point.
+Set to <code class="docutils literal notranslate"><span class="pre">0.0</span></code> to disable the warning.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gradeit.filters.wood2014.Wood2014Filter.filter">
+<span class="sig-name descname"><span class="pre">filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">elevation_profile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coordinates</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gradeit/filters/wood2014.html#Wood2014Filter.filter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gradeit.filters.wood2014.Wood2014Filter.filter" title="Link to this definition">#</a></dt>
+<dd><p>Return a filtered elevation profile in feet.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>elevation_profile</strong> (<em>list</em><em>[</em><em>float</em><em>]</em>)</p></li>
+<li><p><strong>coordinates</strong> (<em>list</em><em>[</em><a class="reference internal" href="#gradeit.coordinate.Coordinate" title="gradeit.coordinate.Coordinate"><em>Coordinate</em></a><em>]</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list[float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="gradeit.filters.wood2014.resolve_parameters">
+<span class="sig-name descname"><span class="pre">resolve_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total_ft</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gradeit/filters/wood2014.html#resolve_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gradeit.filters.wood2014.resolve_parameters" title="Link to this definition">#</a></dt>
+<dd><p>Return <code class="docutils literal notranslate"><span class="pre">(delta_ft,</span> <span class="pre">savgol_window,</span> <span class="pre">savgol_polyorder,</span> <span class="pre">binomial_order)</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>f</strong> (<a class="reference internal" href="#gradeit.filters.wood2014.Wood2014Filter" title="gradeit.filters.wood2014.Wood2014Filter"><em>Wood2014Filter</em></a>)</p></li>
+<li><p><strong>total_ft</strong> (<em>float</em>)</p></li>
+<li><p><strong>n_nodes</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple[float, int, int, int]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p id="module-gradeit.filters.bridge">Bridge correction as an <code class="xref py py-class docutils literal notranslate"><span class="pre">ElevationFilter</span></code>.</p>
+<p>USGS bare-earth elevation data may show a dip under a bridge or overpass. This
+filter finds short dips and fills them with a straight elevation line. Apply it
+before <code class="xref py py-class docutils literal notranslate"><span class="pre">Wood2014Filter</span></code>.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="gradeit.filters.bridge.BridgeFilter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">BridgeFilter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">baseline_radius_ft</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5280.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_dip_depth_ft</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_peak_depth_ft</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_bridge_len_ft</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_bridge_len_ft</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">7920.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_aspect_ratio</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grade_plausibility_tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gradeit/filters/bridge.html#BridgeFilter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gradeit.filters.bridge.BridgeFilter" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gradeit.filters.elevation_filter.ElevationFilter" title="gradeit.filters.elevation_filter.ElevationFilter"><code class="xref py py-class docutils literal notranslate"><span class="pre">ElevationFilter</span></code></a></p>
+<p>Interpolate elevation across bare-earth-DEM bridge artifacts.</p>
+<p>Compares each point with the highest elevation on both sides. A point that
+is much lower than both sides can be part of a bridge artifact.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>baseline_radius_ft</strong> (<em>float</em>) -- Distance, in feet, checked on each side of a point. Default: 1 mile.
+Set it wider than the bridge, but narrow enough to avoid treating a
+valley as a bridge.</p></li>
+<li><p><strong>min_dip_depth_ft</strong> (<em>float</em>) -- Per-point threshold for inclusion in a candidate dip run. Points where
+<code class="docutils literal notranslate"><span class="pre">baseline</span> <span class="pre">-</span> <span class="pre">elevation</span></code> is at most this value are not dip candidates.</p></li>
+<li><p><strong>min_peak_depth_ft</strong> (<em>float</em>) -- A run needs at least one point this deep to be accepted.</p></li>
+<li><p><strong>min_bridge_len_ft</strong> (<em>float</em>) -- Minimum and maximum length in feet for an accepted run. Length includes
+the clean point on each side used for interpolation.</p></li>
+<li><p><strong>max_bridge_len_ft</strong> (<em>float</em>) -- Minimum and maximum length in feet for an accepted run. Length includes
+the clean point on each side used for interpolation.</p></li>
+<li><p><strong>max_aspect_ratio</strong> (<em>float</em>) -- Reject runs whose length divided by peak depth is too large.</p></li>
+<li><p><strong>grade_plausibility_tol</strong> (<em>float</em>) -- Reject a correction when its grade differs too much from nearby road
+grade.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gradeit.filters.bridge.BridgeFilter.filter">
+<span class="sig-name descname"><span class="pre">filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">elevation_profile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coordinates</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gradeit/filters/bridge.html#BridgeFilter.filter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gradeit.filters.bridge.BridgeFilter.filter" title="Link to this definition">#</a></dt>
+<dd><p>Return a filtered elevation profile in feet.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>elevation_profile</strong> (<em>list</em><em>[</em><em>float</em><em>]</em>)</p></li>
+<li><p><strong>coordinates</strong> (<em>list</em><em>[</em><a class="reference internal" href="#gradeit.coordinate.Coordinate" title="gradeit.coordinate.Coordinate"><em>Coordinate</em></a><em>]</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list[float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function" id="module-gradeit.filters.savitzky_golay">
+<dt class="sig sig-object py" id="gradeit.filters.savitzky_golay.savgol_filter">
+<span class="sig-name descname"><span class="pre">savgol_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">polyorder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gradeit/filters/savitzky_golay.html#savgol_filter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gradeit.filters.savitzky_golay.savgol_filter" title="Link to this definition">#</a></dt>
+<dd><p>Apply a Savitzky-Golay filter to a 1-D signal.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>Sequence</em><em>[</em><em>float</em><em>] </em><em>| </em><em>ndarray</em>) -- the signal to smooth.</p></li>
+<li><p><strong>window_length</strong> (<em>int</em>) -- the (odd) length of the filter window.</p></li>
+<li><p><strong>polyorder</strong> (<em>int</em>) -- the order of the polynomial fit within each window.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The smoothed signal as a float64 array the same length as <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>ndarray</em></p>
+</dd>
+</dl>
+<p>Uses interpolated values at both ends of the signal.</p>
+</dd></dl>
+
+</section>
+<section id="module-gradeit.plotting">
+<span id="plotting"></span><h2>Plotting<a class="headerlink" href="#module-gradeit.plotting" title="Link to this heading">#</a></h2>
+<p>Interactive map plotting for a <a class="reference internal" href="#gradeit.io.GradeResult" title="gradeit.io.GradeResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">GradeResult</span></code></a>.</p>
+<p>Provides <a class="reference internal" href="#gradeit.plotting.plot_grade_map" title="gradeit.plotting.plot_grade_map"><code class="xref py py-func docutils literal notranslate"><span class="pre">plot_grade_map()</span></code></a>, which colors each GPS segment by road grade.</p>
+<p>folium is an optional dependency; install via <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">gradeit[plot]</span></code>.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="gradeit.plotting.plot_grade_map">
+<span class="sig-name descname"><span class="pre">plot_grade_map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grade</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grade_range_pct</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">opacity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.85</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tiles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'CartoDB</span> <span class="pre">positron'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_endpoints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gradeit/plotting.html#plot_grade_map"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gradeit.plotting.plot_grade_map" title="Link to this definition">#</a></dt>
+<dd><p>Render the trace on an interactive folium map, colored by grade.</p>
+<p>Each segment is colored by its grade. Hovering shows its index, grade,
+elevation, and length.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>result</strong> (<a class="reference internal" href="#gradeit.io.GradeResult" title="gradeit.io.GradeResult"><em>GradeResult</em></a>) -- The output of <code class="xref py py-func docutils literal notranslate"><span class="pre">gradeit.gradeit()</span></code>.</p></li>
+<li><p><strong>grade</strong> (<em>GradeChoice</em>) -- <p>Which grade profile to plot.</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code> (default) -- plot both raw and filtered as toggleable
+layers when filtering ran, else just raw.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;raw&quot;</span></code> -- always plot the raw, unfiltered grade.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;filtered&quot;</span></code> -- plot only the filtered grade (requires that
+<code class="docutils literal notranslate"><span class="pre">gradeit()</span></code> was called with a filter).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;both&quot;</span></code> -- plot raw and filtered as toggleable layers (requires
+that <code class="docutils literal notranslate"><span class="pre">gradeit()</span></code> was called with a filter).</p></li>
+</ul>
+</p></li>
+<li><p><strong>grade_range_pct</strong> (<em>tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>] </em><em>| </em><em>None</em>) -- <code class="docutils literal notranslate"><span class="pre">(vmin,</span> <span class="pre">vmax)</span></code> percent-grade limits for the color scale. Grades
+beyond this range use the end colors. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, the range is centered
+on zero using the largest absolute grade.</p></li>
+<li><p><strong>weight</strong> (<em>int</em>) -- Stroke width of each polyline segment, in pixels.</p></li>
+<li><p><strong>opacity</strong> (<em>float</em>) -- Stroke opacity in <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code>.</p></li>
+<li><p><strong>tiles</strong> (<em>str</em>) -- Base map tile source passed through to <code class="docutils literal notranslate"><span class="pre">folium.Map</span></code>. Defaults to
+<code class="docutils literal notranslate"><span class="pre">&quot;CartoDB</span> <span class="pre">positron&quot;</span></code>. Other options include <code class="docutils literal notranslate"><span class="pre">&quot;CartoDB</span> <span class="pre">Voyager&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;CartoDB</span> <span class="pre">dark_matter&quot;</span></code>, and <code class="docutils literal notranslate"><span class="pre">&quot;OpenStreetMap&quot;</span></code>.</p></li>
+<li><p><strong>show_endpoints</strong> (<em>bool</em>) -- If true, add Start/End markers at the first and last coordinates.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A folium map fitted to the trace bounds, with a color scale legend
+and (when more than one layer is shown) a layer control.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>folium.Map</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="#gradeit.exceptions.MissingDependencyError" title="gradeit.exceptions.MissingDependencyError"><strong>MissingDependencyError</strong></a> -- If folium is not installed.</p></li>
+<li><p><a class="reference internal" href="#gradeit.exceptions.InvalidInputError" title="gradeit.exceptions.InvalidInputError"><strong>InvalidInputError</strong></a> -- If the result has fewer than 2 coordinates or the requested layer
+    is not available.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-gradeit.exceptions">
+<span id="exceptions"></span><h2>Exceptions<a class="headerlink" href="#module-gradeit.exceptions" title="Link to this heading">#</a></h2>
+<p>Exception and warning hierarchy for gradeit.</p>
+<p>All package errors inherit from <a class="reference internal" href="#gradeit.exceptions.GradeitError" title="gradeit.exceptions.GradeitError"><code class="xref py py-class docutils literal notranslate"><span class="pre">GradeitError</span></code></a>. Specific errors also
+inherit from the matching built-in error type.</p>
+<dl class="py exception">
+<dt class="sig sig-object py" id="gradeit.exceptions.GradeitError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GradeitError</span></span><a class="reference internal" href="_modules/gradeit/exceptions.html#GradeitError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gradeit.exceptions.GradeitError" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>Base class for all gradeit errors.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="gradeit.exceptions.InvalidInputError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">InvalidInputError</span></span><a class="reference internal" href="_modules/gradeit/exceptions.html#InvalidInputError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gradeit.exceptions.InvalidInputError" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gradeit.exceptions.GradeitError" title="gradeit.exceptions.GradeitError"><code class="xref py py-class docutils literal notranslate"><span class="pre">GradeitError</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ValueError</span></code></p>
+<p>The coordinate input could not be interpreted (wrong type or shape).</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="gradeit.exceptions.MissingDependencyError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MissingDependencyError</span></span><a class="reference internal" href="_modules/gradeit/exceptions.html#MissingDependencyError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gradeit.exceptions.MissingDependencyError" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gradeit.exceptions.GradeitError" title="gradeit.exceptions.GradeitError"><code class="xref py py-class docutils literal notranslate"><span class="pre">GradeitError</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ImportError</span></code></p>
+<p>An optional dependency (e.g. pandas, requests) is needed but not installed.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="gradeit.exceptions.ElevationLookupError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ElevationLookupError</span></span><a class="reference internal" href="_modules/gradeit/exceptions.html#ElevationLookupError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gradeit.exceptions.ElevationLookupError" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gradeit.exceptions.GradeitError" title="gradeit.exceptions.GradeitError"><code class="xref py py-class docutils literal notranslate"><span class="pre">GradeitError</span></code></a></p>
+<p>An elevation source failed to return a usable value.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="gradeit.exceptions.GradeitWarning">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GradeitWarning</span></span><a class="reference internal" href="_modules/gradeit/exceptions.html#GradeitWarning"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gradeit.exceptions.GradeitWarning" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">UserWarning</span></code></p>
+<p>Base class for all gradeit warnings.</p>
+<p>Warnings do not inherit from <a class="reference internal" href="#gradeit.exceptions.GradeitError" title="gradeit.exceptions.GradeitError"><code class="xref py py-class docutils literal notranslate"><span class="pre">GradeitError</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="gradeit.exceptions.SparseGridWarning">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SparseGridWarning</span></span><a class="reference internal" href="_modules/gradeit/exceptions.html#SparseGridWarning"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gradeit.exceptions.SparseGridWarning" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gradeit.exceptions.GradeitWarning" title="gradeit.exceptions.GradeitWarning"><code class="xref py py-class docutils literal notranslate"><span class="pre">GradeitWarning</span></code></a></p>
+<p>A filter's distance grid is finer than the GPS points can support.</p>
+<p>This warning is raised when most filter grid nodes have no GPS point.</p>
+</dd></dl>
+
+</section>
+</section>
+
+    <script type="text/x-thebe-config">
+    {
+        requestKernel: true,
+        binderOptions: {
+            repo: "binder-examples/jupyter-stacks-datascience",
+            ref: "master",
+        },
+        codeMirrorConfig: {
+            theme: "abcdef",
+            mode: "python"
+        },
+        kernelOptions: {
+            name: "python3",
+            path: "./."
+        },
+        predefinedOutput: true
+    }
+    </script>
+    <script>kernelName = 'python3'</script>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="filters.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Filters</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="developers/contributing.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Contributing</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item"><div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-gradeit.core">Core</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.core.gradeit"><code class="docutils literal notranslate"><span class="pre">gradeit()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.io.to_coordinates"><code class="docutils literal notranslate"><span class="pre">to_coordinates()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.io.GradeResult"><code class="docutils literal notranslate"><span class="pre">GradeResult</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.io.GradeResult.to_dict"><code class="docutils literal notranslate"><span class="pre">GradeResult.to_dict()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.io.GradeResult.to_dataframe"><code class="docutils literal notranslate"><span class="pre">GradeResult.to_dataframe()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.io.GradeResult.plot_map"><code class="docutils literal notranslate"><span class="pre">GradeResult.plot_map()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.coordinate.Coordinate"><code class="docutils literal notranslate"><span class="pre">Coordinate</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.coordinate.Coordinate.from_lat_lon"><code class="docutils literal notranslate"><span class="pre">Coordinate.from_lat_lon()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.grade.get_grade"><code class="docutils literal notranslate"><span class="pre">get_grade()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.grade.get_distances"><code class="docutils literal notranslate"><span class="pre">get_distances()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.grade.haversine"><code class="docutils literal notranslate"><span class="pre">haversine()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-gradeit.elevation.elevation_model">Elevation models</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.elevation.elevation_model.ElevationModel"><code class="docutils literal notranslate"><span class="pre">ElevationModel</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.elevation.elevation_model.ElevationModel.get_elevation"><code class="docutils literal notranslate"><span class="pre">ElevationModel.get_elevation()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.elevation.usgs_api.USGSApi"><code class="docutils literal notranslate"><span class="pre">USGSApi</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.elevation.usgs_api.USGSApi.get_elevation"><code class="docutils literal notranslate"><span class="pre">USGSApi.get_elevation()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.elevation.usgs_local.USGSLocal"><code class="docutils literal notranslate"><span class="pre">USGSLocal</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.elevation.usgs_local.USGSLocal.get_elevation"><code class="docutils literal notranslate"><span class="pre">USGSLocal.get_elevation()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.elevation.usgs_local.get_raster_elev_profile"><code class="docutils literal notranslate"><span class="pre">get_raster_elev_profile()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.elevation.usgs_local.build_grid_refs"><code class="docutils literal notranslate"><span class="pre">build_grid_refs()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-gradeit.filters.elevation_filter">Filters</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.filters.elevation_filter.ElevationFilter"><code class="docutils literal notranslate"><span class="pre">ElevationFilter</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.filters.elevation_filter.ElevationFilter.filter"><code class="docutils literal notranslate"><span class="pre">ElevationFilter.filter()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.filters.wood2014.binomial_kernel"><code class="docutils literal notranslate"><span class="pre">binomial_kernel()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.filters.wood2014.binomial_filter"><code class="docutils literal notranslate"><span class="pre">binomial_filter()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.filters.wood2014.Wood2014Filter"><code class="docutils literal notranslate"><span class="pre">Wood2014Filter</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.filters.wood2014.Wood2014Filter.filter"><code class="docutils literal notranslate"><span class="pre">Wood2014Filter.filter()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.filters.wood2014.resolve_parameters"><code class="docutils literal notranslate"><span class="pre">resolve_parameters()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.filters.bridge.BridgeFilter"><code class="docutils literal notranslate"><span class="pre">BridgeFilter</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.filters.bridge.BridgeFilter.filter"><code class="docutils literal notranslate"><span class="pre">BridgeFilter.filter()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.filters.savitzky_golay.savgol_filter"><code class="docutils literal notranslate"><span class="pre">savgol_filter()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-gradeit.plotting">Plotting</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.plotting.plot_grade_map"><code class="docutils literal notranslate"><span class="pre">plot_grade_map()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-gradeit.exceptions">Exceptions</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.exceptions.GradeitError"><code class="docutils literal notranslate"><span class="pre">GradeitError</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.exceptions.InvalidInputError"><code class="docutils literal notranslate"><span class="pre">InvalidInputError</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.exceptions.MissingDependencyError"><code class="docutils literal notranslate"><span class="pre">MissingDependencyError</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.exceptions.ElevationLookupError"><code class="docutils literal notranslate"><span class="pre">ElevationLookupError</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.exceptions.GradeitWarning"><code class="docutils literal notranslate"><span class="pre">GradeitWarning</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradeit.exceptions.SparseGridWarning"><code class="docutils literal notranslate"><span class="pre">SparseGridWarning</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By National Laboratory of the Rockies
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2023.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

@@ -1,0 +1,725 @@
+
+<!DOCTYPE html>
+
+
+<html lang="python" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Elevation Data &#8212; GradeIT</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=3c74b3bc" />
+    <link rel="stylesheet" type="text/css" href="_static/togglebutton.css?v=9c3e77be" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-thebe.css?v=4fa983c6" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="_static/scripts/fontawesome.js?digest=55c26ed414f5f8a31ebb"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
+
+    <script src="_static/documentation_options.js?v=30a733bc"></script>
+    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="_static/togglebutton.js?v=b8b12719"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="_static/design-tabs.js?v=f930bc37"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script async="async" src="_static/sphinx-thebe.js?v=c100c467"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'elevation_data';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Your First Grade Profile" href="examples/01_basic_example.html" />
+    <link rel="prev" title="Quickstart" href="quickstart.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="python"/>
+  <meta name="docsearch:version" content="" />
+  
+    
+    <script src="_static/searchtools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script src="searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search this book..."
+         aria-label="Search this book..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="intro.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">GradeIT</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="intro.html">
+                    GradeIT
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Elevation Data</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="examples/01_basic_example.html">Your First Grade Profile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/02_filtering_example.html">How Filtration Works</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/03_bridges_example.html">Bare-Earth Bridges</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/04_plotting_example.html">Mapping a Trace</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/05_custom_elevation_model_example.html">Bringing Your Own Elevation Source</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="methodology.html">Methodology</a></li>
+<li class="toctree-l1"><a class="reference internal" href="filters.html">Filters</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="api_docs.html">API Reference</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Developers</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="developers/contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developers/build_the_docs.html">Building the Docs</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/NatLabRockies/gradeit" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/NatLabRockies/gradeit/issues/new?title=Issue%20on%20page%20%2Felevation_data.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/elevation_data.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button pst-navbar-icon"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+<button class="sidebar-toggle secondary-toggle btn btn-sm pst-navbar-icon" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Elevation Data</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#usgsapi-the-online-query-service"><code class="docutils literal notranslate"><span class="pre">USGSApi</span></code> — the online query service</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#options">Options</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#missing-data">Missing data</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#usgslocal-local-raster-tiles"><code class="docutils literal notranslate"><span class="pre">USGSLocal</span></code> — local raster tiles</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#directory-layout">Directory layout</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sampling">Sampling</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Missing data</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#getting-the-tiles">Getting the tiles</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#budget-the-disk-first">Budget the disk first</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#something-else-entirely">Something else entirely</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="elevation-data">
+<h1>Elevation Data<a class="headerlink" href="#elevation-data" title="Link to this heading">#</a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">elevation_model</span></code> argument selects an <code class="docutils literal notranslate"><span class="pre">ElevationModel</span></code>. GradeIT has two built-in models.</p>
+<section id="usgsapi-the-online-query-service">
+<h2><code class="docutils literal notranslate"><span class="pre">USGSApi</span></code> — the online query service<a class="headerlink" href="#usgsapi-the-online-query-service" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">gradeit</span><span class="w"> </span><span class="kn">import</span> <span class="n">USGSApi</span><span class="p">,</span> <span class="n">gradeit</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">gradeit</span><span class="p">(</span><span class="n">trace</span><span class="p">,</span> <span class="n">elevation_model</span><span class="o">=</span><span class="n">USGSApi</span><span class="p">())</span>  <span class="c1"># this is the default</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">USGSApi</span></code> queries the USGS <a class="reference external" href="https://www.usgs.gov/3d-elevation-program">3D Elevation Program</a> (3DEP)
+bare-earth service. It doesn't require any setup. Points are sent in batches of up to 1,000 per
+request, so a trace costs a handful of requests rather than one per point. The values are identical
+to the <a class="reference external" href="https://epqs.nationalmap.gov/v1/">Elevation Point Query Service</a>, which is a single-point
+wrapper over the same data.</p>
+<p>Batching makes the online model usable for whole traces: a 2,500-point trace takes about six seconds.
+<code class="docutils literal notranslate"><span class="pre">USGSLocal</span></code> is still faster and doesn't depend on a public service, so prefer it for repeated or
+bulk work. Take a look at <a class="reference internal" href="#getting-the-tiles">Downloading USGS Tiles</a> for instructions on how to
+get the local DEM tiles.</p>
+<section id="options">
+<h3>Options<a class="headerlink" href="#options" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">USGSApi</span><span class="p">(</span>
+    <span class="n">batch_size</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>  <span class="c1"># points per request; capped at the service limit of 1000</span>
+    <span class="n">sampling</span><span class="o">=</span><span class="s2">"nearest"</span><span class="p">,</span>  <span class="c1"># or "bilinear"</span>
+    <span class="n">timeout</span><span class="o">=</span><span class="mf">60.0</span><span class="p">,</span>  <span class="c1"># seconds per request</span>
+    <span class="n">max_retries</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>  <span class="c1"># attempts per batch on timeout or a 429/5xx response</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">sampling=&quot;nearest&quot;</span></code> returns the cell containing the point, which is what the Elevation Point Query
+Service returns. <code class="docutils literal notranslate"><span class="pre">sampling=&quot;bilinear&quot;</span></code> asks the service to interpolate the surrounding cells,
+matching the default of <code class="docutils literal notranslate"><span class="pre">USGSLocal</span></code>. Note that the two models therefore differ by default; pass the
+same <code class="docutils literal notranslate"><span class="pre">sampling</span></code> to both if you compare them.</p>
+</section>
+<section id="missing-data">
+<h3>Missing data<a class="headerlink" href="#missing-data" title="Link to this heading">#</a></h3>
+<p>Points outside the service's coverage return <strong><code class="docutils literal notranslate"><span class="pre">NaN</span></code></strong>, the same as <code class="docutils literal notranslate"><span class="pre">USGSLocal</span></code>. The service omits
+those points from its response rather than reporting an error.</p>
+</section>
+</section>
+<section id="usgslocal-local-raster-tiles">
+<h2><code class="docutils literal notranslate"><span class="pre">USGSLocal</span></code> — local raster tiles<a class="headerlink" href="#usgslocal-local-raster-tiles" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">gradeit</span><span class="w"> </span><span class="kn">import</span> <span class="n">USGSLocal</span><span class="p">,</span> <span class="n">gradeit</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">gradeit</span><span class="p">(</span>
+    <span class="n">trace</span><span class="p">,</span>
+    <span class="n">elevation_model</span><span class="o">=</span><span class="n">USGSLocal</span><span class="p">(</span><span class="s2">"path/to/tiles"</span><span class="p">,</span> <span class="n">sampling</span><span class="o">=</span><span class="s2">"bilinear"</span><span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">USGSLocal</span></code> reads the DEM from disk. It groups points by tile and opens each tile once. This makes
+full-trace lookups fast.</p>
+<section id="directory-layout">
+<h3>Directory layout<a class="headerlink" href="#directory-layout" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">USGSLocal</span></code> needs the directory layout from the download script:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>tiles/
+├── n40w105/USGS_13_n40w105.tif
+├── n40w106/USGS_13_n40w106.tif
+└── n41w105/USGS_13_n41w105.tif
+</pre></div>
+</div>
+<p>Tile names identify the <strong>northwest corner</strong> of a 1°×1° cell. <code class="docutils literal notranslate"><span class="pre">n40w105</span></code> covers latitude 39–40 and
+longitude −105 to −104. A point at 39.7 N, 105.2 W is in <code class="docutils literal notranslate"><span class="pre">n40w106</span></code>, not <code class="docutils literal notranslate"><span class="pre">n40w105</span></code>. GradeIT
+calculates tile names. You need this information only when you select tiles to download.</p>
+<p>The dataset supports only the northern and western hemispheres.</p>
+</section>
+<section id="sampling">
+<h3>Sampling<a class="headerlink" href="#sampling" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">USGSLocal</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">sampling</span><span class="o">=</span><span class="s2">"bilinear"</span><span class="p">)</span>  <span class="c1"># default</span>
+<span class="n">USGSLocal</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">sampling</span><span class="o">=</span><span class="s2">"nearest"</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">bilinear</span></code> interpolates the four nearby cells. <code class="docutils literal notranslate"><span class="pre">nearest</span></code> returns the cell that contains the point.
+Both methods use pixel centers. <code class="docutils literal notranslate"><span class="pre">bilinear</span></code> returns the exact pixel value at a pixel center.</p>
+</section>
+<section id="id1">
+<h3>Missing data<a class="headerlink" href="#id1" title="Link to this heading">#</a></h3>
+<p>Points outside the available tiles and points over DEM void cells return <strong><code class="docutils literal notranslate"><span class="pre">NaN</span></code></strong>. GradeIT does not
+raise an error or use a sentinel value. GradeIT raises <code class="docutils literal notranslate"><span class="pre">FileNotFoundError</span></code> if a required tile is not
+in the directory.</p>
+<p>If every point returns <code class="docutils literal notranslate"><span class="pre">NaN</span></code>, you may have the correct directory and incorrect tiles. Check the
+grid reference for the first coordinate.</p>
+</section>
+</section>
+<section id="getting-the-tiles">
+<span id="id2"></span><h2>Getting the tiles<a class="headerlink" href="#getting-the-tiles" title="Link to this heading">#</a></h2>
+<p>The 1/3 arc-second dataset covers the conterminous United States. It has about 33 ft (10 m) post
+spacing and a stated vertical RMSE of 2.44 m. It is a <strong>bare-earth</strong> product. See
+<a class="reference internal" href="methodology.html"><span class="doc std std-doc">Methodology</span></a> for why that matters. Browse it at the
+<a class="reference external" href="https://prd-tnm.s3.amazonaws.com/index.html?prefix=StagedProducts/Elevation/13/TIFF/current/">USGS staged products index</a>.</p>
+<p>This repository ships a download script:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>scripts/get_usgs_tiles.py<span class="w"> </span>--output-dir<span class="w"> </span>path/to/tiles/
+</pre></div>
+</div>
+<p>Flags:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--output-dir</span></code> — where to write tiles. Defaults to <code class="docutils literal notranslate"><span class="pre">usgs_tiles/</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--tile-data</span></code> — a text file listing tile names, one per line. Defaults to
+<code class="docutils literal notranslate"><span class="pre">scripts/usgs_tiles.txt</span></code>, which is all 1,433 CONUS tiles.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--nprocs</span></code> — parallel downloads. Defaults to 4.</p></li>
+</ul>
+<section id="budget-the-disk-first">
+<h3>Budget the disk first<a class="headerlink" href="#budget-the-disk-first" title="Link to this heading">#</a></h3>
+<p>Each tile needs <strong>220–490 MB</strong>. The full CONUS set needs more than 400 GB. Download only tiles that
+cover your traces:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Colorado only, using the bundled tile list (~14 GB)</span>
+python<span class="w"> </span>scripts/get_usgs_tiles.py<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--tile-data<span class="w"> </span>scripts/colorado_tiles.txt<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--output-dir<span class="w"> </span>colorado_tiles/<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--nprocs<span class="w"> </span><span class="m">8</span>
+
+<span class="c1"># Or name specific tiles</span>
+<span class="nb">printf</span><span class="w"> </span><span class="s1">'n38w123\nn39w123\n'</span><span class="w"> </span>&gt;<span class="w"> </span>sf_tiles.txt
+python<span class="w"> </span>scripts/get_usgs_tiles.py<span class="w"> </span>--tile-data<span class="w"> </span>sf_tiles.txt<span class="w"> </span>--output-dir<span class="w"> </span>sf_tiles/
+</pre></div>
+</div>
+</section>
+</section>
+<section id="something-else-entirely">
+<h2>Something else entirely<a class="headerlink" href="#something-else-entirely" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">ElevationModel</span></code> can be customized. You can use another DEM, a lidar survey, a database, or a vendor
+API. See
+<a class="reference internal" href="examples/05_custom_elevation_model_example.html"><span class="doc std std-doc">Custom Elevation Sources</span></a>.</p>
+</section>
+</section>
+
+    <script type="text/x-thebe-config">
+    {
+        requestKernel: true,
+        binderOptions: {
+            repo: "binder-examples/jupyter-stacks-datascience",
+            ref: "master",
+        },
+        codeMirrorConfig: {
+            theme: "abcdef",
+            mode: "python"
+        },
+        kernelOptions: {
+            name: "python3",
+            path: "./."
+        },
+        predefinedOutput: true
+    }
+    </script>
+    <script>kernelName = 'python3'</script>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="quickstart.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Quickstart</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="examples/01_basic_example.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Your First Grade Profile</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item"><div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#usgsapi-the-online-query-service"><code class="docutils literal notranslate"><span class="pre">USGSApi</span></code> — the online query service</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#options">Options</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#missing-data">Missing data</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#usgslocal-local-raster-tiles"><code class="docutils literal notranslate"><span class="pre">USGSLocal</span></code> — local raster tiles</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#directory-layout">Directory layout</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sampling">Sampling</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Missing data</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#getting-the-tiles">Getting the tiles</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#budget-the-disk-first">Budget the disk first</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#something-else-entirely">Something else entirely</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By National Laboratory of the Rockies
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2023.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
